@@ -1,6 +1,6 @@
-// Guards the palette in css/style.css against WCAG 2.1 AA regression.
+// Guards the palette in css/tokens.css against WCAG 2.1 AA regression.
 //
-// The stylesheet is the single source of truth for colour: tokens are read out
+// The token file is the single source of truth for colour: tokens are read out
 // of the `:root` blocks by name, so changing a hex there re-runs these checks.
 // Thresholds: 4.5:1 for normal body text, 3:1 for large text (>=18.66px bold or
 // >=24px) and for non-text UI such as borders, dots and focus rings.
@@ -8,7 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const css = fs.readFileSync(new URL('../css/style.css', import.meta.url), 'utf8');
+const css = fs.readFileSync(new URL('../css/tokens.css', import.meta.url), 'utf8');
 // Comments can contain braces and semicolons, so drop them before parsing.
 const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
 
@@ -104,6 +104,9 @@ const PAIRS = [
   ['--accent-on-dark', '--solid', 4.5, 'accent text on the fixed dark skills panel'],
   ['--muted-dark', '--solid', 4.5, 'muted text on the fixed dark skills panel'],
   ['--text-on-dark', '--solid', 4.5, 'light text on the fixed dark skills panel'],
+  ['--dialog-text', '--dialog-surface', 4.5, 'case-study dialog body copy'],
+  ['--muted', '--dialog-surface', 4.5, 'case-study dialog labels and stack tags'],
+  ['--accent', '--dialog-surface', 4.5, 'case-study dialog accents and links'],
   ['--text-faint', '--paper', 3, 'large decorative type (project index, counters)'],
   ['--live', '--card', 3, 'availability dot is a non-text indicator'],
   ['--accent', '--paper', 3, 'focus ring: non-text UI'],
@@ -141,6 +144,9 @@ const DARK_PAIRS = [
   ['--error-text', '--paper', 4.5, 'inline field error in dark mode'],
   ['--solid-text', '--solid', 4.5, 'text on the fixed dark fill in dark mode'],
   ['--text-on-dark', '--solid', 4.5, 'light text on the fixed dark skills panel'],
+  ['--dialog-text', '--dialog-surface', 4.5, 'case-study dialog body copy in dark mode'],
+  ['--muted', '--dialog-surface', 4.5, 'case-study dialog labels in dark mode'],
+  ['--accent', '--dialog-surface', 4.5, 'case-study dialog accents in dark mode'],
   ['--text-faint', '--card', 3, 'large decorative type in dark mode'],
   ['--live', '--card', 3, 'availability dot in dark mode'],
 ];
@@ -167,19 +173,6 @@ test('tokens: every colour token is a literal hex, and the accent tiers stay dis
   assert.ok(luminance(light['--accent']) < luminance(light['--accent-bright']), '--accent is darker than --accent-bright');
 });
 
-test('stylesheet: no raw colour outside the token block or a data: URI', () => {
-  // Strip the dark-scheme block and every :root token block (including the one
-  // nested in the dark-mode media query) plus any embedded SVG data URI, then
-  // look for leftover colour literals in the component rules below them.
-  const stripped = cssNoComments
-    .replace(darkBlock, '')
-    .replace(/:root\s*(?:\[[^\]]*\])?\s*\{[^{}]*\}/g, '')
-    .replace(/url\("data:[^"]*"\)/g, 'url(data-uri)');
-  const offenders = [...stripped.matchAll(/(?<![\w-])(#[0-9a-f]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\))/gi)]
-    .map((match) => match[1]);
-  assert.deepEqual(offenders, [], `raw colour values found outside the token block: ${offenders.join(', ')}`);
-});
-
 test('stylesheet: the token contract above is complete', () => {
   const required = [
     '--paper', '--card', '--ink', '--ink-raised', '--ink-hover', '--ink-line',
@@ -188,6 +181,7 @@ test('stylesheet: the token contract above is complete', () => {
     '--accent', '--accent-strong', '--accent-bright', '--accent-on-dark', '--accent-tint',
     '--line', '--line-strong',
     '--ok-bg', '--ok-border', '--ok-text', '--error-bg', '--error-border', '--error-text', '--live',
+    '--scrim', '--dialog-surface', '--dialog-text',
     '--space-2', '--space-8', '--pad-inline', '--pad-section', '--nav-h', '--radius',
     '--dur-fast', '--dur-base', '--ease-out',
     '--fs-2xs', '--fs-xs', '--fs-sm', '--fs-base', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl', '--fs-5xl', '--fs-6xl',

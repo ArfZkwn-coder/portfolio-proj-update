@@ -680,6 +680,107 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Case-study dialogs — deep-linkable, keyboard-first                  */
+  /* ------------------------------------------------------------------ */
+  function initCaseStudies(lenis) {
+    const dialogs = $$('dialog.case-study');
+    if (dialogs.length === 0 || typeof HTMLDialogElement === 'undefined'
+      || typeof HTMLDialogElement.prototype.showModal !== 'function') return;
+
+    const bySlug = new Map();
+    dialogs.forEach((dialog) => bySlug.set(dialog.id.replace(/^case-/, ''), dialog));
+
+    let current = null;
+    let opener = null;
+
+    // Same lock the mobile menu uses: one place decides whether the page can
+    // scroll, so two overlapping overlays cannot leave it stuck.
+    const setLocked = (locked) => {
+      root.classList.toggle('case-open', locked);
+      if (!lenis) return;
+      if (locked) lenis.stop();
+      else lenis.start();
+    };
+
+    const open = (slug, trigger) => {
+      const dialog = bySlug.get(slug);
+      if (!dialog || current === dialog) return;
+      // Keep the previous opener until the new one is recorded, so closing the
+      // outgoing panel during a swap cannot bounce focus to a stale control.
+      const previousOpener = opener;
+      close({ restoreFocus: false });
+      opener = trigger || previousOpener || null;
+      current = dialog;
+      dialog.scrollTop = 0;
+      dialog.showModal();
+      setLocked(true);
+      const heading = $('.case-study-title', dialog);
+      if (heading) heading.focus({ preventScroll: true });
+    };
+
+    const close = ({ restoreFocus = true } = {}) => {
+      const dialog = current;
+      if (!dialog) return;
+      current = null;
+      if (dialog.open) dialog.close();
+      setLocked(false);
+      const back = opener;
+      opener = null;
+      if (restoreFocus && back && document.contains(back)) back.focus();
+    };
+
+    // The hash is the single source of truth for which case study is open, so
+    // the back button, a shared link and a click all take the same path. Each
+    // panel is individually shorable as #case-<slug>.
+    const syncFromHash = () => {
+      const slug = (window.location.hash || '').replace(/^#case-/, '');
+      if (window.location.hash.startsWith('#case-') && bySlug.has(slug)) {
+        // Arriving by URL rather than by click: there is no control to return to.
+        const trigger = document.querySelector(`.project-case-open[data-case="${slug}"]`);
+        open(slug, trigger);
+      } else {
+        close();
+      }
+    };
+
+    $$('.project-case-open').forEach((button) => {
+      button.addEventListener('click', () => {
+        const slug = button.dataset.case;
+        if (!slug || !bySlug.has(slug)) return;
+        opener = button;
+        const hash = `#case-${slug}`;
+        if (window.location.hash === hash) open(slug, button);
+        else window.history.pushState(null, '', hash);
+        syncFromHash();
+      });
+    });
+
+    dialogs.forEach((dialog) => {
+      const requestClose = () => {
+        if (window.location.hash) window.history.back();
+        else close();
+      };
+      $('.case-study-close', dialog)?.addEventListener('click', requestClose);
+      // The platform fires `cancel` for Escape; routing it through the same
+      // history path keeps the URL and the visible panel in step.
+      dialog.addEventListener('cancel', (event) => {
+        event.preventDefault();
+        requestClose();
+      });
+      // Backdrop clicks land on the dialog element itself, never on its content.
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) requestClose();
+      });
+      // A closed dialog must not keep the page locked.
+      dialog.addEventListener('close', () => setLocked(false));
+    });
+
+    window.addEventListener('hashchange', syncFromHash);
+    window.addEventListener('popstate', syncFromHash);
+    syncFromHash();
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Boot                                                                */
   /* ------------------------------------------------------------------ */
   const year = $('#year');
@@ -694,6 +795,7 @@
   initReveal();
   initMarquee();
   initForm();
+  initCaseStudies(lenis);
 
   const heroName = $('.hero-name');
   if (heroName) splitChars(heroName);

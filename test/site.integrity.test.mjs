@@ -10,14 +10,22 @@ const { document } = new JSDOM(html).window;
 const SITE = 'https://arfzkwn-coder.github.io/portfolio-proj';
 
 test('all local assets are relative (root-absolute paths 404 on a Pages project site) and exist on disk', () => {
-  const refs = [...document.querySelectorAll('link[href], script[src]')]
+  const localRefs = (doc) => [...doc.querySelectorAll('link[href], script[src]')]
     .map((el) => el.getAttribute('href') || el.getAttribute('src'))
     .filter((u) => u && !/^(https?:|data:|#|mailto:)/.test(u));
-  assert.deepEqual(refs.sort(), ['css/style.css', 'js/main.js']);
+
+  const refs = localRefs(document);
+  assert.deepEqual(refs.sort(), ['css/style.css', 'css/tokens.css', 'js/main.js']);
+
+  // resume.html is a second document the repo must ship consistently.
+  const resumeHtml = fs.readFileSync('../resume.html', 'utf8');
+  const resumeDoc = new JSDOM(resumeHtml).window.document;
+  assert.deepEqual(localRefs(resumeDoc).sort(), ['css/resume.css', 'css/tokens.css']);
+
   // totem.js is loaded lazily via import('./totem.js') from main.js, so it never appears as a <script src>
   assert.ok(/import\('\.\/totem\.js'\)/.test(fs.readFileSync('../js/main.js', 'utf8')), 'main.js lazy-loads ./totem.js');
   assert.ok(fs.existsSync('../js/totem.js'), 'js/totem.js exists');
-  for (const ref of refs) {
+  for (const ref of [...refs, ...localRefs(resumeDoc)]) {
     assert.ok(!ref.startsWith('/'), `root-absolute path breaks under /portfolio-proj/: ${ref}`);
     assert.ok(!ref.includes('site/'), `stale site/ subfolder reference: ${ref}`);
     assert.ok(fs.existsSync(`../${ref}`), `missing file for ${ref}`);
@@ -96,6 +104,48 @@ test('accessibility plumbing ships with the markup', () => {
     assert.ok(error.textContent.trim().length > 0, `${id} error has copy without JS`);
   }
   assert.equal(document.getElementById('contactForm').hasAttribute('novalidate'), true, 'inline validation owns the messages');
+});
+
+test('résumé: reachable from the portfolio in one step, and cross-linked back', () => {
+  // Entry points on the portfolio page. The nav button sits outside .nav-links
+  // on purpose, so the on-page section order the tests above enforce is
+  // untouched by a link to another document.
+  assert.equal(document.querySelector('.nav-cta').getAttribute('href'), 'resume.html', 'nav offers the résumé');
+  assert.equal(document.querySelector('.hero-cta-tertiary').getAttribute('href'), 'resume.html', 'hero offers the résumé');
+  assert.equal(document.querySelector('.contact-resume a').getAttribute('href'), 'resume.html', 'contact offers the résumé');
+
+  const resumeDoc = new JSDOM(fs.readFileSync('../resume.html', 'utf8')).window.document;
+  assert.equal(resumeDoc.querySelector('.resume-bar-link').getAttribute('href'), 'index.html', 'the résumé links back');
+  assert.ok(resumeDoc.querySelector('.resume-print'), 'the résumé offers a print/PDF control');
+  assert.equal(resumeDoc.querySelector('link[rel="canonical"]').getAttribute('href'), `${SITE}/resume.html`);
+
+  // The résumé must reproduce the real content, not a summary that drifts.
+  const text = resumeDoc.body.textContent.replace(/\s+/g, ' ');
+  for (const needle of ['Team Fames Sdn Bhd', 'S&S Hana Enterprise', 'AqWise', 'Universiti Teknologi MARA (UiTM)',
+    'Google Data Analytics Professional Certificate', 'Linux System Administration', 'Arif Zakwan']) {
+    assert.ok(text.includes(needle), `résumé is missing: ${needle}`);
+  }
+  // 3 roles + 3 projects + 2 degrees + 1 certificate
+  assert.equal(resumeDoc.querySelectorAll('.resume-entry').length, 9, 'every real entry is carried over');
+
+  // No screen-only chrome should print.
+  const resumeCss = fs.readFileSync('../css/resume.css', 'utf8');
+  const printBlock = resumeCss.slice(resumeCss.indexOf('@media print'));
+  for (const selector of ['.resume-bar', '.skip-link', '.resume-hint']) {
+    assert.ok(printBlock.includes(selector), `print rules hide ${selector}`);
+  }
+  assert.ok(/@page\s*\{[^}]*size:\s*A4/.test(printBlock), 'print declares an A4 page');
+});
+
+test('structured data: both pages publish the same person', () => {
+  const person = (doc) => JSON.parse(doc.querySelector('script[type="application/ld+json"]').textContent);
+  const fromRoot = person(document);
+  const fromResume = person(new JSDOM(fs.readFileSync('../resume.html', 'utf8')).window.document);
+
+  assert.equal(fromResume.name, fromRoot.name, 'the same name');
+  assert.equal(fromResume.jobTitle, fromRoot.jobTitle, 'the same job title');
+  assert.deepEqual(fromResume.sameAs, fromRoot.sameAs, 'the same profile links');
+  assert.ok(fromResume.url.startsWith(SITE), 'the résumé links back to the portfolio');
 });
 
 test('"Open" cursor label is wired to external links that exist', () => {

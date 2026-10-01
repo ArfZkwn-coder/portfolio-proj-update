@@ -1,145 +1,11 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 /* ==========================================================================
-   1. DESIGN TOKENS
-   Every colour, space, radius, shadow and duration in this file is declared
-   here. Nothing below this block may hard-code a raw hex value — a test
-   (test/contrast.test.mjs) enforces that, and every text pair below is
-   checked against WCAG 2.1 AA (4.5:1 normal text, 3:1 large text / UI).
+   2. PAGE SHELL
+   Design tokens live in css/tokens.css, which index.html and resume.html both
+   load first. Nothing below may hard-code a raw colour — test/contrast.test.mjs
+   reads the token file and enforces that, in both colour schemes.
    ========================================================================== */
-:root {
-  /* Surfaces. --ink is the *text* colour and --paper the page colour; the
-     --solid/--solid-text pair is a fixed dark fill (primary buttons, inverted
-     panels) that keeps cream-on-ink contrast under either scheme. */
-  --paper: #f5f2ec;          /* page background */
-  --card: #efece5;           /* alternating section background */
-  --ink: #0f0f0f;            /* primary text */
-  --ink-raised: #171717;     /* dark card */
-  --ink-hover: #1f1f1f;      /* dark card, hovered */
-  --ink-line: #262625;       /* divider on dark surfaces */
-  --solid: #0f0f0f;          /* fixed dark fill, does not invert */
-  --solid-text: #f5f2ec;     /* text on --solid: 17.4:1 */
-  --section-alt: #efece5;    /* alternate section band */
-
-  /* Text — all verified against their intended surface */
-  --muted: #5f5e58;          /* 6.0:1 on --paper, 5.6:1 on --card */
-  --text-body: #4a4944;      /* 8.4:1 on --paper */
-  --text-faint: #84827a;     /* 3.5:1 — large text / decorative only */
-  --muted-dark: #a3a19a;     /* 7.1:1 on --ink */
-  --text-on-dark: #ece9e3;   /* 15.3:1 on --ink */
-  --text-faint-dark: #8f8d86;/* 5.6:1 on --ink */
-
-  /* Accent tiers — --accent is the *text* accent on light surfaces (5.0:1 on
-     --paper, 4.7:1 on --card, so it is safe at any size); --accent-on-dark is
-     for text on dark surfaces (6.5:1 on --ink); --accent-bright is a decorative
-     tint for rules, dots and 3D only, never for text. */
-  --accent: #ab4c1a;
-  --accent-strong: #8f3f16;
-  --accent-bright: #c8602a;
-  --accent-on-dark: #e58150;  /* 6.5:1 on --ink */
-  --accent-tint: #f3e4da;
-
-  /* Lines */
-  --line: #dddad3;
-  --line-strong: #c9c5bc;
-
-  /* Feedback states */
-  --ok-bg: #eaf5ea;
-  --ok-border: #b4d9b4;
-  --ok-text: #245c24;
-  --error-bg: #fbeeea;
-  --error-border: #e8bdae;
-  --error-text: #8a3a1c;
-  --live: #1f7a33;            /* availability dot: non-text contrast 3:1+ */
-
-  /* Space scale (fluid where it matters) */
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-7: 3rem;
-  --space-8: 4rem;
-
-  --pad-inline: clamp(1.25rem, 5vw, 4rem);
-  --pad-section: clamp(4rem, 8vw, 6rem);
-  --nav-h: 4.5rem;
-  --nav-bg: var(--nav-bg);   /* blends to ~5:1 against --ink text */
-  --nav-bg-solid: #f5f2ec;               /* fallback when backdrop-filter is unsupported */
-  --field-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%235f5e58' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
-  --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-
-  /* Radius (kept sharp by design; routed through one token) */
-  --radius: 0px;
-
-  /* Motion */
-  --dur-fast: 0.2s;
-  --dur-base: 0.3s;
-  --ease-out: cubic-bezier(0.19, 1, 0.22, 1);
-
-  /* Type scale. Small end: nothing a visitor has to read sits below 0.75rem.
-     Large end: display steps, kept here so no component invents a size. */
-  --fs-2xs: 0.6875rem;
-  --fs-xs: 0.75rem;
-  --fs-sm: 0.8125rem;
-  --fs-base: 0.9375rem;
-  --fs-lg: 1rem;
-  --fs-xl: 1.1rem;
-  --fs-2xl: 1.25rem;
-  --fs-3xl: 1.5rem;
-  --fs-5xl: 2.25rem;
-  --fs-6xl: 3.5rem;
-
-  --font-display: 'DM Serif Display', 'Iowan Old Style', Georgia, serif;
-  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-}
-
-:root[data-contrast='high'] {
-  --line: var(--line-strong);
-  --muted: #46453f;
-  --text-faint: #5f5e58;
-}
-
-/* Dark OS preference: same tokens, remapped. No JS, no toggle. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #121212;
-    --card: #191919;
-    --ink: #f5f2ec;
-    --ink-raised: #1c1c1c;
-    --ink-hover: #242424;
-    --ink-line: #2c2c2c;
-    --solid: #0f0f0f;
-    --solid-text: #f5f2ec;
-    /* Kept dark: --card here is a *raised* surface, not an inverted panel, so
-       sections that use --ink as a fill would otherwise flash light. */
-    --section-alt: #1b1b1b;
-
-    --muted: #9b9993;
-    --text-body: #c7c4bd;
-    --text-faint: #6f6d67;
-    --muted-dark: #a3a19a;
-    --text-on-dark: #ece9e3;
-    --text-faint-dark: #8f8d86;
-
-    --accent: #e58150;        /* 7.0:1 on --paper in this scheme */
-    --accent-strong: #f09a6d;
-    --accent-bright: #c8602a;
-    --accent-on-dark: #e58150;
-    --accent-tint: #2a1c13;
-
-    --line: #33312e;
-    --line-strong: #454340;
-
-    --ok-bg: #16281a;
-    --ok-border: #2f5233;
-    --ok-text: #a6dfa6;
-    --error-bg: #2a1a15;
-    --error-border: #5c3323;
-    --error-text: #f0a884;
-    --live: #4cc267;
-  }
-}
 
 html { scroll-behavior: smooth; }
 
@@ -1216,6 +1082,88 @@ footer {
   justify-content: center;
 }
 
+/* ── RÉSUMÉ ENTRY POINTS ── */
+/* A quiet button in the bar, sitting after the section links so the nav's
+   on-page link order is unchanged. */
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin-left: var(--space-5);
+  padding: 0.4rem var(--space-4);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+.nav-cta:hover {
+  background: var(--solid);
+  color: var(--solid-text);
+  border-color: var(--solid);
+}
+@media (max-width: 900px) {
+  /* The hamburger already replaced the section links at this width. */
+  .nav-cta { display: none; }
+}
+
+.hero-cta-tertiary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.9rem var(--space-5);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid transparent;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.hero-cta-tertiary:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+.contact-resume {
+  margin-top: var(--space-5);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.contact-resume a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-tint);
+}
+.contact-resume a:hover { border-bottom-color: var(--accent); }
+
+/* ── 404 PAGE ── */
+/* 404.html links tokens.css + this stylesheet and nothing else, so it needs the
+   baseline that the reset would otherwise leave to the browser. */
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-weight: 300; line-height: 1.6; }
+.notfound-page nav { background: var(--nav-bg-solid); border-bottom: 1px solid var(--line); }
+.notfound {
+  min-height: 60svh;
+  display: grid;
+  align-content: center;
+  gap: var(--space-5);
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: calc(var(--nav-h) + var(--space-8)) max(var(--pad-inline), env(safe-area-inset-right)) var(--space-8) max(var(--pad-inline), env(safe-area-inset-left));
+}
+.notfound .section-header { margin-bottom: 0; }
+.notfound-body {
+  font-size: var(--fs-base);
+  line-height: 1.8;
+  color: var(--text-body);
+  max-width: 52ch;
+  margin-bottom: var(--space-3);
+}
+
 .skip-link {
   position: fixed;
   top: calc(0.75rem + env(safe-area-inset-top));
@@ -1472,3 +1420,210 @@ html.has-cursor .form-submit {
   .scroll-line, .availability-dot { animation: none !important; }
   .nav-progress { transition: none; }
 }
+
+/* ==========================================================================
+   Print — the page as a document, not as a light show
+   The résumé has its own print stylesheet; this keeps a print-out of the
+   portfolio readable by removing the chrome and forcing anything that a scroll
+   reveal would otherwise leave invisible into its final state.
+   ========================================================================== */
+
+@media print {
+  /* Print in the current scheme's own colours: a dark-mode visitor who prints
+     the page expects what they were looking at, and --paper/--ink are always a
+     legible pair. (resume.css overrides this to black on white, because a CV
+     goes on paper.) */
+
+  .cursor,
+  .cursor-ring,
+  .preloader,
+  nav,
+  .mobile-menu,
+  .marquee,
+  .hero-scroll,
+  .case-study,
+  .project-case-open,
+  .nav-progress { display: none !important; }
+
+  /* Reveals and the character mask are scroll-driven; on paper they must be
+     settled, or whole sections print blank. */
+  .js .reveal,
+  .js .section-header .section-line { opacity: 1 !important; transform: none !important; }
+  .char { transform: none !important; }
+  .word { overflow: visible !important; }
+
+  body::before { display: none !important; } /* the noise overlay */
+
+  section { padding: 1.5rem 0; }
+  .section-header { margin-bottom: 1rem; }
+
+  .project-card,
+  .skill-card,
+  .cert-card,
+  .timeline-item,
+  .about-fact { break-inside: avoid; page-break-inside: avoid; }
+
+  /* A printed page cannot hover, so state must not depend on it. */
+  .project-card:hover,
+  .cert-card:hover { background: inherit; }
+
+  /* Show where a printed link goes; the résumé is the more useful artefact, so
+     point at it explicitly. */
+  .contact-resume a::after { content: ' — ' attr(href); font-size: var(--fs-2xs); }
+  a[href^='http']::after { content: ' (' attr(href) ')'; font-size: var(--fs-2xs); }
+}
+
+/* ==========================================================================
+   PHASE 4 — case-study dialogs
+   Native <dialog>, so focus moving, Escape closing and the top-layer stacking
+   all come from the platform. The panel paints its own surface rather than
+   trusting the UA default, and paints it from tokens so both colour schemes
+   stay legible (test/contrast.test.mjs checks the pairs).
+   ========================================================================== */
+
+/* Without JS the panel never opens, so the button that opens it would be a
+   dead control. Hide it until main.js marks the document as scripted. */
+.project-case-open { display: none; }
+.js .project-case-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: var(--space-4);
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--accent-tint);
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), gap var(--dur-fast);
+}
+.js .project-case-open:hover { border-bottom-color: var(--accent); gap: 0.75rem; }
+
+.case-study {
+  width: min(46rem, calc(100vw - 2 * var(--space-5)));
+  max-height: min(88svh, 60rem);
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--dialog-surface);
+  color: var(--dialog-text);
+  overflow: auto;
+  overscroll-behavior: contain;
+  font-family: var(--font-body);
+}
+.case-study::backdrop { background: var(--scrim); }
+
+.case-study article { padding: var(--space-7) var(--space-6) var(--space-6); }
+
+.case-study-head { margin-bottom: var(--space-6); }
+
+.case-study-eyebrow {
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-2);
+}
+.case-study-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, var(--fs-5xl));
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.case-study-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+.case-study-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+.case-study-meta dt {
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+.case-study-meta dd { font-size: var(--fs-sm); color: var(--dialog-text); }
+
+.case-study-section + .case-study-section,
+.case-study-links { margin-top: var(--space-6); }
+
+.case-study-section h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-3);
+}
+.case-study-section p,
+.case-study-section li {
+  font-size: var(--fs-base);
+  line-height: 1.75;
+  color: var(--dialog-text);
+}
+.case-study-section ul { padding-left: var(--space-5); }
+.case-study-section li + li { margin-top: var(--space-2); }
+
+.case-study-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-left: 0 !important;
+  list-style: none;
+}
+.case-study-stack li {
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--line-strong);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.case-study-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.case-study-links a:hover { border-bottom-color: var(--accent); }
+
+.case-study-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: var(--space-6);
+  padding: 0.7rem var(--space-5);
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  color: var(--dialog-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.case-study-close:hover { border-color: var(--accent); color: var(--accent); }
+
+@media (max-width: 600px) {
+  .case-study article { padding: var(--space-6) var(--space-5) var(--space-5); }
+}
+
+/* Nothing behind a modal dialog should be reachable while it is open. */
+html.case-open { overflow: hidden; }

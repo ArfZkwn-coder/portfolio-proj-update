@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found — Arif Zakwan</title>
+  <meta name="description" content="That page does not exist. Head back to the portfolio or open the résumé.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f5f2ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <!-- GitHub Pages serves this file at whatever depth the missing URL was, so a
+       relative href would resolve against the wrong base. Pin it to the site
+       root: 404 is the one page where an absolute path is correct. -->
+  <base href="/portfolio-proj/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+</head>
+<body class="notfound-page">
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <nav id="nav">
+    <a href="index.html" class="nav-logo">Arif Zakwan</a>
+    <a class="nav-cta" href="resume.html">Résumé ↗</a>
+  </nav>
+
+  <main id="main" class="notfound">
+    <section aria-labelledby="notfound-title">
+      <div class="section-header">
+        <span class="section-number" aria-hidden="true">404</span>
+        <h1 class="section-title" id="notfound-title">That page isn't here</h1>
+        <div class="section-line"></div>
+      </div>
+      <p class="notfound-body">
+        The link may be out of date, or the page may have moved. The portfolio is one page,
+        so nothing is more than a click away.
+      </p>
+      <div class="hero-actions">
+        <a class="hero-cta" href="index.html">Back to the portfolio →</a>
+        <a class="hero-cta-secondary" href="resume.html">Open the résumé ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© <span id="year">2026</span> Arif Zakwan</span>
+    <span>IT Enthusiast &amp; Automation Specialist · Malaysia</span>
+    <span class="footer-links">
+      <a href="mailto:arifzakwan2001@gmail.com" class="footer-link">Email</a>
+      <a href="index.html" class="footer-link">↑ Back to the portfolio</a>
+    </span>
+  </footer>
+
+  <script>
+    /* The page is complete without this; it only keeps the footer year current.
+       Inline on purpose so the 404 has no extra script request. */
+    (function () {
+      var year = document.getElementById('year');
+      if (year) year.textContent = String(new Date().getFullYear());
+    })();
+  </script>
+</body>
+</html>
