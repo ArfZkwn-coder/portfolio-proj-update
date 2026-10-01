@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy — Arif Zakwan</title>
+  <meta name="description" content="What this portfolio records, what it does not, and how to opt out. No cookies, no third-party analytics.">
+  <meta property="og:title" content="Privacy — Arif Zakwan">
+  <meta property="og:description" content="What this portfolio records when you use the contact form, and how to opt out.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://arfzkwn-coder.github.io/portfolio-proj/privacy.html">
+  <meta property="og:image" content="https://arfzkwn-coder.github.io/portfolio-proj/og-image.png">
+  <link rel="canonical" href="https://arfzkwn-coder.github.io/portfolio-proj/privacy.html">
+  <meta name="theme-color" content="#f5f2ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+</head>
+<body class="notfound-page">
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <nav id="nav">
+    <a href="index.html" class="nav-logo">Arif Zakwan</a>
+    <a class="nav-cta" href="resume.html">Résumé ↗</a>
+  </nav>
+
+  <main id="main" class="notfound">
+    <section aria-labelledby="privacy-title">
+      <div class="section-header">
+        <span class="section-number" aria-hidden="true">§</span>
+        <h1 class="section-title" id="privacy-title">Privacy</h1>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="legal">
+        <p class="legal-lede">
+          Short version: this site sets no cookies and runs no third-party analytics.
+          The only personal information it sends anywhere is what you type into the
+          contact form, along with a little context — one thing at a time below.
+        </p>
+
+        <h2>What the contact form records</h2>
+        <p>When you submit the form, these values are sent to my automation platform (Pabbly Connect) so I can reply:</p>
+        <ul>
+          <li>your name, email address, chosen topic and message;</li>
+          <li>the page you submitted from and, if your browser sent one, the referring page;</li>
+          <li>any <code>utm_</code> campaign parameters in the address you arrived on;</li>
+          <li>which of my outbound links you clicked on this visit — GitHub, LinkedIn or a certificate — and how many times;</li>
+          <li>basic browser context: your language, time zone, screen and window size;</li>
+          <li>a random identifier, regenerated every browser session, so those clicks can be matched to your submission. It is not tied to you and does not persist after you close the tab.</li>
+        </ul>
+
+        <h2>What it does not record</h2>
+        <ul>
+          <li>No cookies, and no third-party analytics, advertising or session-recording scripts.</li>
+          <li>No IP address is stored in your browser or sent on to me by this site.</li>
+          <li>No tracking at all on any page other than this portfolio and the résumé.</li>
+        </ul>
+
+        <h2>Why outbound clicks are counted</h2>
+        <p>
+          Knowing that a visitor looked at my GitHub before getting in touch tells me
+          which part of the page did its job. Those clicks are counted in your own
+          browser and are only attached to you if you go on to submit the form — a
+          click on its own never leaves your browser and never reaches my automation.
+        </p>
+
+        <h2>Where it goes</h2>
+        <p>
+          Submissions are received by Pabbly Connect, which passes them to the tools
+          my automation is built from — the ones I use to keep track of enquiries and
+          reply to them. What those tools do with the data is my responsibility, and
+          I keep it to replying to you and recording that we spoke. Ask me and I will
+          delete anything I hold about you.
+        </p>
+
+        <h2>How to opt out</h2>
+        <p>
+          Send the <em>Do Not Track</em> or <em>Global Privacy Control</em> signal from a
+          browser that supports it and this site stops sending anything at all: no click
+          counts, and the form falls back to opening your own email app, which never
+          touches my automation. Ad and script blockers will also stop it, and nothing
+          on the page breaks if they do.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          Questions, or a deletion request:
+          <a href="mailto:arifzakwan2001@gmail.com">arifzakwan2001@gmail.com</a>.
+        </p>
+
+        <p class="legal-foot">Last updated 1 October 2026.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© <span id="year">2026</span> Arif Zakwan</span>
+    <span>IT Enthusiast &amp; Automation Specialist · Malaysia</span>
+    <span class="footer-links">
+      <a href="index.html" class="footer-link">Portfolio</a>
+      <a href="mailto:arifzakwan2001@gmail.com" class="footer-link">Email</a>
+    </span>
+  </footer>
+
+  <script>
+    /* Keeps the footer year current. The page is complete without it. */
+    (function () {
+      var year = document.getElementById('year');
+      if (year) year.textContent = String(new Date().getFullYear());
+    })();
+  </script>
+</body>
+</html>

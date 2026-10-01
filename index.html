@@ -384,7 +384,8 @@
         <div class="cert-issuer">Google</div>
         <div class="cert-name">Google Data Analytics Professional Certificate</div>
         <div class="cert-year">2024</div>
-        <a href="https://www.coursera.org/professional-certificates/google-data-analytics" target="_blank" rel="noopener noreferrer" class="cert-verify" aria-label="Verify the Google Data Analytics Professional Certificate on Coursera (opens in a new tab)">Verify ↗</a>
+        <a href="https://www.coursera.org/professional-certificates/google-data-analytics" target="_blank" rel="noopener noreferrer" class="cert-verify" aria-label="Verify the Google Data Analytics Professional Certificate on Coursera (opens in a new tab)"
+           data-track="outbound" data-track-channel="coursera">Verify ↗</a>
       </div>
     </div>
   </section>
@@ -411,10 +412,12 @@
       </div>
       <div class="contact-right reveal">
         <div class="contact-links">
-          <a href="https://github.com/ArfZkwn-coder" target="_blank" rel="noopener noreferrer" class="contact-link" data-cursor="Open">
+          <a href="https://github.com/ArfZkwn-coder" target="_blank" rel="noopener noreferrer" class="contact-link" data-cursor="Open"
+             data-track="outbound" data-track-channel="github">
             <span>GitHub</span><span class="arrow">↗</span>
           </a>
-          <a href="https://www.linkedin.com/in/arif-zakwan" target="_blank" rel="noopener noreferrer" class="contact-link" data-cursor="Open">
+          <a href="https://www.linkedin.com/in/arif-zakwan" target="_blank" rel="noopener noreferrer" class="contact-link" data-cursor="Open"
+             data-track="outbound" data-track-channel="linkedin">
             <span>LinkedIn</span><span class="arrow">↗</span>
           </a>
           <a href="mailto:arifzakwan2001@gmail.com" class="contact-link">
@@ -425,8 +428,20 @@
         <!-- To send without opening a mail app: create a free form at formspree.io (or web3forms.com)
              and paste its URL into data-endpoint below. Empty = falls back to mailto.
              novalidate: this form reports its own inline, focusable errors (see initForm in main.js)
-             instead of relying on the browser's transient bubbles. -->
-        <form class="contact-form" id="contactForm" data-endpoint="" novalidate>
+             instead of relying on the browser's transient bubbles.
+
+             data-track-endpoint: where a submission is sent (see js/tracking.js).
+               - a Pabbly Connect webhook URL → the page posts straight to the workflow
+               - a relay Worker URL          → the Worker validates, then forwards
+               - empty                       → tracking off; the form only emails
+
+             NOTE: a webhook URL in public markup is readable by anyone, who could then
+             post into the workflow. Clear this attribute to turn tracking off, and
+             rotate the URL in Pabbly if it is ever abused. See relay/README.md for the
+             relay option, which keeps the URL server-side. -->
+        <form class="contact-form" id="contactForm" data-endpoint=""
+              data-track-endpoint="https://connect.pabbly.com/webhook-listener/webhook/IjU3NjEwNTZkMDYzMjA0MzA1MjZiNTUzYyI_3D_pc/IjU3NjcwNTY4MDYzMTA0M2Q1MjY1NTUzNzUxMzEi_pc"
+              novalidate>
           <div class="form-row">
             <div class="form-field">
               <label for="fname">Name <span class="field-req" aria-hidden="true">*</span></label>
@@ -626,6 +641,7 @@
     <span>IT Enthusiast &amp; Automation Specialist · Malaysia</span>
     <span class="footer-links">
       <a href="mailto:arifzakwan2001@gmail.com" class="footer-link">Email</a>
+      <a href="privacy.html" class="footer-link">Privacy</a>
       <a href="#hero" class="footer-link">↑ Back to top</a>
     </span>
   </footer>
@@ -634,5 +650,6 @@
   <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
   <script defer src="js/main.js"></script>
+  <script defer src="js/tracking.js"></script>
 </body>
 </html>

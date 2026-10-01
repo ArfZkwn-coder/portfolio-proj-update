@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- data-track-endpoint: tracked outbound links (GitHub, LinkedIn) queue a click
+     count here and send it with a form submission. There is no form on this page,
+     so the endpoint lives on <html>. Empty = tracking off. The automation's own
+     webhook URL is public when placed here; see the note in index.html. -->
+<html lang="en" data-track-endpoint="https://connect.pabbly.com/webhook-listener/webhook/IjU3NjEwNTZkMDYzMjA0MzA1MjZiNTUzYyI_3D_pc/IjU3NjcwNTY4MDYzMTA0M2Q1MjY1NTUzNzUxMzEi_pc">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,6 +38,7 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/resume.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+  <script defer src="js/tracking.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#resume">Skip to content</a>
@@ -55,8 +60,10 @@
       <dl class="resume-contact">
         <div><dt>Email</dt><dd><a href="mailto:arifzakwan2001@gmail.com">arifzakwan2001@gmail.com</a></dd></div>
         <div><dt>Location</dt><dd>Malaysia</dd></div>
-        <div><dt>GitHub</dt><dd><a href="https://github.com/ArfZkwn-coder" target="_blank" rel="noopener noreferrer">github.com/ArfZkwn-coder</a></dd></div>
-        <div><dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/arif-zakwan" target="_blank" rel="noopener noreferrer">linkedin.com/in/arif-zakwan</a></dd></div>
+        <div><dt>GitHub</dt><dd><a href="https://github.com/ArfZkwn-coder" target="_blank" rel="noopener noreferrer"
+          data-track="outbound" data-track-channel="github">github.com/ArfZkwn-coder</a></dd></div>
+        <div><dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/arif-zakwan" target="_blank" rel="noopener noreferrer"
+          data-track="outbound" data-track-channel="linkedin">linkedin.com/in/arif-zakwan</a></dd></div>
       </dl>
     </header>
 
@@ -223,7 +230,10 @@
       Available for freelance projects and full-time roles ·
       <a href="mailto:arifzakwan2001@gmail.com">arifzakwan2001@gmail.com</a>
     </p>
-    <p class="resume-foot-year">© <span id="resumeYear">2026</span> Arif Zakwan</p>
+    <p class="resume-foot-year">
+      © <span id="resumeYear">2026</span> Arif Zakwan ·
+      <a href="privacy.html">Privacy</a>
+    </p>
   </main>
 
   <script>

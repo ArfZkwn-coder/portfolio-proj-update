@@ -15,12 +15,12 @@ test('all local assets are relative (root-absolute paths 404 on a Pages project 
     .filter((u) => u && !/^(https?:|data:|#|mailto:)/.test(u));
 
   const refs = localRefs(document);
-  assert.deepEqual(refs.sort(), ['css/style.css', 'css/tokens.css', 'js/main.js']);
+  assert.deepEqual(refs.sort(), ['css/style.css', 'css/tokens.css', 'js/main.js', 'js/tracking.js']);
 
   // resume.html is a second document the repo must ship consistently.
   const resumeHtml = fs.readFileSync('../resume.html', 'utf8');
   const resumeDoc = new JSDOM(resumeHtml).window.document;
-  assert.deepEqual(localRefs(resumeDoc).sort(), ['css/resume.css', 'css/tokens.css']);
+  assert.deepEqual(localRefs(resumeDoc).sort(), ['css/resume.css', 'css/tokens.css', 'js/tracking.js']);
 
   // totem.js is loaded lazily via import('./totem.js') from main.js, so it never appears as a <script src>
   assert.ok(/import\('\.\/totem\.js'\)/.test(fs.readFileSync('../js/main.js', 'utf8')), 'main.js lazy-loads ./totem.js');
@@ -146,6 +146,39 @@ test('structured data: both pages publish the same person', () => {
   assert.equal(fromResume.jobTitle, fromRoot.jobTitle, 'the same job title');
   assert.deepEqual(fromResume.sameAs, fromRoot.sameAs, 'the same profile links');
   assert.ok(fromResume.url.startsWith(SITE), 'the résumé links back to the portfolio');
+});
+
+test('privacy: the page exists, is reachable, and is honest about what is collected', () => {
+  const html = fs.readFileSync('../privacy.html', 'utf8');
+  const doc = new JSDOM(html).window.document;
+
+  assert.equal(doc.querySelector('link[rel="canonical"]').getAttribute('href'), `${SITE}/privacy.html`);
+  for (const page of ['index.html', 'resume.html', '404.html']) {
+    const source = fs.readFileSync(`../${page}`, 'utf8');
+    assert.ok(/href="privacy\.html"/.test(source), `${page} links to the privacy page`);
+  }
+
+  const text = doc.body.textContent.replace(/\s+/g, ' ').toLowerCase();
+  // The page makes specific promises; the code has to keep them.
+  for (const claim of ['no cookies', 'no third-party analytics', 'global privacy control', 'do not track']) {
+    assert.ok(text.includes(claim), `privacy page states: ${claim}`);
+  }
+  assert.ok(text.includes('only'), 'it distinguishes what is and is not recorded');
+
+  // The processor the page names must be the one the relay is wired to, or the
+  // policy describes a system that no longer exists.
+  const relayReadme = fs.readFileSync('../relay/README.md', 'utf8');
+  const processor = /PABBLY_WEBHOOK_URL/.test(relayReadme) ? 'pabbly' : null;
+  assert.ok(processor, 'the relay documents a webhook destination');
+  assert.ok(text.includes(processor), `privacy page names the processor: ${processor}`);
+  // And it must not still be claiming a platform the relay no longer uses.
+  assert.ok(!text.includes('hubspot'), 'the privacy page has no stale processor name');
+
+  // The code must actually honour the signals the page promises.
+  const tracking = fs.readFileSync('../js/tracking.js', 'utf8');
+  assert.ok(/globalPrivacyControl/.test(tracking), 'GPC is read by the tracker');
+  assert.ok(/doNotTrack/.test(tracking), 'DNT is read by the tracker');
+  assert.ok(!/document\.cookie/.test(tracking), 'the tracker sets no cookie');
 });
 
 test('"Open" cursor label is wired to external links that exist', () => {

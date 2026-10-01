@@ -29,7 +29,9 @@ test('sitemap.xml lists only pages that exist, on the canonical host', () => {
   assert.equal((xml.match(/<\/url>/g) || []).length, (xml.match(/<url>/g) || []).length, 'every url is closed');
 
   const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-  assert.deepEqual(urls.sort(), [`${SITE}/`, `${SITE}/resume.html`], 'index and résumé, nothing else');
+  assert.deepEqual(urls.sort(),
+    [`${SITE}/`, `${SITE}/privacy.html`, `${SITE}/resume.html`],
+    'every real document is listed, and nothing else');
 
   for (const url of urls) {
     const file = url.endsWith('/') ? 'index.html' : url.slice(SITE.length + 1);

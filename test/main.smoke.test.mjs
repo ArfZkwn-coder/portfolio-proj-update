@@ -91,6 +91,32 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
   return { window, document, errors, warns, io, root: document.documentElement };
 }
 
+// js/tracking.js is a separate deferred script in index.html, so the harness
+// loads it the same way the browser does: after main.js, in the same window.
+// jsdom's `outside-only` mode never fires DOMContentLoaded, so the public
+// `start()` is called explicitly — which is exactly what a deferred script
+// relies on happening by itself in a real browser.
+function loadTracking(window) {
+  const source = fs.readFileSync('../js/tracking.js', 'utf8');
+  window.eval(source);
+  if (!window.PortfolioTracking) return null;
+  return window.PortfolioTracking.start();
+}
+
+// Collects every request the page makes, so "sends nothing" is provable.
+function spyOnRequests(window) {
+  const calls = [];
+  window.fetch = async (url, init) => {
+    calls.push({ url: String(url), method: (init && init.method) || 'GET', body: init && init.body });
+    return { ok: true, status: 200 };
+  };
+  window.navigator.sendBeacon = (url, blob) => {
+    calls.push({ url: String(url), method: 'BEACON', body: blob });
+    return true;
+  };
+  return calls;
+}
+
 test('baseline: no libs, coarse pointer — page boots, no errors, content never hidden', async () => {
   const { document, errors, root } = makeEnv();
   assert.equal(document.getElementById('year').textContent, String(new Date().getFullYear()));
@@ -413,6 +439,162 @@ test('certifications: the verify link is reachable without a hover', () => {
   assert.ok(!verify.hasAttribute('hidden'), 'not hidden from assistive tech');
   assert.ok(!verify.hasAttribute('tabindex') || verify.getAttribute('tabindex') !== '-1', 'in the tab order');
   assert.ok(verify.getAttribute('aria-label'), 'the bare "Verify" text has a descriptive name');
+});
+
+test('tracking: with no relay configured, the page sends nothing at all', () => {
+  const { window, document } = makeEnv();
+  const calls = spyOnRequests(window);
+  const runtime = loadTracking(window);
+
+  assert.ok(runtime, 'the tracker exposes a runtime');
+  assert.equal(runtime.shouldTrack(), false, 'an empty data-track-endpoint means off');
+
+  // A click on a tracked link, then a full form submission.
+  document.querySelector('[data-track-channel="linkedin"]').dispatchEvent(
+    new window.MouseEvent('click', { bubbles: true, cancelable: true })
+  );
+  const form = document.getElementById('contactForm');
+  document.getElementById('fname').value = 'Test User';
+  document.getElementById('femail').value = 't@example.com';
+  document.getElementById('fmessage').value = 'Hello';
+  document.getElementById('ftopic').value = 'A job opportunity';
+  form.dispatchEvent(new window.Event('submit', { cancelable: true, bubbles: true }));
+
+  return new Promise((resolve) => setTimeout(resolve, 30)).then(() => {
+    assert.deepEqual(calls, [], 'no requests escape the page');
+    assert.match(document.getElementById('formStatus').textContent, /Opening your email app/,
+      'and the mailto fallback still runs');
+  });
+});
+
+test('tracking: a configured relay receives the submission plus the clicks before it', async () => {
+  const { window, document } = makeEnv();
+  const calls = spyOnRequests(window);
+  document.getElementById('contactForm').setAttribute('data-track-endpoint', 'https://relay.test');
+  // The harness runs on http://localhost, where tracking is deliberately off, so
+  // the test opts into the documented seam rather than the production rule being
+  // weakened. The next test proves localhost is silent without it.
+  window.__portfolioTrackingTestMode = true;
+
+  const runtime = loadTracking(window);
+  assert.equal(runtime.shouldTrack(), true, 'a configured https endpoint turns tracking on');
+
+  // Two clicks before the submission is what attribution means.
+  for (const channel of ['linkedin', 'github']) {
+    document.querySelector(`[data-track-channel="${channel}"]`).dispatchEvent(
+      new window.MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+  }
+  assert.equal(calls.length, 2, 'each click is sent as it happens');
+  assert.ok(calls.every((call) => call.url === 'https://relay.test/event'), 'to the event route');
+  assert.ok(calls.every((call) => call.method === 'BEACON'), 'via sendBeacon, so it survives the navigation');
+
+  const form = document.getElementById('contactForm');
+  document.getElementById('fname').value = 'Test User';
+  document.getElementById('femail').value = 't@example.com';
+  document.getElementById('fmessage').value = 'Interested in the role';
+  document.getElementById('ftopic').value = 'A job opportunity';
+  form.dispatchEvent(new window.Event('submit', { cancelable: true, bubbles: true }));
+  await sleep(40);
+
+  const submit = calls.find((call) => call.url === 'https://relay.test/submit');
+  assert.ok(submit, 'the submission reaches the relay');
+  assert.equal(submit.method, 'POST', 'a submission is a normal fetch, not a beacon');
+  const payload = JSON.parse(submit.body);
+  assert.equal(payload.name, 'Test User');
+  assert.equal(payload.email, 't@example.com');
+  assert.equal(payload.message, 'Interested in the role');
+  assert.equal(payload.topic, 'A job opportunity');
+  assert.deepEqual(payload.clicks.map((click) => click.channel), ['linkedin', 'github'],
+    'the clicks that led here travel with the submission');
+  assert.ok(!('company' in payload), 'the honeypot field is never part of the payload');
+});
+
+test('tracking: a privacy signal silences the tracker completely', async () => {
+  const { window, document } = makeEnv();
+  const calls = spyOnRequests(window);
+  document.getElementById('contactForm').setAttribute('data-track-endpoint', 'https://relay.test');
+  window.__portfolioTrackingTestMode = true;
+  Object.defineProperty(window.navigator, 'globalPrivacyControl', { value: true, configurable: true });
+
+  const runtime = loadTracking(window);
+  assert.equal(runtime.shouldTrack(), false, 'GPC turns tracking off even in test mode');
+  document.querySelector('[data-track-channel="linkedin"]').dispatchEvent(
+    new window.MouseEvent('click', { bubbles: true, cancelable: true })
+  );
+  await sleep(20);
+  assert.deepEqual(calls, [], 'not even a click event is sent');
+});
+
+test('tracking: localhost is silent unless the test seam is explicitly on', () => {
+  const { window, document } = makeEnv();
+  document.getElementById('contactForm').setAttribute('data-track-endpoint', 'https://relay.test');
+  const runtime = loadTracking(window);
+  assert.equal(window.location.hostname, 'localhost', 'the harness really is on localhost');
+  assert.equal(runtime.shouldTrack(), false, 'a local server never writes into the live workflow');
+});
+
+test('tracking: a direct webhook is called once per submission, and never for an anonymous click', async () => {
+  const { window, document } = makeEnv();
+  const calls = spyOnRequests(window);
+  // A direct destination is recognised by its host, so the page posts straight
+  // to the automation with no relay in between.
+  document.getElementById('contactForm').setAttribute(
+    'data-track-endpoint', 'https://connect.pabbly.com/webhook-listener/webhook/test-token'
+  );
+  window.__portfolioTrackingTestMode = true;
+
+  const runtime = loadTracking(window);
+  assert.equal(runtime.shouldTrack(), true);
+
+  // An anonymous click must not reach the automation: the count stays local.
+  document.querySelector('[data-track-channel="linkedin"]').dispatchEvent(
+    new window.MouseEvent('click', { bubbles: true, cancelable: true })
+  );
+  await sleep(20);
+  assert.deepEqual(calls, [], 'a click alone sends nothing to the webhook');
+  assert.equal(runtime.readQueue().length, 1, 'but the count is kept for the submission');
+
+  const form = document.getElementById('contactForm');
+  document.getElementById('fname').value = 'Test User';
+  document.getElementById('femail').value = 't@example.com';
+  document.getElementById('fmessage').value = 'Hello from the direct path';
+  document.getElementById('ftopic').value = 'A job opportunity';
+  form.dispatchEvent(new window.Event('submit', { cancelable: true, bubbles: true }));
+  await sleep(40);
+
+  assert.equal(calls.length, 1, 'exactly one request reaches the webhook');
+  const [call] = calls;
+  assert.equal(call.url, 'https://connect.pabbly.com/webhook-listener/webhook/test-token',
+    'straight to the configured webhook, with no path appended');
+  assert.equal(call.method, 'POST');
+
+  const payload = JSON.parse(call.body);
+  assert.equal(payload.event, 'form_submission');
+  assert.equal(payload.email, 't@example.com');
+  assert.equal(payload.message, 'Hello from the direct path');
+  assert.equal(payload.clicks_total, '1', 'the click that preceded it travels with the submission');
+  assert.equal(payload.clicks_linkedin, '1');
+  assert.equal(payload.last_channel, 'linkedin');
+  assert.equal(runtime.readQueue().length, 0, 'the queue is cleared only after the webhook accepts');
+});
+
+test('tracking: a failing relay never breaks the visitor\'s submission', async () => {
+  const { window, document } = makeEnv();
+  const calls = [];
+  window.fetch = async (url) => { calls.push(String(url)); throw new Error('relay down'); };
+  window.navigator.sendBeacon = () => true;
+  document.getElementById('contactForm').setAttribute('data-track-endpoint', 'https://relay.test');
+  window.__portfolioTrackingTestMode = true;
+
+  const runtime = loadTracking(window);
+  const delivered = await runtime.submit({ name: 'A', email: 'a@b.co', message: 'hi', topic: 'Something else' });
+  assert.equal(delivered, false, 'the failure is reported to the caller, not thrown');
+  assert.equal(calls.length, 1, 'the attempt was made');
+
+  // And the queued clicks survive for a later retry rather than being cleared.
+  runtime.trackClick('github');
+  assert.ok(runtime.readQueue().length >= 1, 'the click is still queued');
 });
 
 test('case studies: opening pushes a deep link, locks the page, and focuses the heading', () => {
