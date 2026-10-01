@@ -1,0 +1,11 @@
+{
+  "name": "portfolio-webhook-relay",
+  "private": true,
+  "description": "Cloudflare Worker that forwards validated portfolio form submissions to a Pabbly Connect webhook",
+  "type": "module",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}

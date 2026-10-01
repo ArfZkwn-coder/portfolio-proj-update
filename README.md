@@ -9,14 +9,17 @@ Single-page portfolio for an IT enthusiast and automation specialist, plus a pri
 ```
 index.html            the portfolio — all page content (edit your text here)
 resume.html           print-first résumé, built from the same copy
+privacy.html          what is recorded, and how to opt out
 404.html              GitHub Pages fallback; pins <base> because it is served at any depth
 css/tokens.css        the only place colours, sizes, space and motion are declared
-css/style.css         index.html + 404.html component styles, incl. print rules
+css/style.css         index.html + 404.html + privacy.html styles, incl. print rules
 css/resume.css        résumé layout + its A4 print rules
 js/main.js            scroll, nav, cursor, intro, form, case-study dialogs, totem loader
+js/tracking.js        sends form submissions to the webhook relay (off by default)
 js/totem.js           Three.js skills "totem" (lazy-loaded, desktop + WebGL only)
+relay/                Cloudflare Worker that holds the webhook URL (see relay/README.md)
 robots.txt            allows crawling, points at the sitemap
-sitemap.xml           the two real pages (maintained by hand — keep lastmod honest)
+sitemap.xml           the three real pages (maintained by hand — keep lastmod honest)
 .nojekyll             stop Pages from running Jekyll over the output
 og-image.png          social preview (1200×630)
 test/                 dev-only checks (not needed to run the site)
@@ -105,6 +108,62 @@ HTML with a two-line inline script for the print button — no dependency on
 - `index.html` also has a print block, so printing the portfolio is readable
   rather than a stack of blank reveals.
 
+## Contact form → Pabbly Connect
+
+The contact form posts to a **Pabbly Connect webhook**. The URL lives in the
+markup (`data-track-endpoint`), and the tracker detects the route from the host:
+
+```
+form submit ──→ Pabbly webhook URL in data-track-endpoint ──→ your workflow
+                (direct mode: one request, no infrastructure)
+
+form submit ──→ relay Worker URL in data-track-endpoint ──→ Pabbly ──→ your workflow
+                (relay mode: URL stays secret, validated and signed)
+```
+
+It ships in **direct mode** with the webhook URL in [index.html](index.html)'s
+form and on [resume.html](resume.html)'s `<html>`.
+
+### The direct-mode trade-off (read this)
+
+A webhook URL in public markup is **readable by anyone** — view-source, or the
+GitHub repo — and whoever has it can post into your workflow. That is the price
+of not running infrastructure; it was a deliberate choice, not an oversight.
+
+Two consequences worth acting on:
+
+1. **Treat the workflow as untrusted input.** Validate email format and cap
+   field lengths in the workflow itself, because nothing sits in front of it —
+   no origin check, no rate limit, no size cap, no honeypot re-check.
+2. **If it is ever abused**, delete that Webhook Trigger in Pabbly (which kills
+   the URL) and create a new one. Clearing `data-track-endpoint` turns tracking
+   off instantly without any other change.
+
+The [relay/](relay/) Worker exists to remove exactly this trade-off: it keeps the
+webhook URL server-side and adds the checks. Deploy it, put the Worker URL in
+`data-track-endpoint`, and direct mode stops being used — the tracker picks the
+route from the host automatically.
+
+- **What is sent:** one flat JSON object — form fields, click attribution,
+  campaign parameters and browser context — with the contract tabulated in
+  [relay/README.md](relay/README.md). The field names are identical in both
+  modes, so a workflow does not care which route the data took.
+- **Clicks are counted anonymously.** They are queued in the visitor's own
+  browser (capped, 7-day TTL) and only travel with a submission the visitor chose
+  to send. In direct mode an anonymous click sends **nothing**, so the workflow
+  never learns about a visitor who did not contact you.
+- **No cookies, no third-party scripts.** The only identifier is a random
+  per-tab value; [privacy.html](privacy.html) states this, and a test checks the
+  tracker keeps the promise.
+- **Off in three more ways:** a local host, or a `Global Privacy Control` /
+  `Do Not Track: 1` signal, each mean nothing leaves the page.
+- **Accepted is not processed.** Pabbly answers `200` as soon as it receives a
+  request, before the workflow runs, so "Message sent" means *accepted*. Check
+  Pabbly's **Task History** for what the workflow actually did.
+
+To disable: clear `data-track-endpoint` on `index.html`'s form and on
+`resume.html`'s `<html>`, and remove `js/tracking.js` from both pages.
+
 ## Editing
 
 - All portfolio text lives in `index.html`. If you add or remove a skill, update the hard-coded `/ 06` totem counter in the Skills section; `npm test` fails if it drifts.
@@ -139,3 +198,5 @@ run `npm test`, or `cd test` first.
 | `test/case-studies.test.mjs` | one opener per card, labelled dialog + close control, card ↔ dialog copy cannot drift, no stray URLs |
 | `test/static-site.test.mjs` | robots ↔ sitemap agreement, sitemap entries resolve to real files, 404 is no-indexed and self-contained, `.nojekyll` present |
 | `test/totem.test.mjs` | the 3D layout/rotation/paint math |
+| `test/tracking.test.mjs` | the client tracker: config gates, privacy signals, payload contract and caps, queue pruning, markup instrumentation, and that no credential ships |
+| `test/relay.test.mjs` | the relay's validation boundary: origin allowlist, size and rate limits, schema enforcement, markup rejection, honeypot, HMAC signature, and the flat Mapper-safe payload |

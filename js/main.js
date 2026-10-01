@@ -654,6 +654,12 @@
       const topic = String(data.get('topic') || '').trim();
       const endpoint = form.dataset.endpoint;
 
+      // The webhook relay (js/tracking.js) is a parallel delivery path: it carries
+      // the submission plus the outbound clicks that led to it. It never gates
+      // the visitor — if it is unconfigured or fails, the paths below still run.
+      const tracking = window.PortfolioTracking && window.PortfolioTracking.runtime;
+      if (tracking) tracking.submit({ name, email, message, topic });
+
       if (endpoint) {
         setBusy(true);
         try {
