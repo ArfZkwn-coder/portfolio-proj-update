@@ -1,0 +1,148 @@
+// Guards the deploy-time facts that unit tests can't see: this is a GitHub Pages *project* site
+// (served from /portfolio-proj/), so asset paths must be relative, and no placeholder may ship.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { JSDOM } from 'jsdom';
+
+const html = fs.readFileSync('../index.html', 'utf8');
+const { document } = new JSDOM(html).window;
+const SITE = 'https://arfzkwn-coder.github.io/portfolio-proj';
+
+test('all local assets are relative (root-absolute paths 404 on a Pages project site) and exist on disk', () => {
+  const refs = [...document.querySelectorAll('link[href], script[src]')]
+    .map((el) => el.getAttribute('href') || el.getAttribute('src'))
+    .filter((u) => u && !/^(https?:|data:|#|mailto:)/.test(u));
+  assert.deepEqual(refs.sort(), ['css/style.css', 'js/main.js']);
+  // totem.js is loaded lazily via import('./totem.js') from main.js, so it never appears as a <script src>
+  assert.ok(/import\('\.\/totem\.js'\)/.test(fs.readFileSync('../js/main.js', 'utf8')), 'main.js lazy-loads ./totem.js');
+  assert.ok(fs.existsSync('../js/totem.js'), 'js/totem.js exists');
+  for (const ref of refs) {
+    assert.ok(!ref.startsWith('/'), `root-absolute path breaks under /portfolio-proj/: ${ref}`);
+    assert.ok(!ref.includes('site/'), `stale site/ subfolder reference: ${ref}`);
+    assert.ok(fs.existsSync(`../${ref}`), `missing file for ${ref}`);
+  }
+});
+
+test('social/SEO metadata is absolute and the og-image is a real PNG', () => {
+  const meta = (p) => document.querySelector(`meta[property="${p}"]`)?.getAttribute('content');
+  assert.equal(meta('og:url'), SITE);
+  assert.equal(meta('og:image'), `${SITE}/og-image.png`);
+  assert.equal(document.querySelector('link[rel="canonical"]').getAttribute('href'), SITE);
+  const png = fs.readFileSync('../og-image.png');
+  assert.deepEqual([...png.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 'og-image.png has a PNG signature');
+  const ld = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
+  assert.equal(ld['@type'], 'Person'); assert.equal(ld.name, 'Arif Zakwan');
+});
+
+test('no placeholder content ships: no example.com links, no hidden credential links, no TODO text', () => {
+  assert.ok(!/example\.com/.test(html), 'example.com placeholder URL found');
+  assert.equal(document.querySelectorAll('.cert-verify[hidden]').length, 0);
+  assert.ok(!/\bTODO\b/.test(document.body.textContent));
+  for (const a of document.querySelectorAll('.cert-verify')) assert.match(a.getAttribute('href'), /^https:\/\//);
+});
+
+test('skills: the totem counter matches the number of skill cards, and the real Linux skill is present', () => {
+  const cards = document.querySelectorAll('.skill-card');
+  const names = [...cards].map((c) => c.querySelector('.skill-name').textContent.trim());
+  assert.ok(names.includes('Linux System Administration'));
+  assert.ok(!names.some((n) => /Next\.js/.test(n)), 'stale Next.js placeholder skill');
+  const counter = document.body.textContent.match(/\/\s*(\d{2})/);
+  assert.ok(counter, 'totem counter text "/ NN" present');
+  assert.equal(Number(counter[1]), cards.length, 'totem counter is hard-coded in HTML; keep it in sync with the card count');
+});
+
+test('real experience, certification and project content is intact', () => {
+  const text = document.body.textContent.replace(/\s+/g, ' ');
+  for (const needle of ['Team Fames Sdn Bhd', 'Universiti Teknologi MARA (UiTM)', 'Diploma in Computer Science', 'S&S Hana Enterprise', 'AqWise', 'Google Data Analytics Professional Certificate', 'Personal Homelab & Game Server', 'Dabox Chatbot AI']) {
+    assert.ok(text.includes(needle), `missing: ${needle}`);
+  }
+  assert.equal(document.querySelectorAll('.timeline-item').length, 3);
+  assert.equal(document.querySelectorAll('.cert-card').length, 3, '2 degrees + 1 certificate');
+  assert.equal(document.querySelectorAll('.cert-verify').length, 1, 'only the certificate has a verify link');
+  assert.equal(document.querySelectorAll('.project-card').length, 3);
+  assert.equal(document.querySelector('.about-fact-value').textContent.trim(), '1');
+});
+
+test('accessibility plumbing ships with the markup', () => {
+  // The icon-only menu button has no text, so it needs a name of its own.
+  const hamburger = document.getElementById('hamburger');
+  assert.ok(hamburger.getAttribute('aria-label'), 'hamburger has an accessible name');
+  assert.equal(hamburger.getAttribute('aria-controls'), 'mobileMenu');
+  assert.notEqual(hamburger.getAttribute('tabindex'), '-1', 'menu button stays reachable');
+
+  const menu = document.getElementById('mobileMenu');
+  assert.equal(menu.getAttribute('role'), 'dialog', 'the overlay is announced as a dialog');
+  assert.equal(menu.getAttribute('aria-modal'), 'true');
+  assert.ok(menu.hasAttribute('inert'), 'closed menu is inert until opened');
+
+  // Decorative icons must not be announced or focusable.
+  const svgs = [...document.querySelectorAll('svg')];
+  assert.ok(svgs.length >= 12, `icons present: ${svgs.length}`);
+  for (const svg of svgs) {
+    assert.equal(svg.getAttribute('aria-hidden'), 'true', 'decorative svg is aria-hidden');
+    assert.equal(svg.getAttribute('focusable'), 'false', 'decorative svg is not focusable');
+    assert.equal(svg.getAttribute('stroke'), 'currentColor', 'icon stroke follows the accent token');
+  }
+
+  // Required inputs describe themselves and own an error slot.
+  for (const id of ['fname', 'femail', 'fmessage']) {
+    const field = document.getElementById(id);
+    const describedBy = field.getAttribute('aria-describedby');
+    assert.ok(describedBy, `${id} has aria-describedby`);
+    const error = document.getElementById(describedBy);
+    assert.ok(error, `${id} points at a real error element`);
+    assert.ok(error.hasAttribute('hidden'), `${id} error starts hidden`);
+    assert.ok(error.textContent.trim().length > 0, `${id} error has copy without JS`);
+  }
+  assert.equal(document.getElementById('contactForm').hasAttribute('novalidate'), true, 'inline validation owns the messages');
+});
+
+test('"Open" cursor label is wired to external links that exist', () => {
+  const targets = [...document.querySelectorAll('[data-cursor="Open"]')];
+  assert.equal(targets.length, 2);
+  for (const t of targets) assert.equal(t.getAttribute('target'), '_blank');
+});
+
+test('sections: nav and mobile menu follow DOM order, every link resolves, numbers run 01–06 in order', () => {
+  const sectionIds = [...document.querySelectorAll('main > section')].map((s) => s.id);
+  assert.deepEqual(sectionIds, ['hero', 'about', 'projects', 'skills', 'experience', 'education', 'contact']);
+  const hrefs = (sel) => [...document.querySelectorAll(sel)].map((a) => a.getAttribute('href').slice(1));
+  const expected = sectionIds.filter((id) => id !== 'hero');
+  assert.deepEqual(hrefs('.nav-links a'), expected, 'desktop nav order');
+  assert.deepEqual(hrefs('#mobileMenu a'), expected, 'mobile menu order');
+  const numbers = [...document.querySelectorAll('.section-number')].map((n) => n.textContent.trim());
+  assert.deepEqual(numbers, ['01', '02', '03', '04', '05', '06']);
+  assert.equal(document.getElementById('certifications'), null, 'old #certifications id is gone');
+});
+
+test('hero and contact speak to both audiences', () => {
+  assert.equal(document.querySelector('.hero-cta').getAttribute('href'), '#contact', 'primary action is to get in touch');
+  assert.equal(document.querySelector('.hero-cta-secondary').getAttribute('href'), '#projects');
+  assert.match(document.querySelector('.availability').textContent, /freelance projects and full-time roles/);
+  const select = document.getElementById('ftopic');
+  assert.equal(select.getAttribute('name'), 'topic');
+  // The first option is a disabled placeholder so the visitor makes a real choice;
+  // the three answers the form can submit are asserted by value, which is what
+  // main.js and the email subject actually carry.
+  assert.equal(select.options[0].value, '', 'first option is the empty placeholder');
+  assert.ok(select.options[0].disabled, 'placeholder cannot be submitted');
+  assert.deepEqual(
+    [...select.options].filter((o) => o.value !== '').map((o) => o.value),
+    ['A job opportunity', 'A freelance project', 'Something else']
+  );
+  assert.ok(document.querySelector('label[for="ftopic"]'), 'select has a label');
+});
+
+test('head script: first visit shows the preloader, a repeat visit in the same session skips it', () => {
+  const run = (seen) => {
+    const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', beforeParse(w) { if (seen) w.sessionStorage.setItem('intro-seen', '1'); } });
+    const classes = [...dom.window.document.documentElement.classList];
+    dom.window.close();
+    return classes;
+  };
+  const first = run(false);
+  assert.ok(first.includes('js') && first.includes('is-loading') && !first.includes('is-ready'), `first visit: ${first}`);
+  const repeat = run(true);
+  assert.ok(repeat.includes('js') && repeat.includes('is-ready') && !repeat.includes('is-loading'), `repeat visit: ${repeat}`);
+});

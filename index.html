@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arif Zakwan — IT Enthusiast &amp; Automation</title>
+  <meta name="description" content="Arif Zakwan — Designing, deploying, and optimising AI-driven marketing automation workflows using CRM tools, data analytics, and n8n.">
+  <meta property="og:title" content="Arif Zakwan — Portfolio">
+  <meta property="og:description" content="IT Enthusiast & Automation Specialist. AI-driven workflows, CRM, and n8n automation.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://arfzkwn-coder.github.io/portfolio-proj">
+  <meta property="og:image" content="https://arfzkwn-coder.github.io/portfolio-proj/og-image.png">
+  <link rel="canonical" href="https://arfzkwn-coder.github.io/portfolio-proj">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Arif Zakwan",
+    "jobTitle": "IT Enthusiast & Automation Specialist",
+    "url": "https://arfzkwn-coder.github.io/portfolio-proj",
+    "sameAs": [
+      "https://github.com/ArfZkwn-coder",
+      "https://www.linkedin.com/in/arif-zakwan"
+    ],
+    "knowsAbout": ["AI Automation", "CRM", "n8n", "Data Analytics", "Marketing Automation"]
+  }
+  </script>
+  <meta name="theme-color" content="#f5f2ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- three.js is only downloaded on desktop when the Skills section approaches (see js/main.js) -->
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" } }
+  </script>
+  <script>
+    /* Content stays visible without JS. First visit in a session: the preloader owns the intro
+       (the timeout is a fail-safe so a script error can never trap the page). Repeat visits skip it. */
+    (function () {
+      var c = document.documentElement.classList;
+      var seen = false;
+      try { seen = sessionStorage.getItem('intro-seen') === '1'; } catch (e) { /* storage blocked */ }
+      c.add('js');
+      if (seen) { c.add('is-ready'); return; }
+      c.add('is-loading');
+      setTimeout(function () { c.remove('is-loading'); c.add('is-ready'); }, 6000);
+    })();
+  </script>
+</head>
+<body>
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <span class="preloader-name">Arif Zakwan</span>
+    <span class="preloader-count" id="preloaderCount">000</span>
+  </div>
+
+  <!-- CURSOR (created only for fine pointers) -->
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"><span class="cursor-label" id="cursorLabel"></span></div>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Site menu" inert>
+    <a href="#about">About</a>
+    <a href="#projects">Projects</a>
+    <a href="#skills">Skills</a>
+    <a href="#experience">Experience</a>
+    <a href="#education">Education</a>
+    <a href="#contact">Contact</a>
+  </div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="#hero" class="nav-logo">Arif Zakwan</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="nav-progress" id="navProgress" aria-hidden="true"></span>
+  </nav>
+
+  <main id="main">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-left">
+      <p class="hero-label">IT Enthusiast &amp; Automation Specialist</p>
+      <h1 class="hero-name">Arif<br><em>Zakwan.</em></h1>
+      <p class="hero-lead">I design, deploy and optimise AI-driven marketing automation workflows.</p>
+      <p class="hero-bio">Using CRM tools, data analytics, and AI to enhance customer engagement, operational efficiency, and meaningful business insights.</p>
+      <div class="hero-actions">
+        <a href="#contact" class="hero-cta">Get In Touch →</a>
+        <a href="#projects" class="hero-cta-secondary">View My Work</a>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-capability">
+        <svg class="hero-capability-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+        <div class="hero-capability-text">
+          <div class="hero-capability-mark">n8n</div>
+          <div class="hero-capability-label">Workflow Automation</div>
+        </div>
+      </div>
+      <div class="hero-capability">
+        <svg class="hero-capability-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+        <div class="hero-capability-text">
+          <div class="hero-capability-mark">AI</div>
+          <div class="hero-capability-label">Driven Integrations</div>
+        </div>
+      </div>
+      <div class="hero-capability">
+        <svg class="hero-capability-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+        <div class="hero-capability-text">
+          <div class="hero-capability-mark">CRM</div>
+          <div class="hero-capability-label">Tools &amp; Analytics</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll" aria-hidden="true">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- MARQUEE (decorative; speed follows scroll velocity) -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <div class="marquee-group">
+        <span class="marquee-item">n8n Workflows</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">AI Automation</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">CRM Pipelines</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Data Analytics</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Marketing Automation</span><span class="marquee-sep">✦</span>
+      </div>
+      <div class="marquee-group">
+        <span class="marquee-item">n8n Workflows</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">AI Automation</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">CRM Pipelines</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Data Analytics</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Marketing Automation</span><span class="marquee-sep">✦</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="section-header reveal">
+      <span class="section-number">01</span>
+      <h2 class="section-title">About</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="about-inner">
+      <div class="reveal">
+        <h3 class="about-tagline">Building systems that work <em>while you sleep.</em></h3>
+        <div class="about-body">
+          <p>I'm Arif Zakwan — an IT enthusiast in AI-driven automation and marketing technology. My focus is on building intelligent systems that remove manual bottlenecks and let teams focus on what actually matters.</p>
+          <p>From orchestrating multi-step n8n workflows to integrating AI into CRM pipelines, I bridge the gap between cutting-edge technology and practical business impact.</p>
+        </div>
+      </div>
+      <div class="about-facts reveal">
+        <div class="about-fact">
+          <div class="about-fact-value">1</div>
+          <div class="about-fact-label">Years in Automation</div>
+        </div>
+        <div class="about-fact">
+          <div class="about-fact-value">AI</div>
+          <div class="about-fact-label">First Mindset</div>
+        </div>
+        <div class="about-fact">
+          <div class="about-fact-value">n8n</div>
+          <div class="about-fact-label">Power User</div>
+        </div>
+        <div class="about-fact">
+          <div class="about-fact-value">MY</div>
+          <div class="about-fact-label">Based in Malaysia</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="section-header reveal">
+      <span class="section-number">02</span>
+      <h2 class="section-title">Projects</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="projects-grid">
+      <div class="project-card reveal">
+        <div class="project-index" aria-hidden="true">01</div>
+        <h3 class="project-title">N8n Automations</h3>
+        <p class="project-desc">Automated server management workflows built with n8n — including auto-update routines and real-time server health monitoring delivered via Telegram messages. Keeps infrastructure healthy with zero manual intervention.</p>
+        <p class="project-outcome">Health checks and updates run unattended, with anything unusual pushed to Telegram instead of waiting for a manual check.</p>
+        <div class="project-tags">
+          <span class="tag">n8n</span>
+          <span class="tag">Automation</span>
+          <span class="tag">Telegram API</span>
+          <span class="tag">DevOps</span>
+        </div>
+      </div>
+      <div class="project-card reveal">
+        <div class="project-index" aria-hidden="true">02</div>
+        <h3 class="project-title">Personal Homelab &amp; Game Server</h3>
+        <p class="project-desc">Maintain a local Linux-based server environment utilizing Docker to host self-hosted services and game servers. Implemented secure remote access using Tailscale, ensuring encrypted connectivity without exposing local ports.</p>
+        <p class="project-outcome">Services are containerised and reachable remotely over an encrypted mesh, with no inbound ports published to the internet.</p>
+        <div class="project-tags">
+          <span class="tag">Hardware</span>
+          <span class="tag">Docker</span>
+          <span class="tag">Linux</span>
+        </div>
+      </div>
+      <div class="project-card reveal">
+        <div class="project-index" aria-hidden="true">03</div>
+        <h3 class="project-title">Dabox Chatbot AI</h3>
+        <p class="project-desc">An AI-powered chatbot system with craftable persona roles — allowing dynamic, context-aware chat responses tailored to different business personalities and use cases. Designed for flexibility and natural customer interaction.</p>
+        <p class="project-outcome">One chatbot engine covers several business voices, so a new persona is a configuration change rather than a rebuild.</p>
+        <div class="project-tags">
+          <span class="tag">AI</span>
+          <span class="tag">Chatbot</span>
+          <span class="tag">Persona Design</span>
+          <span class="tag">NLP</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="section-header reveal">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Skills &amp; Stack</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="skills-layout">
+    <div class="totem-stage" id="totemStage" aria-hidden="true">
+      <div class="totem-canvas" id="totemCanvas"></div>
+      <div class="totem-meta"><span class="current" id="totemIndex">01</span><span class="total" id="totemTotal">/ 06</span></div>
+    </div>
+    <div class="skills-grid" id="skillsGrid">
+      <div class="skill-card reveal">
+        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="skill-name">Python</div>
+        <div class="skill-desc">Scripting, automation, and data processing pipelines for business intelligence workflows.</div>
+        <span class="skill-tag">Language</span>
+      </div>
+      <div class="skill-card reveal">
+        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <div class="skill-name">SQL &amp; Data Analytics</div>
+        <div class="skill-desc">Querying, transforming, and surfacing meaningful insights from complex datasets.</div>
+        <span class="skill-tag">Data</span>
+      </div>
+      <div class="skill-card reveal">
+        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        <div class="skill-name">AI &amp; Machine Learning</div>
+        <div class="skill-desc">Building and integrating AI models into real-world marketing and operational workflows.</div>
+        <span class="skill-tag">AI</span>
+      </div>
+      <div class="skill-card reveal">
+        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="skill-name">CRM Tools</div>
+        <div class="skill-desc">HubSpot and similar platforms to drive customer engagement and retention strategies.</div>
+        <span class="skill-tag">CRM</span>
+      </div>
+      <div class="skill-card reveal">
+        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <div class="skill-name">Marketing Automation</div>
+        <div class="skill-desc">End-to-end automation of marketing funnels, lead nurturing, and campaign workflows.</div>
+        <span class="skill-tag">Automation</span>
+      </div>
+      <div class="skill-card reveal">
+        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        <div class="skill-name">Linux System Administration</div>
+        <div class="skill-desc">Managing Linux servers, automating system tasks with shell scripting, and maintaining secure, stable infrastructure environments.</div>
+        <span class="skill-tag">SysAdmin</span>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE / TIMELINE -->
+  <section id="experience">
+    <div class="section-header reveal">
+      <span class="section-number">04</span>
+      <h2 class="section-title">Experience</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item reveal">
+        <div class="timeline-dot"></div>
+        <div class="timeline-period">Apr 2026 — Present</div>
+        <div class="timeline-role">Customer Service Officer</div>
+        <div class="timeline-company">Team Fames Sdn Bhd</div>
+        <div class="timeline-desc">Diagnose critical issues on the Wabot.io / Wabot.my platform, trace them to root causes and resolve them with minimal downtime. Test new features with developers before release, develop SOPs and escalation protocols, and optimize ticketing workflows to reduce Average Handling Time. Investigate billing and account discrepancies, including payment failures and webhook errors.</div>
+        <div class="timeline-skills">
+          <span class="timeline-skill-tag">Technical Support</span>
+          <span class="timeline-skill-tag">QA Testing</span>
+          <span class="timeline-skill-tag">SOP Development</span>
+        </div>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-dot"></div>
+        <div class="timeline-period">Dec 2024 — Jan 2026</div>
+        <div class="timeline-role">Marketing Assistant</div>
+        <div class="timeline-company">S&amp;S Hana Enterprise · Bangi, Malaysia</div>
+        <div class="timeline-desc">Streamlined client communications by developing automated WhatsApp workflows and AI-powered chatbots using Dabox and OpenAI, significantly reducing manual follow-up time and team workload. Providing end-to-end technical support and documentation to simplify troubleshooting, analyzing customer feedback patterns to inform and optimize marketing ad strategies. Built a data collection workflow to track user interactions and conversion paths across automation workflows, supporting KPI monitoring, reporting and analysis of user behavior.</div>
+        <div class="timeline-skills">
+          <span class="timeline-skill-tag">AI Chatbot</span>
+          <span class="timeline-skill-tag">CRM</span>
+          <span class="timeline-skill-tag">Marketing Automation</span>
+        </div>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-dot"></div>
+        <div class="timeline-period">Sept 2021 — Feb 2022</div>
+        <div class="timeline-role">Intern Frontend Flutter Developer</div>
+        <div class="timeline-company">AqWise · Selangor, Malaysia</div>
+        <div class="timeline-desc">Collaborated within agile teams to develop client-focused mobile applications, specializing in crafting responsive and adaptive UI components.</div>
+        <div class="timeline-skills">
+          <span class="timeline-skill-tag">Flutter Framework</span>
+          <span class="timeline-skill-tag">Dart</span>
+          <span class="timeline-skill-tag">Mobile App Development</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDUCATION & CERTIFICATIONS -->
+  <section id="education">
+    <div class="section-header reveal">
+      <span class="section-number">05</span>
+      <h2 class="section-title">Education &amp; Certifications</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="certs-grid">
+      <div class="cert-card reveal">
+        <div class="cert-badge">
+          <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+        </div>
+        <div class="cert-issuer">Universiti Teknologi MARA (UiTM)</div>
+        <div class="cert-name">Bachelor of Information System (Hons.), Intelligent System Engineering</div>
+        <div class="cert-year">Mar 2022 — Feb 2024</div>
+      </div>
+      <div class="cert-card reveal">
+        <div class="cert-badge">
+          <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+        </div>
+        <div class="cert-issuer">Universiti Teknologi MARA (UiTM)</div>
+        <div class="cert-name">Diploma in Computer Science</div>
+        <div class="cert-year">Aug 2019 — Feb 2022</div>
+      </div>
+      <div class="cert-card reveal">
+        <div class="cert-badge">
+          <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <div class="cert-issuer">Google</div>
+        <div class="cert-name">Google Data Analytics Professional Certificate</div>
+        <div class="cert-year">2024</div>
+        <a href="https://www.coursera.org/professional-certificates/google-data-analytics" target="_blank" rel="noopener noreferrer" class="cert-verify" aria-label="Verify the Google Data Analytics Professional Certificate on Coursera (opens in a new tab)">Verify ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-header reveal">
+      <span class="section-number">06</span>
+      <h2 class="section-title">Get In Touch</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="contact-inner">
+      <div class="contact-text reveal">
+        <p class="big">Let's build something <em>meaningful</em> together.</p>
+        <p>Open to collaborations, consulting, and opportunities where data, AI, and automation can drive real business impact.</p>
+        <div class="availability">
+          <span class="availability-dot"></span>
+          <span>Open to freelance projects and full-time roles</span>
+        </div>
+      </div>
+      <div class="contact-right reveal">
+        <div class="contact-links">
+          <a href="https://github.com/ArfZkwn-coder" target="_blank" rel="noopener noreferrer" class="contact-link" data-cursor="Open">
+            <span>GitHub</span><span class="arrow">↗</span>
+          </a>
+          <a href="https://www.linkedin.com/in/arif-zakwan" target="_blank" rel="noopener noreferrer" class="contact-link" data-cursor="Open">
+            <span>LinkedIn</span><span class="arrow">↗</span>
+          </a>
+          <a href="mailto:arifzakwan2001@gmail.com" class="contact-link">
+            <span>Email Me</span><span class="arrow">↗</span>
+          </a>
+        </div>
+
+        <!-- To send without opening a mail app: create a free form at formspree.io (or web3forms.com)
+             and paste its URL into data-endpoint below. Empty = falls back to mailto.
+             novalidate: this form reports its own inline, focusable errors (see initForm in main.js)
+             instead of relying on the browser's transient bubbles. -->
+        <form class="contact-form" id="contactForm" data-endpoint="" novalidate>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="fname">Name <span class="field-req" aria-hidden="true">*</span></label>
+              <input type="text" id="fname" name="name" placeholder="Your name" autocomplete="name"
+                     aria-required="true" aria-describedby="fname-error">
+              <p class="field-error" id="fname-error" hidden>Please enter your name.</p>
+            </div>
+            <div class="form-field">
+              <label for="femail">Email <span class="field-req" aria-hidden="true">*</span></label>
+              <input type="email" id="femail" name="email" placeholder="your@email.com" autocomplete="email"
+                     inputmode="email" aria-required="true" aria-describedby="femail-error">
+              <p class="field-error" id="femail-error" hidden>Please enter an email address.</p>
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="ftopic">I'm reaching out about</label>
+            <select id="ftopic" name="topic" required aria-required="true">
+              <option value="" selected disabled>Choose a topic</option>
+              <option value="A job opportunity">A job opportunity</option>
+              <option value="A freelance project">A freelance project</option>
+              <option value="Something else">Something else</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="fmessage">Message <span class="field-req" aria-hidden="true">*</span></label>
+            <textarea id="fmessage" name="message" placeholder="Tell me a little about the role or project..."
+                      aria-required="true" aria-describedby="fmessage-error"></textarea>
+            <p class="field-error" id="fmessage-error" hidden>Please add a short message.</p>
+          </div>
+          <div class="form-field hp" aria-hidden="true">
+            <label for="fcompany">Company</label>
+            <input type="text" id="fcompany" name="company" tabindex="-1" autocomplete="off">
+          </div>
+          <button type="submit" class="form-submit">
+            <span class="form-submit-label">Send Message →</span>
+            <span class="form-submit-busy" aria-hidden="true">Sending…</span>
+          </button>
+          <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© <span id="year">2026</span> Arif Zakwan</span>
+    <span>IT Enthusiast &amp; Automation Specialist · Malaysia</span>
+    <span class="footer-links">
+      <a href="mailto:arifzakwan2001@gmail.com" class="footer-link">Email</a>
+      <a href="#hero" class="footer-link">↑ Back to top</a>
+    </span>
+  </footer>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+  <script defer src="js/main.js"></script>
+</body>
+</html>
