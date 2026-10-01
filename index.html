@@ -31,6 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
   <meta name="twitter:card" content="summary_large_image">
@@ -87,6 +88,7 @@
       <li><a href="#education">Education</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
+    <a class="nav-cta" href="resume.html">Résumé ↗</a>
     <button class="hamburger" id="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
       <span></span><span></span><span></span>
     </button>
@@ -105,6 +107,7 @@
       <div class="hero-actions">
         <a href="#contact" class="hero-cta">Get In Touch →</a>
         <a href="#projects" class="hero-cta-secondary">View My Work</a>
+        <a href="resume.html" class="hero-cta-tertiary">Résumé ↗</a>
       </div>
     </div>
     <div class="hero-right">
@@ -200,7 +203,7 @@
       <div class="section-line"></div>
     </div>
     <div class="projects-grid">
-      <div class="project-card reveal">
+      <div class="project-card reveal" data-case="n8n-automations">
         <div class="project-index" aria-hidden="true">01</div>
         <h3 class="project-title">N8n Automations</h3>
         <p class="project-desc">Automated server management workflows built with n8n — including auto-update routines and real-time server health monitoring delivered via Telegram messages. Keeps infrastructure healthy with zero manual intervention.</p>
@@ -211,8 +214,12 @@
           <span class="tag">Telegram API</span>
           <span class="tag">DevOps</span>
         </div>
+        <button type="button" class="project-case-open" data-case="n8n-automations"
+                aria-haspopup="dialog" aria-controls="case-n8n-automations">
+          Read case study <span aria-hidden="true">→</span>
+        </button>
       </div>
-      <div class="project-card reveal">
+      <div class="project-card reveal" data-case="homelab-game-server">
         <div class="project-index" aria-hidden="true">02</div>
         <h3 class="project-title">Personal Homelab &amp; Game Server</h3>
         <p class="project-desc">Maintain a local Linux-based server environment utilizing Docker to host self-hosted services and game servers. Implemented secure remote access using Tailscale, ensuring encrypted connectivity without exposing local ports.</p>
@@ -222,8 +229,12 @@
           <span class="tag">Docker</span>
           <span class="tag">Linux</span>
         </div>
+        <button type="button" class="project-case-open" data-case="homelab-game-server"
+                aria-haspopup="dialog" aria-controls="case-homelab-game-server">
+          Read case study <span aria-hidden="true">→</span>
+        </button>
       </div>
-      <div class="project-card reveal">
+      <div class="project-card reveal" data-case="dabox-chatbot-ai">
         <div class="project-index" aria-hidden="true">03</div>
         <h3 class="project-title">Dabox Chatbot AI</h3>
         <p class="project-desc">An AI-powered chatbot system with craftable persona roles — allowing dynamic, context-aware chat responses tailored to different business personalities and use cases. Designed for flexibility and natural customer interaction.</p>
@@ -234,6 +245,10 @@
           <span class="tag">Persona Design</span>
           <span class="tag">NLP</span>
         </div>
+        <button type="button" class="project-case-open" data-case="dabox-chatbot-ai"
+                aria-haspopup="dialog" aria-controls="case-dabox-chatbot-ai">
+          Read case study <span aria-hidden="true">→</span>
+        </button>
       </div>
     </div>
   </section>
@@ -389,6 +404,10 @@
           <span class="availability-dot"></span>
           <span>Open to freelance projects and full-time roles</span>
         </div>
+        <div class="contact-resume">
+          Prefer the one-page version?
+          <a href="resume.html">Open my résumé ↗</a>
+        </div>
       </div>
       <div class="contact-right reveal">
         <div class="contact-links">
@@ -452,6 +471,154 @@
   </section>
 
   </main>
+
+  <!-- CASE STUDIES
+       One dialog per project, opened by the matching .project-case-open button
+       (see initCaseStudies in js/main.js) and deep-linkable as #case-<slug>.
+       The copy here is the project card's own text, expanded — a test asserts
+       the outcome and stack match the card verbatim, so the two cannot drift. -->
+  <dialog class="case-study" id="case-n8n-automations" aria-labelledby="case-n8n-automations-title">
+    <article>
+      <header class="case-study-head">
+        <p class="case-study-eyebrow">Case study</p>
+        <h2 class="case-study-title" id="case-n8n-automations-title" tabindex="-1">N8n Automations</h2>
+        <dl class="case-study-meta">
+          <div><dt>Status</dt><dd>Ongoing — runs unattended</dd></div>
+          <div><dt>Built with</dt><dd>n8n, Telegram API</dd></div>
+        </dl>
+      </header>
+
+      <section class="case-study-section">
+        <h3>The problem</h3>
+        <p>Server maintenance had to be remembered and checked by hand — routine updates and health checks only happened when someone went looking.</p>
+      </section>
+
+      <section class="case-study-section">
+        <h3>How it works</h3>
+        <ul>
+          <li>Auto-update routines run on a schedule instead of at someone's discretion.</li>
+          <li>Real-time server health monitoring runs continuously alongside them.</li>
+          <li>Health and update results are delivered as Telegram messages, so there is no dashboard to remember to open.</li>
+        </ul>
+      </section>
+
+      <section class="case-study-section">
+        <h3>Outcome</h3>
+        <p>Health checks and updates run unattended, with anything unusual pushed to Telegram instead of waiting for a manual check.</p>
+      </section>
+
+      <section class="case-study-section">
+        <h3>Stack</h3>
+        <ul class="case-study-stack">
+          <li>n8n</li>
+          <li>Automation</li>
+          <li>Telegram API</li>
+          <li>DevOps</li>
+        </ul>
+      </section>
+
+      <div class="case-study-links">
+        <a href="mailto:arifzakwan2001@gmail.com?subject=Portfolio%20question%3A%20N8n%20Automations">Ask me about this project ↗</a>
+      </div>
+
+      <button type="button" class="case-study-close" aria-label="Close case study">Close</button>
+    </article>
+  </dialog>
+
+  <dialog class="case-study" id="case-homelab-game-server" aria-labelledby="case-homelab-game-server-title">
+    <article>
+      <header class="case-study-head">
+        <p class="case-study-eyebrow">Case study</p>
+        <h2 class="case-study-title" id="case-homelab-game-server-title" tabindex="-1">Personal Homelab &amp; Game Server</h2>
+        <dl class="case-study-meta">
+          <div><dt>Status</dt><dd>Ongoing</dd></div>
+          <div><dt>Built with</dt><dd>Docker, Linux, Tailscale</dd></div>
+        </dl>
+      </header>
+
+      <section class="case-study-section">
+        <h3>The problem</h3>
+        <p>Self-hosted services and game servers need to stay reachable from outside the network without opening the network up to the internet.</p>
+      </section>
+
+      <section class="case-study-section">
+        <h3>How it works</h3>
+        <ul>
+          <li>A local Linux-based server environment hosts the services, with Docker keeping them isolated and reproducible.</li>
+          <li>Securing remote access runs over Tailscale, so connectivity stays encrypted.</li>
+          <li>No local ports are exposed to the public internet.</li>
+        </ul>
+      </section>
+
+      <section class="case-study-section">
+        <h3>Outcome</h3>
+        <p>Services are containerised and reachable remotely over an encrypted mesh, with no inbound ports published to the internet.</p>
+      </section>
+
+      <section class="case-study-section">
+        <h3>Stack</h3>
+        <ul class="case-study-stack">
+          <li>Hardware</li>
+          <li>Docker</li>
+          <li>Linux</li>
+        </ul>
+      </section>
+
+      <div class="case-study-links">
+        <a href="mailto:arifzakwan2001@gmail.com?subject=Portfolio%20question%3A%20Personal%20Homelab%20%26%20Game%20Server">Ask me about this project ↗</a>
+      </div>
+
+      <button type="button" class="case-study-close" aria-label="Close case study">Close</button>
+    </article>
+  </dialog>
+
+  <dialog class="case-study" id="case-dabox-chatbot-ai" aria-labelledby="case-dabox-chatbot-ai-title">
+    <article>
+      <header class="case-study-head">
+        <p class="case-study-eyebrow">Case study</p>
+        <h2 class="case-study-title" id="case-dabox-chatbot-ai-title" tabindex="-1">Dabox Chatbot AI</h2>
+        <dl class="case-study-meta">
+          <div><dt>Status</dt><dd>Built and delivered</dd></div>
+          <div><dt>Built with</dt><dd>Dabox, OpenAI</dd></div>
+        </dl>
+      </header>
+
+      <section class="case-study-section">
+        <h3>The problem</h3>
+        <p>Different businesses need a chatbot that sounds like them, and rebuilding the engine for every new personality does not scale.</p>
+      </section>
+
+      <section class="case-study-section">
+        <h3>How it works</h3>
+        <ul>
+          <li>Persona roles are craftable, so one engine covers several business voices.</li>
+          <li>Responses are context-aware rather than canned, which keeps conversations natural.</li>
+          <li>The design favours flexibility: a new use case is a configuration change, not a rebuild.</li>
+        </ul>
+      </section>
+
+      <section class="case-study-section">
+        <h3>Outcome</h3>
+        <p>One chatbot engine covers several business voices, so a new persona is a configuration change rather than a rebuild.</p>
+      </section>
+
+      <section class="case-study-section">
+        <h3>Stack</h3>
+        <ul class="case-study-stack">
+          <li>AI</li>
+          <li>Chatbot</li>
+          <li>Persona Design</li>
+          <li>NLP</li>
+        </ul>
+      </section>
+
+      <div class="case-study-links">
+        <a href="mailto:arifzakwan2001@gmail.com?subject=Portfolio%20question%3A%20Dabox%20Chatbot%20AI">Ask me about this project ↗</a>
+      </div>
+
+      <button type="button" class="case-study-close" aria-label="Close case study">Close</button>
+    </article>
+  </dialog>
 
   <!-- FOOTER -->
   <footer>

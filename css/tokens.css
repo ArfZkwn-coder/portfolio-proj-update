@@ -1,0 +1,156 @@
+/* ==========================================================================
+   1. DESIGN TOKENS — shared by every page
+   Every colour, space, radius, duration and type step used anywhere in this
+   project is declared here. Nothing outside a `:root` block may hard-code a
+   raw colour: test/contrast.test.mjs reads these blocks by name and re-checks
+   every text pair against WCAG 2.1 AA (4.5:1 normal text, 3:1 large text and
+   non-text UI), in both colour schemes. A declaration here that is never
+   consumed fails test/stylesheet.test.mjs.
+   ========================================================================== */
+:root {
+  /* Surfaces. --ink is the *text* colour and --paper the page colour; the
+     --solid/--solid-text pair is a fixed dark fill (primary buttons, inverted
+     panels) that keeps cream-on-ink contrast under either scheme. */
+  --paper: #f5f2ec;          /* page background */
+  --card: #efece5;           /* alternating section background */
+  --ink: #0f0f0f;            /* primary text */
+  --ink-raised: #171717;     /* dark card */
+  --ink-hover: #1f1f1f;      /* dark card, hovered */
+  --ink-line: #262625;       /* divider on dark surfaces */
+  --solid: #0f0f0f;          /* fixed dark fill, does not invert */
+  --solid-text: #f5f2ec;     /* text on --solid: 17.4:1 */
+  --section-alt: #efece5;    /* alternate section band */
+
+  /* Text — all verified against their intended surface */
+  --muted: #5f5e58;          /* 6.0:1 on --paper, 5.6:1 on --card */
+  --text-body: #4a4944;      /* 8.4:1 on --paper */
+  --text-faint: #84827a;     /* 3.5:1 — large text / decorative only */
+  --muted-dark: #a3a19a;     /* 7.1:1 on --ink */
+  --text-on-dark: #ece9e3;   /* 15.3:1 on --ink */
+  --text-faint-dark: #8f8d86;/* 5.6:1 on --ink */
+
+  /* Accent tiers — --accent is the *text* accent on light surfaces (5.0:1 on
+     --paper, 4.7:1 on --card, so it is safe at any size); --accent-on-dark is
+     for text on dark surfaces (6.5:1 on --ink); --accent-bright is a decorative
+     tint for rules, dots and 3D only, never for text. */
+  --accent: #ab4c1a;
+  --accent-strong: #8f3f16;
+  --accent-bright: #c8602a;
+  --accent-on-dark: #e58150;  /* 6.5:1 on --ink */
+  --accent-tint: #f3e4da;
+
+  /* Lines */
+  --line: #dddad3;
+  --line-strong: #c9c5bc;
+
+  /* Feedback states */
+  --ok-bg: #eaf5ea;
+  --ok-border: #b4d9b4;
+  --ok-text: #245c24;
+  --error-bg: #fbeeea;
+  --error-border: #e8bdae;
+  --error-text: #8a3a1c;
+  --live: #1f7a33;            /* availability dot: non-text contrast 3:1+ */
+
+  /* Overlays. The scrim dims the page behind a modal dialog; the panel itself
+     paints its own surface so the UA default can never leak through. */
+  --scrim: rgba(15, 15, 15, 0.55);
+  --dialog-surface: #efece5;
+  --dialog-text: #0f0f0f;
+
+  /* Space scale (fluid where it matters) */
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --pad-inline: clamp(1.25rem, 5vw, 4rem);
+  --pad-section: clamp(4rem, 8vw, 6rem);
+  --nav-h: 4.5rem;
+  /* 0.92 alpha over --paper is visually indistinguishable from --paper (1.03:1),
+     which is the point: the bar only needs enough coverage that --ink text on
+     it keeps its 17:1 ratio. */
+  --nav-bg: rgba(245, 242, 236, 0.92);
+  --nav-bg-solid: #f5f2ec;   /* fallback when backdrop-filter is unsupported */
+  --field-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%235f5e58' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+
+  /* Radius (kept sharp by design; routed through one token) */
+  --radius: 0px;
+
+  /* Motion */
+  --dur-fast: 0.2s;
+  --dur-base: 0.3s;
+  --ease-out: cubic-bezier(0.19, 1, 0.22, 1);
+
+  /* Type scale. Small end: nothing a visitor has to read sits below 0.75rem.
+     Large end: display steps, kept here so no component invents a size. */
+  --fs-2xs: 0.6875rem;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.1rem;
+  --fs-2xl: 1.25rem;
+  --fs-3xl: 1.5rem;
+  --fs-5xl: 2.25rem;
+  --fs-6xl: 3.5rem;
+
+  --font-display: 'DM Serif Display', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+:root[data-contrast='high'] {
+  --line: var(--line-strong);
+  --muted: #46453f;
+  --text-faint: #5f5e58;
+}
+
+/* Dark OS preference: same tokens, remapped. No JS, no toggle. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #121212;
+    --card: #191919;
+    --ink: #f5f2ec;
+    --ink-raised: #1c1c1c;
+    --ink-hover: #242424;
+    --ink-line: #2c2c2c;
+    --solid: #0f0f0f;
+    --solid-text: #f5f2ec;
+    /* Kept dark: --card here is a *raised* surface, not an inverted panel, so
+       sections that use --ink as a fill would otherwise flash light. */
+    --section-alt: #1b1b1b;
+
+    --muted: #9b9993;
+    --text-body: #c7c4bd;
+    --text-faint: #6f6d67;
+    --muted-dark: #a3a19a;
+    --text-on-dark: #ece9e3;
+    --text-faint-dark: #8f8d86;
+
+    --accent: #e58150;        /* 7.0:1 on --paper in this scheme */
+    --accent-strong: #f09a6d;
+    --accent-bright: #c8602a;
+    --accent-on-dark: #e58150;
+    --accent-tint: #2a1c13;
+
+    --line: #33312e;
+    --line-strong: #454340;
+
+    --ok-bg: #16281a;
+    --ok-border: #2f5233;
+    --ok-text: #a6dfa6;
+    --error-bg: #2a1a15;
+    --error-border: #5c3323;
+    --error-text: #f0a884;
+    --live: #4cc267;
+
+    /* A modal panel in dark mode is a raised dark surface, not a light one. */
+    --scrim: rgba(0, 0, 0, 0.65);
+    --dialog-surface: #1c1c1c;
+    --dialog-text: #f5f2ec;
+  }
+}

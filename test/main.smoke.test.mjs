@@ -41,6 +41,34 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
   const warns = [];
   window.console.warn = (...a) => warns.push(a.map(String).join(' '));
 
+  // jsdom implements neither <dialog>'s modal API nor History traversal. Stub
+  // both so the case-study logic can be exercised; the stubs mirror the spec's
+  // observable contract (open flag, `close` event, hash changes on back()).
+  window.__history = [];
+  window.HTMLDialogElement.prototype.showModal = function showModal() {
+    this.open = true;
+    this.setAttribute('open', '');
+  };
+  window.HTMLDialogElement.prototype.close = function close() {
+    this.open = false;
+    this.removeAttribute('open');
+    this.dispatchEvent(new window.Event('close'));
+  };
+  const realPushState = window.history.pushState.bind(window.history);
+  window.history.pushState = (state, title, url) => {
+    window.__history.push(['pushState', String(url)]);
+    return realPushState(state, title, url);
+  };
+  window.history.back = () => {
+    window.__history.push(['back']);
+    // A real back() pops to the previous entry; in these tests that is the
+    // document without a hash, so clear it and announce the change.
+    const { origin, pathname, search } = window.location;
+    window.history.replaceState(null, '', `${origin}${pathname}${search}`);
+    window.dispatchEvent(new window.Event('popstate'));
+    window.dispatchEvent(new window.HashChangeEvent('hashchange'));
+  };
+
   if (libs) {
     window.eval(lib('gsap/dist/gsap.min.js'));
     window.eval(lib('gsap/dist/ScrollTrigger.min.js'));
@@ -385,4 +413,81 @@ test('certifications: the verify link is reachable without a hover', () => {
   assert.ok(!verify.hasAttribute('hidden'), 'not hidden from assistive tech');
   assert.ok(!verify.hasAttribute('tabindex') || verify.getAttribute('tabindex') !== '-1', 'in the tab order');
   assert.ok(verify.getAttribute('aria-label'), 'the bare "Verify" text has a descriptive name');
+});
+
+test('case studies: opening pushes a deep link, locks the page, and focuses the heading', () => {
+  const { window, document, root } = makeEnv();
+  const button = document.querySelector('.project-case-open[data-case="homelab-game-server"]');
+  const dialog = document.getElementById('case-homelab-game-server');
+
+  assert.equal(dialog.open, false, 'no dialog opens on load');
+  assert.ok(!root.classList.contains('case-open'), 'the page is not locked on load');
+
+  button.click();
+  assert.equal(dialog.open, true, 'the matching dialog opens');
+  assert.equal(window.location.hash, '#case-homelab-game-server', 'the panel is deep-linkable');
+  assert.ok(root.classList.contains('case-open'), 'page scroll is locked while the modal is open');
+  assert.equal(document.activeElement, dialog.querySelector('.case-study-title'), 'focus moves into the panel');
+  assert.equal(dialog.scrollTop, 0, 'a reopened panel starts at the top');
+  assert.equal(document.getElementById('case-n8n-automations').open, false, 'only one panel is open');
+});
+
+test('case studies: the close control closes, unlocks, and returns focus to the opener', () => {
+  const { window, document, root } = makeEnv();
+  const button = document.querySelector('.project-case-open[data-case="n8n-automations"]');
+  const dialog = document.getElementById('case-n8n-automations');
+  button.click();
+
+  dialog.querySelector('.case-study-close').click();
+  assert.deepEqual(window.__history.at(-1), ['back'], 'closing goes back through history, keeping URL and panel in step');
+  assert.equal(window.location.hash, '', 'the deep link is cleared');
+  assert.equal(dialog.open, false, 'the panel is closed');
+  assert.ok(!root.classList.contains('case-open'), 'page scroll is released');
+  assert.equal(document.activeElement, button, 'focus returns to the control that opened it');
+});
+
+test('case studies: Escape and a backdrop click both close the panel', () => {
+  const { window, document } = makeEnv();
+  const button = document.querySelector('.project-case-open[data-case="dabox-chatbot-ai"]');
+  const dialog = document.getElementById('case-dabox-chatbot-ai');
+
+  button.click();
+  const cancel = new window.Event('cancel', { cancelable: true });
+  dialog.dispatchEvent(cancel);
+  assert.equal(cancel.defaultPrevented, true, 'the default Escape behaviour is intercepted so history stays the source of truth');
+  assert.equal(dialog.open, false, 'Escape closes the panel');
+
+  button.click();
+  assert.equal(dialog.open, true);
+  // A click that lands on the dialog element itself is a backdrop click; one on
+  // its content is not.
+  dialog.querySelector('.case-study-title').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  assert.equal(dialog.open, true, 'clicking content does not close the panel');
+  dialog.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  assert.equal(dialog.open, false, 'clicking the backdrop closes the panel');
+});
+
+test('case studies: a shared #case- URL opens that panel on load', async () => {
+  const { window, document } = makeEnv();
+  const dialog = document.getElementById('case-dabox-chatbot-ai');
+  assert.equal(dialog.open, false, 'closed before the hash changes');
+
+  window.location.hash = '#case-dabox-chatbot-ai';
+  window.dispatchEvent(new window.HashChangeEvent('hashchange'));
+  assert.equal(dialog.open, true, 'the deep link opens the right panel');
+  assert.equal(document.getElementById('case-n8n-automations').open, false, 'and only that panel');
+});
+
+test('case studies: an unknown slug is ignored, and the feature no-ops without showModal', () => {
+  const { window, document, errors } = makeEnv();
+  window.location.hash = '#case-not-a-real-project';
+  window.dispatchEvent(new window.HashChangeEvent('hashchange'));
+  assert.ok([...document.querySelectorAll('dialog.case-study')].every((d) => !d.open), 'nothing opens');
+  assert.deepEqual(errors, [], 'an unknown slug is not an error');
+
+  const noModal = makeEnv();
+  delete noModal.window.HTMLDialogElement.prototype.showModal;
+  const button = noModal.document.querySelector('.project-case-open');
+  assert.doesNotThrow(() => button.click(), 'a browser without the modal API is tolerated');
+  assert.ok([...noModal.document.querySelectorAll('dialog.case-study')].every((d) => !d.open));
 });
