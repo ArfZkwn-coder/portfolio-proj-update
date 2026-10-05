@@ -327,3 +327,27 @@ main { padding: var(--space-6) var(--space-5) var(--space-8); }
 
   .resume-foot { margin-top: 14pt; padding-top: 6pt; }
 }
+
+/* ==========================================================================
+   Direction A — the résumé follows the portfolio's typography on screen.
+   Screen only: the printed document keeps exactly the rules above, because
+   paper wants its own sizes and no letter-spaced labels.
+   ========================================================================== */
+
+@media screen {
+  .resume-period,
+  .resume-skill-kind,
+  .resume-tags li,
+  .resume-contact dt,
+  .resume-section h2 {
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+  }
+
+  .resume-period,
+  .resume-skill-kind,
+  .resume-tags li,
+  .resume-section h2 { text-transform: uppercase; }
+
+  .resume-section h2 { letter-spacing: 0.12em; }
+}

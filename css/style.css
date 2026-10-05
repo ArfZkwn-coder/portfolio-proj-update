@@ -1669,3 +1669,334 @@ html.has-cursor .form-submit {
 
 /* Nothing behind a modal dialog should be reachable while it is open. */
 html.case-open { overflow: hidden; }
+
+/* ==========================================================================
+   DIRECTION A — "Workflow / Blueprint"
+   The site as a technical drawing: a drafting grid behind the page, mono
+   micro-labels, and pipelines that draw themselves.
+
+   Appended after the base sheet on purpose — these rules restyle existing
+   components by cascade order, so the base sheet and its tests stay intact.
+   Every animated initial state is opt-in under `html.motion`, which js/main.js
+   sets only when motion is allowed and IntersectionObserver exists: no JS and
+   reduced motion both get the finished drawing, never a blank one.
+   ========================================================================== */
+
+/* ── 1. THE DRAFTING GRID (behind all content) ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 88px 88px;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, var(--ink) 45%, transparent 100%);
+  mask-image: radial-gradient(120% 90% at 50% 0%, var(--ink) 45%, transparent 100%);
+}
+
+/* ── 2. MONO MICRO-LABELS ──
+   One voice for metadata: navigation, numbers, tags, dates, form labels. */
+.section-number,
+.nav-links a,
+.nav-cta,
+.hero-label,
+.project-index,
+.tag,
+.skill-tag,
+.timeline-period,
+.timeline-skill-tag,
+.cert-year,
+.form-field label,
+.footer-links a,
+.status-strip b,
+.diagram-note {
+  font-family: var(--font-mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.section-number { font-size: var(--fs-xs); color: var(--accent); }
+.hero-label { font-size: var(--fs-2xs); color: var(--muted); }
+.project-index { font-size: var(--fs-2xs); color: var(--accent); }
+.tag, .skill-tag, .timeline-skill-tag { font-size: var(--fs-2xs); }
+.timeline-period { font-size: var(--fs-2xs); color: var(--muted); }
+.cert-year { font-size: var(--fs-2xs); color: var(--muted); }
+.form-field label { font-size: var(--fs-2xs); color: var(--muted); }
+.footer-links a { font-size: var(--fs-2xs); }
+
+/* ── 3. NAV ── */
+.nav-links a { font-size: var(--fs-2xs); }
+.nav-cta {
+  font-size: var(--fs-2xs);
+  border: 1px solid var(--ink);
+  padding: 0.55rem 0.9rem;
+}
+.nav-cta:hover { background: var(--ink); color: var(--paper); }
+
+/* ── 4. HERO ── */
+.hero-name { font-size: clamp(3rem, 7.5vw, 5.25rem); letter-spacing: -0.02em; }
+
+/* The pipeline panel replaces the abstract capability chips: the hero now
+   shows the shape of the work instead of describing it. Crop marks are the
+   blueprint signature. */
+.hero-canvas {
+  position: relative;
+  margin: 0;
+  padding: clamp(1rem, 2.5vw, 1.75rem);
+  background: var(--node-fill);
+  border: 1px solid var(--line);
+}
+.hero-canvas::before,
+.hero-canvas::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--accent-bright);
+}
+.hero-canvas::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+.hero-canvas::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+.diagram-note {
+  margin-top: var(--space-4);
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+}
+
+/* ── 5. STATUS STRIP — the marquee's quiet, factual sibling ── */
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: var(--space-7);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.status-strip span {
+  flex: 1 1 220px;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-right: 1px solid var(--line);
+}
+.status-strip span:last-child { border-right: 0; }
+.status-strip b {
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--muted);
+}
+.status-strip i { font-style: normal; font-size: var(--fs-sm); color: var(--text-body); }
+
+/* ── 6. DIAGRAMS ── */
+.diagram { display: block; width: 100%; height: auto; }
+.diagram .box { fill: var(--node-fill); stroke: var(--line-strong); stroke-width: 1; }
+.diagram .kicker { font-family: var(--font-mono); font-size: var(--fs-2xs); letter-spacing: 0.1em; fill: var(--muted); }
+.diagram .name { font-family: var(--font-body); font-size: var(--fs-sm); fill: var(--ink); }
+.diagram .wire { stroke: var(--line-strong); stroke-width: 1; fill: none; }
+.diagram .wire-accent { stroke: var(--accent-bright); stroke-width: 1.25; fill: none; }
+.diagram .wire-dash { stroke: var(--accent-bright); stroke-width: 1; stroke-dasharray: 4 5; fill: none; }
+.diagram .hi { fill: var(--accent-bright); }
+.diagram-card { margin: var(--space-2) 0 0; }
+
+/* ── 7. PROJECTS ── */
+.project-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  transition: border-color var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+.project-card:hover { border-color: var(--accent-bright); transform: translateY(-3px); }
+.project-card:hover .wire, .project-card:hover .wire-accent { stroke: var(--accent-bright); }
+.project-outcome::before {
+  content: 'Outcome';
+  display: block;
+  margin-bottom: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.project-tags::before {
+  content: 'Stack';
+  margin-right: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── 8. SKILLS (the 3D totem keeps its own rules; these apply to the grid) ── */
+.skills-grid .skill-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+.skills-grid .skill-card:hover { border-color: var(--accent-bright); }
+
+/* ── 9. EXPERIENCE ── */
+.timeline .timeline-item:first-child .timeline-dot {
+  background: var(--live);
+  animation: bp-pulse 2.6s ease-out infinite;
+}
+
+/* ── 10. CONTACT + FOOTER ── */
+.form-submit {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.footer-links a { text-transform: uppercase; }
+
+/* ── 11. MOTION — the drawing builds itself ── */
+@keyframes bp-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes bp-wire { 0% { opacity: 0; stroke-dashoffset: 500; } 18% { opacity: 1; } 100% { opacity: 1; stroke-dashoffset: 0; } }
+@keyframes bp-node { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bp-dash { to { opacity: 0.65; } }
+@keyframes bp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 45%, transparent); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+}
+
+.js .reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.js .reveal.visible { opacity: 1; transform: none; }
+
+html.motion .diagram .box { opacity: 0; }
+html.motion .diagram .wire,
+html.motion .diagram .wire-accent { stroke-dasharray: 500; stroke-dashoffset: 500; opacity: 0; }
+html.motion .diagram .wire-dash { opacity: 0; }
+.diagram.draw .box { animation: bp-node 0.45s ease forwards; animation-delay: var(--d, 0ms); }
+.diagram.draw .wire,
+.diagram.draw .wire-accent { animation: bp-wire 0.8s var(--ease-out) forwards; animation-delay: var(--d, 0ms); }
+.diagram.draw .wire-dash { animation: bp-dash 0.5s ease forwards; animation-delay: var(--d, 0ms); }
+
+/* ── 12. GUARDS ── */
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+  html.motion .diagram .box,
+  html.motion .diagram .wire,
+  html.motion .diagram .wire-accent,
+  html.motion .diagram .wire-dash { opacity: 1; stroke-dashoffset: 0; animation: none; }
+  .timeline .timeline-item:first-child .timeline-dot { animation: none; }
+}
+
+@media print {
+  body::after { display: none; }
+  html.motion .diagram .box,
+  html.motion .diagram .wire,
+  html.motion .diagram .wire-accent,
+  html.motion .diagram .wire-dash { opacity: 1 !important; stroke-dashoffset: 0 !important; animation: none !important; }
+}
+
+/* ==========================================================================
+   DIRECTION A — PASS 2: the sections themselves
+   Pass 1 restyled the shell (nav, hero, cards, diagrams). This pass re-lays
+   the interior sections so the whole page reads as a drawing: stacked section
+   headers, a light toolchain panel, blueprint cards, square timeline nodes.
+   The 3D totem keeps its own dark stage, so every rule below is scoped to
+   `html:not(.has-totem)` where the two looks would collide.
+   ========================================================================== */
+
+/* ── Section headers: kicker above the title, rule underneath ── */
+.section-header { display: block; margin-bottom: var(--space-7); }
+.section-header .section-number { display: block; margin-bottom: var(--space-3); }
+.section-header .section-line { margin-top: var(--space-4); }
+
+/* ── About: facts as node blocks ── */
+.about-fact { background: var(--node-fill); border: 1px solid var(--line); padding: var(--space-5); }
+.about-fact-value { font-style: normal; }
+
+/* ── Skills: a light toolchain panel when the totem is not driving it ── */
+html:not(.has-totem) #skills { background: var(--paper); color: var(--ink); }
+html:not(.has-totem) #skills .section-title { color: var(--ink); }
+html:not(.has-totem) #skills .section-number { color: var(--accent); }
+html:not(.has-totem) #skills .section-line { background: var(--line); }
+html:not(.has-totem) .skills-grid { gap: var(--space-4); background: transparent; }
+html:not(.has-totem) .skills-grid .skill-card { background: var(--node-fill); border: 1px solid var(--line); }
+html:not(.has-totem) .skills-grid .skill-card:hover { background: var(--node-fill); border-color: var(--accent-bright); }
+html:not(.has-totem) .skills-grid .skill-name { color: var(--ink); }
+html:not(.has-totem) .skills-grid .skill-desc { color: var(--text-body); }
+html:not(.has-totem) .skills-grid .skill-icon { color: var(--accent); }
+html:not(.has-totem) .skills-grid .skill-tag { color: var(--muted); border-color: var(--line-strong); background: var(--section-alt); }
+
+/* ── Certificates: blueprint cards, no flip-to-dark on hover ── */
+.certs-grid { gap: var(--space-5); background: transparent; }
+.cert-card { background: var(--node-fill); border: 1px solid var(--line); border-left: 2px solid var(--accent-bright); }
+.cert-card:hover,
+.cert-card:focus-within { background: var(--node-fill); }
+.cert-card:hover .cert-badge,
+.cert-card:focus-within .cert-badge { background: var(--section-alt); border-color: var(--line); }
+.cert-card:hover .cert-badge svg,
+.cert-card:focus-within .cert-badge svg { stroke: var(--accent); }
+
+/* ── Timeline: square nodes, not dots ── */
+.timeline-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 0;
+  border-width: 1px;
+  background: var(--node-fill);
+}
+.timeline-item:hover .timeline-dot,
+.timeline-item.is-active .timeline-dot,
+.timeline-item:focus-within .timeline-dot { background: var(--accent); }
+
+/* ── Contact: the form is a node panel, not floating fields ── */
+.contact-form { background: var(--node-fill); border: 1px solid var(--line); padding: var(--space-5); }
+
+/* ── Hero pipeline on small screens: list, not diagram ──
+   The 620-unit-wide SVG keeps its type legible by dropping it; the same three
+   steps arrive as a list, so nothing is lost on a phone. */
+.hero-steps { display: none; }
+
+@media (max-width: 760px) {
+  .hero-canvas .diagram { display: none; }
+  .hero-steps {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .hero-steps li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: var(--fs-sm);
+    color: var(--text-body);
+  }
+  .hero-steps b {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.09em;
+    color: var(--accent);
+  }
+}
+
+/* ==========================================================================
+   DIRECTION A — PASS 3: the totem keeps its 3D, loses the black box
+   The scroll-driven totem runs exactly as before; its stage now sits on the
+   same paper as every other section instead of a fixed dark panel, so the
+   page has one surface from top to bottom.
+   ========================================================================== */
+
+html.has-totem #skills { background: var(--paper); color: var(--ink); }
+html.has-totem #skills .section-title { color: var(--ink); }
+html.has-totem #skills .section-number { color: var(--accent); }
+html.has-totem #skills .section-line { background: var(--line); }
+html.has-totem .totem-stage { background: transparent; }
+html.has-totem .totem-meta { border-color: var(--line); }
+html.has-totem .totem-meta .current { color: var(--accent); }
+html.has-totem .totem-meta .total { color: var(--muted); }
+html.has-totem .skills-grid .skill-card { border-top-color: var(--line); }
+html.has-totem .skills-grid .skill-name { color: var(--ink); }
+html.has-totem .skills-grid .skill-desc { color: var(--text-body); }
+html.has-totem .skills-grid .skill-icon { color: var(--accent); }
+html.has-totem .skills-grid .skill-tag { color: var(--muted); border-color: var(--line-strong); background: var(--section-alt); }

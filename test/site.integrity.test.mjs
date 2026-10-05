@@ -98,10 +98,15 @@ test('accessibility plumbing ships with the markup', () => {
   assert.equal(menu.getAttribute('aria-modal'), 'true');
   assert.ok(menu.hasAttribute('inert'), 'closed menu is inert until opened');
 
-  // Decorative icons must not be announced or focusable.
+  // Decorative icons must not be announced or focusable. An informative
+  // diagram is the one exception, and it must carry a name of its own instead.
   const svgs = [...document.querySelectorAll('svg')];
   assert.ok(svgs.length >= 12, `icons present: ${svgs.length}`);
   for (const svg of svgs) {
+    if (svg.getAttribute('role') === 'img') {
+      assert.ok(svg.getAttribute('aria-label'), 'a labelled diagram has an accessible name');
+      continue;
+    }
     assert.equal(svg.getAttribute('aria-hidden'), 'true', 'decorative svg is aria-hidden');
     assert.equal(svg.getAttribute('focusable'), 'false', 'decorative svg is not focusable');
     assert.equal(svg.getAttribute('stroke'), 'currentColor', 'icon stroke follows the accent token');
