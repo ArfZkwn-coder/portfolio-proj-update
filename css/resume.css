@@ -37,7 +37,7 @@ body {
 .skip-link:focus-visible { transform: none; }
 
 /* ── SCREEN CHROME (never printed) ── */
-.resume-bar,
+.resume-chrome,
 .resume-hint,
 main {
   max-width: 54rem;
@@ -277,8 +277,7 @@ main { padding: var(--space-6) var(--space-5) var(--space-8); }
   }
 
   .skip-link,
-  .resume-bar,
-  .resume-hint { display: none !important; }
+  .resume-chrome { display: none !important; }
 
   main { max-width: none; padding: 0; }
 

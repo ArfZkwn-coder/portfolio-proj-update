@@ -10,14 +10,17 @@ import path from 'node:path';
 // tokens.css is loaded first by every page and holds the only :root blocks.
 // style.css dresses index.html; resume.css dresses resume.html and may add its
 // own print-only token overrides.
+const fontsPath = new URL('../css/fonts.css', import.meta.url);
 const tokensPath = new URL('../css/tokens.css', import.meta.url);
 const stylePath = new URL('../css/style.css', import.meta.url);
 const resumePath = new URL('../css/resume.css', import.meta.url);
+const fonts = fs.readFileSync(fontsPath, 'utf8');
 const tokens = fs.readFileSync(tokensPath, 'utf8');
 const page = fs.readFileSync(stylePath, 'utf8');
 const resume = fs.readFileSync(resumePath, 'utf8');
-const css = `${tokens}\n${page}\n${resume}`;
+const css = `${fonts}\n${tokens}\n${page}\n${resume}`;
 const PAGE_FILES = [
+  { name: 'css/fonts.css', source: fonts },
   { name: 'css/tokens.css', source: tokens },
   { name: 'css/style.css', source: page },
   { name: 'css/resume.css', source: resume },
@@ -124,7 +127,7 @@ test('stylesheet: no token resolves to itself', () => {
 
 test('stylesheet: assets and external references stay relative', () => {
   // data: URIs are inline; anything else must be a relative path (the site is
-  // served from /portfolio-proj/, so root-absolute URLs 404).
+  // served from /portfolio-proj-update/, so root-absolute URLs 404).
   for (const { name, source } of PAGE_FILES) {
     for (const match of source.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)) {
       const url = match[1];

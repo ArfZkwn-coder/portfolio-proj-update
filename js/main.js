@@ -471,13 +471,18 @@
   /* ------------------------------------------------------------------ */
   /* 3D skills totem — lazy, desktop + WebGL + motion allowed            */
   /* ------------------------------------------------------------------ */
+  // Probed once: the answer cannot change mid-session, and each probe allocates
+  // a canvas plus a WebGL context that is never explicitly released.
+  let webglSupport;
   function hasWebGL() {
+    if (webglSupport !== undefined) return webglSupport;
     try {
       const canvas = document.createElement('canvas');
-      return Boolean(canvas.getContext('webgl2'));
+      webglSupport = Boolean(canvas.getContext('webgl2'));
     } catch {
-      return false;
+      webglSupport = false;
     }
+    return webglSupport;
   }
 
   function wireTotem(totem, cards, grid) {
@@ -536,7 +541,12 @@
       wireTotem(totem, cards, grid);
     } catch (error) {
       root.classList.remove('has-totem');
-      console.warn('3D totem unavailable, keeping the static skills grid.', error);
+      // Expected on desktops without WebGL or with module loading blocked, and
+      // already covered by the static grid, so this is a developer signal rather
+      // than noise in a visitor's console: opt in with `window.__portfolioDebug`.
+      if (window.__portfolioDebug === true) {
+        console.warn('3D totem unavailable, keeping the static skills grid.', error);
+      }
     }
     if (window.ScrollTrigger) window.ScrollTrigger.refresh();
   }
@@ -578,6 +588,9 @@
 
     const submit = $('.form-submit', form);
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    // A "loading" endpoint that accepts the connection but never answers would
+    // otherwise leave the button disabled and the form stuck busy forever.
+    const submitTimeoutMs = 15000;
 
     const show = (message, isError = false) => {
       status.textContent = message;
@@ -663,7 +676,14 @@
       if (endpoint) {
         setBusy(true);
         try {
-          const response = await fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json' }, body: data });
+          // Guarded, because not every engine implements the static helper.
+          const canTimeout = typeof AbortSignal === 'function' && typeof AbortSignal.timeout === 'function';
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: data,
+            signal: canTimeout ? AbortSignal.timeout(submitTimeoutMs) : undefined,
+          });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           form.reset();
           requiredFields.forEach(clear);

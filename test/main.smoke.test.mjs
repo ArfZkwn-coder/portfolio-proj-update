@@ -12,7 +12,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const openDoms = [];
 after(() => { for (const d of openDoms) d.window.close(); });
 
-function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl = false, libs = false, totem = null, fetchImpl = null, introSeen = false, captureMailto = false } = {}) {
+function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl = false, libs = false, totem = null, fetchImpl = null, introSeen = false, captureMailto = false, formTimeoutMs = null, debug = false } = {}) {
   const errors = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', (e) => errors.push(e.message));
@@ -76,6 +76,7 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
   }
 
   if (introSeen) window.sessionStorage.setItem('intro-seen', '1');
+  if (debug) window.__portfolioDebug = true; // must be set before main.js runs
 
   let src = mainSrc;
   if (captureMailto) { // jsdom can't navigate; expose the mailto URL the form would have opened
@@ -85,6 +86,11 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
   if (totem === 'ok') { window.__totemCalls = []; window.__fakeTotem = { createTotem: async () => ({ setActive: (i) => window.__totemCalls.push(['active', i]), setProgress: (p) => window.__totemCalls.push(['progress', p]) }) }; src = src.replace("import('./totem.js')", 'Promise.resolve(window.__fakeTotem)'); }
   if (totem === 'fail') src = src.replace("import('./totem.js')", "Promise.reject(new Error('boom'))");
   assert.ok(totem ? src !== mainSrc : true, 'test harness substitution applied');
+  if (formTimeoutMs != null) { // shrink the submit timeout so the abort is observable in a test
+    const marker = 'const submitTimeoutMs = 15000;';
+    assert.ok(src.includes(marker), 'harness found the submit timeout constant');
+    src = src.replace(marker, `const submitTimeoutMs = ${formTimeoutMs};`);
+  }
 
   window.eval(src);
   const io = (pred) => window.__ios.find(pred);
@@ -204,6 +210,36 @@ test('form (endpoint): success resets + confirms; failure shows an error and re-
   }
 });
 
+test('form (endpoint): a request that never answers times out and re-enables the button', async () => {
+  // The endpoint accepts the connection and then says nothing. Without a
+  // timeout the pending promise never settles, `setBusy(false)` never runs and
+  // the button stays disabled for the rest of the visit.
+  let signal;
+  const { window, document } = makeEnv({
+    formTimeoutMs: 25,
+    fetchImpl: (url, init) => {
+      signal = init.signal;
+      return new Promise((resolve, reject) => init.signal.addEventListener('abort', () => reject(new Error('aborted'))));
+    },
+  });
+  const form = document.getElementById('contactForm'); const status = document.getElementById('formStatus'); const btn = form.querySelector('.form-submit');
+  form.dataset.endpoint = 'https://example.test/f';
+  document.getElementById('fname').value = 'A'; document.getElementById('femail').value = 'a@b.co'; document.getElementById('fmessage').value = 'msg';
+  document.getElementById('ftopic').value = 'A job opportunity';
+
+  form.dispatchEvent(new window.Event('submit', { cancelable: true, bubbles: true }));
+  await sleep(10);
+  assert.ok(signal, 'the request carries an abort signal');
+  assert.equal(btn.disabled, true, 'busy while the request is in flight');
+  assert.equal(form.getAttribute('aria-busy'), 'true');
+
+  await sleep(150);
+  assert.equal(btn.disabled, false, 'the timeout re-enabled the button');
+  assert.equal(form.getAttribute('aria-busy'), 'false');
+  assert.ok(status.classList.contains('is-error'));
+  assert.match(status.textContent, /arifzakwan2001@gmail\.com/);
+});
+
 test('fine pointer: custom cursor on, follows pointer, external links show an "Open" label', () => {
   const { window, document, root } = makeEnv({ finePointer: true });
   assert.ok(root.classList.contains('has-cursor'));
@@ -260,12 +296,19 @@ test('totem success path: lazy load -> has-totem, active card + counter + progre
   assert.equal(window.__totemCalls.filter((c) => c[0] === 'active' && c[1] === 0).length, 1);
 });
 
-test('totem failure path: import/WebGL failure falls back to the static grid and warns', async () => {
-  const { document, root, io, warns } = makeEnv({ webgl: true, totem: 'fail' });
-  io((o) => o.opts.rootMargin === '600px 0px').cb([{ isIntersecting: true, target: document.getElementById('skills') }]);
+test('totem failure path: falls back to the static grid, warns only for a developer', async () => {
+  const arm = (env) => env.io((o) => o.opts.rootMargin === '600px 0px').cb([{ isIntersecting: true, target: env.document.getElementById('skills') }]);
+
+  const quiet = makeEnv({ webgl: true, totem: 'fail' });
+  arm(quiet);
   await sleep(20);
-  assert.ok(!root.classList.contains('has-totem'), 'class removed again');
-  assert.ok(warns.some((w) => /3D totem unavailable/.test(w)));
+  assert.ok(!quiet.root.classList.contains('has-totem'), 'class removed again');
+  assert.deepEqual(quiet.warns, [], 'a failed enhancement is not the visitor\'s problem');
+
+  const loud = makeEnv({ webgl: true, totem: 'fail', debug: true });
+  arm(loud);
+  await sleep(20);
+  assert.ok(loud.warns.some((w) => /3D totem unavailable/.test(w)), 'a developer who opts in sees it');
 });
 
 test('no WebGL or mobile viewport: totem loader is never armed', () => {
