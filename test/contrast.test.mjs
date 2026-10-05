@@ -181,7 +181,7 @@ test('stylesheet: the token contract above is complete', () => {
     '--accent', '--accent-strong', '--accent-bright', '--accent-on-dark', '--accent-tint',
     '--line', '--line-strong',
     '--ok-bg', '--ok-border', '--ok-text', '--error-bg', '--error-border', '--error-text', '--live',
-    '--scrim', '--dialog-surface', '--dialog-text',
+    '--scrim', '--dialog-surface', '--dialog-text', '--nav-bg', '--nav-bg-solid',
     '--space-2', '--space-8', '--pad-inline', '--pad-section', '--nav-h', '--radius',
     '--dur-fast', '--dur-base', '--ease-out',
     '--fs-2xs', '--fs-xs', '--fs-sm', '--fs-base', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl', '--fs-5xl', '--fs-6xl',
@@ -190,3 +190,58 @@ test('stylesheet: the token contract above is complete', () => {
   const missing = required.filter((token) => !light[token]);
   assert.deepEqual(missing, [], `tokens missing from :root: ${missing.join(', ')}`);
 });
+
+/* ------------------------------------------------------------------ */
+/* Translucent surfaces                                                */
+/* ------------------------------------------------------------------ */
+
+// The scrolled nav bar is the one translucent surface that carries text, so it
+// needs a value per scheme. Skipping the dark override once shipped a cream bar
+// over the dark page, with links on it at roughly 1.1:1.
+function parseColour(value) {
+  const rgba = value.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?\s*\)$/);
+  if (rgba) {
+    return {
+      channels: [1, 2, 3].map((index) => Number(rgba[index])),
+      alpha: rgba[4] === undefined ? 1 : Number(rgba[4]),
+    };
+  }
+  assert.ok(HEX.test(value), `"${value}" is a hex or rgb()/rgba() colour`);
+  const digits = value.slice(1);
+  const full = digits.length === 3 ? [...digits].map((c) => c + c).join('') : digits;
+  return { channels: [0, 2, 4].map((offset) => parseInt(full.slice(offset, offset + 2), 16)), alpha: 1 };
+}
+
+// Flattens a translucent token onto whatever sits behind it, the way the
+// browser paints it.
+function composited(value, background) {
+  const { channels, alpha } = parseColour(value);
+  const under = parseColour(background).channels;
+  const mixed = channels.map((channel, index) => Math.round(channel * alpha + under[index] * (1 - alpha)));
+  return `#${mixed.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+}
+
+test('tokens: the nav bar background flips with the scheme', () => {
+  assert.ok(parseColour(light['--nav-bg']).alpha < 1, '--nav-bg stays translucent so content blurs through');
+  assert.notEqual(
+    light['--nav-bg-solid'],
+    dark['--nav-bg-solid'],
+    '--nav-bg-solid is remapped in the dark block'
+  );
+  const lightBar = luminance(composited(light['--nav-bg'], light['--paper']));
+  const darkBar = luminance(composited(dark['--nav-bg'], dark['--paper']));
+  assert.ok(darkBar < lightBar, 'the dark nav bar composites darker than the light one, not cream');
+});
+
+for (const [scheme, palette] of [['light', light], ['dark', dark]]) {
+  test(`${scheme}: nav text stays readable on the scrolled bar`, () => {
+    const bar = composited(palette['--nav-bg'], palette['--paper']);
+    for (const [foreground, why] of [['--ink', 'logo and active link'], ['--muted', 'idle links']]) {
+      const value = ratio(palette[foreground], bar);
+      assert.ok(
+        value >= 4.5,
+        `${scheme}: ${foreground} (${palette[foreground]}) on the nav bar (${bar}) is ${value.toFixed(2)}:1, needs 4.5:1 (${why})`
+      );
+    }
+  });
+}

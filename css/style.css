@@ -1791,7 +1791,9 @@ body::after {
 
 /* ── 6. DIAGRAMS ── */
 .diagram { display: block; width: 100%; height: auto; }
-.diagram .box { fill: var(--node-fill); stroke: var(--line-strong); stroke-width: 1; }
+/* --ink-raised as the fallback keeps the boxes visible (not SVG-default black)
+   if a browser is ever running with a partial or older token set. */
+.diagram .box { fill: var(--node-fill, var(--ink-raised)); stroke: var(--line-strong); stroke-width: 1; }
 .diagram .kicker { font-family: var(--font-mono); font-size: var(--fs-2xs); letter-spacing: 0.1em; fill: var(--muted); }
 .diagram .name { font-family: var(--font-body); font-size: var(--fs-sm); fill: var(--ink); }
 .diagram .wire { stroke: var(--line-strong); stroke-width: 1; fill: none; }
