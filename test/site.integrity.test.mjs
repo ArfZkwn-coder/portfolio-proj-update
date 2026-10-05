@@ -1,5 +1,5 @@
 // Guards the deploy-time facts that unit tests can't see: this is a GitHub Pages *project* site
-// (served from /portfolio-proj/), so asset paths must be relative, and no placeholder may ship.
+// (served from /portfolio-proj-update/), so asset paths must be relative, and no placeholder may ship.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,7 +7,7 @@ import { JSDOM } from 'jsdom';
 
 const html = fs.readFileSync('../index.html', 'utf8');
 const { document } = new JSDOM(html).window;
-const SITE = 'https://arfzkwn-coder.github.io/portfolio-proj';
+const SITE = 'https://arfzkwn-coder.github.io/portfolio-proj-update';
 
 test('all local assets are relative (root-absolute paths 404 on a Pages project site) and exist on disk', () => {
   const localRefs = (doc) => [...doc.querySelectorAll('link[href], script[src]')]
@@ -15,18 +15,18 @@ test('all local assets are relative (root-absolute paths 404 on a Pages project 
     .filter((u) => u && !/^(https?:|data:|#|mailto:)/.test(u));
 
   const refs = localRefs(document);
-  assert.deepEqual(refs.sort(), ['css/style.css', 'css/tokens.css', 'js/main.js', 'js/tracking.js']);
+  assert.deepEqual(refs.sort(), ['css/fonts.css', 'css/style.css', 'css/tokens.css', 'js/main.js', 'js/tracking.js']);
 
   // resume.html is a second document the repo must ship consistently.
   const resumeHtml = fs.readFileSync('../resume.html', 'utf8');
   const resumeDoc = new JSDOM(resumeHtml).window.document;
-  assert.deepEqual(localRefs(resumeDoc).sort(), ['css/resume.css', 'css/tokens.css', 'js/tracking.js']);
+  assert.deepEqual(localRefs(resumeDoc).sort(), ['css/fonts.css', 'css/resume.css', 'css/tokens.css', 'js/tracking.js']);
 
   // totem.js is loaded lazily via import('./totem.js') from main.js, so it never appears as a <script src>
   assert.ok(/import\('\.\/totem\.js'\)/.test(fs.readFileSync('../js/main.js', 'utf8')), 'main.js lazy-loads ./totem.js');
   assert.ok(fs.existsSync('../js/totem.js'), 'js/totem.js exists');
   for (const ref of [...refs, ...localRefs(resumeDoc)]) {
-    assert.ok(!ref.startsWith('/'), `root-absolute path breaks under /portfolio-proj/: ${ref}`);
+    assert.ok(!ref.startsWith('/'), `root-absolute path breaks under /portfolio-proj-update/: ${ref}`);
     assert.ok(!ref.includes('site/'), `stale site/ subfolder reference: ${ref}`);
     assert.ok(fs.existsSync(`../${ref}`), `missing file for ${ref}`);
   }
@@ -41,6 +41,20 @@ test('social/SEO metadata is absolute and the og-image is a real PNG', () => {
   assert.deepEqual([...png.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 'og-image.png has a PNG signature');
   const ld = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
   assert.equal(ld['@type'], 'Person'); assert.equal(ld.name, 'Arif Zakwan');
+});
+
+test('fonts are self-hosted: no page reaches out to a third-party font origin', () => {
+  // The webfonts live in fonts/ and are declared in css/fonts.css. A stray
+  // fonts.googleapis.com link would quietly reintroduce a third-party request
+  // (and a render-blocking stylesheet) without breaking anything visibly.
+  for (const file of ['index.html', 'resume.html', 'privacy.html', '404.html']) {
+    const source = fs.readFileSync(`../${file}`, 'utf8');
+    assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(source), `${file} loads fonts from Google`);
+    assert.match(source, /href="css\/fonts\.css"/, `${file} loads the self-hosted @font-face sheet`);
+  }
+  for (const face of ['dm-sans-latin.woff2', 'dm-serif-display-latin.woff2', 'dm-serif-display-italic-latin.woff2']) {
+    assert.ok(fs.existsSync(`../fonts/${face}`), `fonts/${face} ships`);
+  }
 });
 
 test('no placeholder content ships: no example.com links, no hidden credential links, no TODO text', () => {
@@ -128,10 +142,11 @@ test('résumé: reachable from the portfolio in one step, and cross-linked back'
   // 3 roles + 3 projects + 2 degrees + 1 certificate
   assert.equal(resumeDoc.querySelectorAll('.resume-entry').length, 9, 'every real entry is carried over');
 
-  // No screen-only chrome should print.
+  // No screen-only chrome should print. .resume-chrome is the banner that wraps
+  // the toolbar row and its hint, so hiding it covers both.
   const resumeCss = fs.readFileSync('../css/resume.css', 'utf8');
   const printBlock = resumeCss.slice(resumeCss.indexOf('@media print'));
-  for (const selector of ['.resume-bar', '.skip-link', '.resume-hint']) {
+  for (const selector of ['.resume-chrome', '.skip-link']) {
     assert.ok(printBlock.includes(selector), `print rules hide ${selector}`);
   }
   assert.ok(/@page\s*\{[^}]*size:\s*A4/.test(printBlock), 'print declares an A4 page');

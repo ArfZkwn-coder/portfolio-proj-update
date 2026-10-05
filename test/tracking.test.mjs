@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { toPabblyPayload, validateSubmission } from '../relay/lib.js';
 
 // js/tracking.js is a browser script that also exports its pure helpers so they
 // can be tested without a DOM. CommonJS wraps every file with a `module` object,
@@ -308,6 +309,40 @@ test('direct mode payload: same field names as the relay would send', () => {
   const total = Number(payload.clicks_total);
   const summed = Number(payload.clicks_github) + Number(payload.clicks_linkedin) + Number(payload.clicks_coursera);
   assert.equal(total, summed, 'the total agrees with the per-channel counts');
+});
+
+test('the direct payload and the relay payload carry the same fields, key for key', () => {
+  // The field names exist in two files and there is no build step to share them
+  // (the client is a classic script, the relay is ESM), so this is what stops
+  // the two hand-kept copies from drifting apart.
+  const fields = { name: 'Test User', email: 'test@example.com', topic: 'A job opportunity', message: 'Hello there' };
+  const context = {
+    page: '/portfolio-proj-update/',
+    referrer: 'https://www.linkedin.com/feed/',
+    sessionId: 'session-1',
+    utm: { utm_source: 'linkedin' },
+    clicks: [
+      { channel: 'linkedin', ts: 1_700_000_000_000 },
+      { channel: 'github', ts: 1_700_000_060_000 },
+    ],
+    browser: { locale: 'en-GB', timezone: 'Asia/Kuala_Lumpur', screen: '1440x900', viewport: '1280x800' },
+  };
+
+  // Whatever the visitor's browser would POST to the relay, validated the way
+  // the relay validates it, must land on the same schema as the direct route.
+  const validated = validateSubmission(buildSubmission(fields, context));
+  assert.ok(validated.ok, `the client wire payload must be accepted by the relay: ${validated.errors}`);
+
+  const direct = buildWebhookPayload(fields, context);
+  const relayed = toPabblyPayload(validated.value);
+  assert.deepEqual(Object.keys(direct).sort(), Object.keys(relayed).sort(),
+    'a workflow must not care which route the data took');
+
+  // Same field names, same shapes: every value is a string in both routes.
+  for (const [key, value] of Object.entries(relayed)) {
+    assert.equal(typeof value, 'string', `relay ${key} is a string`);
+    assert.equal(typeof direct[key], 'string', `direct ${key} is a string`);
+  }
 });
 
 test('direct mode payload: no clicks and no browser context still produce every field', () => {

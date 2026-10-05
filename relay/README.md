@@ -30,29 +30,28 @@ both a privacy decision and the reason the automation never sees a stranger.
 | --- | --- |
 | `worker.js` | the Worker: routing, CORS, rate limiting, one forward |
 | `lib.js` | pure validation and payload shaping — unit-tested, no runtime needed |
+| `wrangler.toml` | deploy config: Worker name, entry point, compatibility date |
 
 `lib.js` is exercised by `test/relay.test.mjs`, which runs with plain `node` and
 needs neither a Workers runtime nor a Pabbly account.
 
 ## Deploy
 
-Requires a Cloudflare account and the [`wrangler`](https://developers.cloudflare.com/workers/wrangler/) CLI.
+Requires a Cloudflare account. The Worker's [`wrangler.toml`](wrangler.toml) and its
+pinned CLI are committed, so `npm install` in this folder is all the setup there
+is:
 
 ```bash
 cd relay
+npm install
 npx wrangler secret put ALLOWED_ORIGIN
 npx wrangler secret put PABBLY_WEBHOOK_URL
 npx wrangler secret put PABBLY_SIGNING_SECRET
-npx wrangler deploy
+npm run deploy
 ```
 
-A minimal `wrangler.toml`:
-
-```toml
-name = "portfolio-webhook-relay"
-main = "worker.js"
-compatibility_date = "2026-01-01"
-```
+`npm run deploy` is `wrangler deploy`, which reads `wrangler.toml` — the name,
+the `worker.js` entry point and the compatibility date all live there.
 
 Generate the signing secret with any long random value, for example:
 
@@ -99,7 +98,7 @@ Flat, one level, every value a string, every key addressable in Pabbly as
 | `email` | `a@b.com` | |
 | `topic` | `A job opportunity` | one of three fixed values, or empty |
 | `message` | `Hello…` | newlines preserved |
-| `page` | `/portfolio-proj/` | the page they submitted from |
+| `page` | `/portfolio-proj-update/` | the page they submitted from |
 | `referrer` | `https://…` | empty when the browser sends none |
 | `session_id` | `uuid` | random per tab; not an identity |
 | `utm_source` … `utm_term` | `linkedin` | all five UTM parameters, empty when absent |
@@ -121,7 +120,7 @@ no field is ever `null` or `undefined` — absent means an empty string.
 ### `POST /event` → acknowledged, not forwarded
 
 ```json
-{ "channel": "linkedin", "page": "/portfolio-proj/", "sessionId": "…", "ts": 1790000000000 }
+{ "channel": "linkedin", "page": "/portfolio-proj-update/", "sessionId": "…", "ts": 1790000000000 }
 ```
 
 Answered `202 {"ok":true,"forwarded":false}`. Click counts live in the visitor's

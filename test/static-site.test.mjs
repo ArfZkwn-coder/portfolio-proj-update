@@ -5,11 +5,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { JSDOM } from 'jsdom';
 
 const read = (name) => fs.readFileSync(`../${name}`, 'utf8');
-const SITE_PATH = '/portfolio-proj/';
-const SITE = 'https://arfzkwn-coder.github.io/portfolio-proj';
+const SITE_PATH = '/portfolio-proj-update/';
+const SITE = 'https://arfzkwn-coder.github.io/portfolio-proj-update';
 
 test('robots.txt allows crawling and points at the sitemap that exists', () => {
   const robots = read('robots.txt');
@@ -72,4 +73,29 @@ test('404.html is self-contained, no-indexed, and points back to the site', () =
 
 test('.nojekyll is present so Pages copies underscored files verbatim', () => {
   assert.ok(fs.existsSync('../.nojekyll'), 'a build step must not rewrite the site');
+});
+
+test('the canonical host matches the repository the site deploys from', () => {
+  // A Pages project site is served from /<repo>/, so renaming the repo — or
+  // copying the site into a differently named one — invalidates every absolute
+  // URL at once (canonical, og:url, og:image, sitemap, robots, the 404 base).
+  // That failure is invisible locally, so tie the constant to the actual remote.
+  const remote = (() => {
+    try {
+      return execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: '..', encoding: 'utf8' }).trim();
+    } catch {
+      return ''; // no git (e.g. a source tarball): there is nothing to compare against
+    }
+  })();
+  const match = remote.match(/github\.com[:/]([^/]+)\/(.+?)(?:\.git)?$/);
+  if (!match) return;
+  const [, owner, repo] = match;
+
+  // In a fork's CI the origin is the fork, so the host legitimately differs.
+  // Only the canonical owner's own repository has to agree with the constants.
+  const canonicalOwner = new URL(SITE).hostname.split('.')[0];
+  if (process.env.GITHUB_REPOSITORY && owner.toLowerCase() !== canonicalOwner) return;
+
+  assert.equal(SITE, `https://${owner.toLowerCase()}.github.io/${repo}`,
+    'absolute URLs must use the deployed repository name; update the HTML, sitemap, robots.txt and 404 <base> together');
 });

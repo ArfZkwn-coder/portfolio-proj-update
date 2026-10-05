@@ -1,6 +1,6 @@
 # Arif Zakwan — Portfolio
 
-Live: https://arfzkwn-coder.github.io/portfolio-proj
+Live: https://arfzkwn-coder.github.io/portfolio-proj-update
 
 Single-page portfolio for an IT enthusiast and automation specialist, plus a print-first résumé page. Plain HTML, CSS and JavaScript with no build step, hosted on GitHub Pages straight from the repo root. Motion and 3D are progressive enhancements: if a library, WebGL, a fine pointer or motion is unavailable (or the visitor prefers reduced motion), that feature skips itself and the page still works.
 
@@ -11,9 +11,11 @@ index.html            the portfolio — all page content (edit your text here)
 resume.html           print-first résumé, built from the same copy
 privacy.html          what is recorded, and how to opt out
 404.html              GitHub Pages fallback; pins <base> because it is served at any depth
+css/fonts.css         self-hosted DM Sans / DM Serif Display @font-face rules
 css/tokens.css        the only place colours, sizes, space and motion are declared
 css/style.css         index.html + 404.html + privacy.html styles, incl. print rules
 css/resume.css        résumé layout + its A4 print rules
+fonts/                self-hosted .woff2 files and their SIL OFL licences
 js/main.js            scroll, nav, cursor, intro, form, case-study dialogs, totem loader
 js/tracking.js        sends form submissions to the webhook relay (off by default)
 js/totem.js           Three.js skills "totem" (lazy-loaded, desktop + WebGL only)
@@ -23,6 +25,8 @@ sitemap.xml           the three real pages (maintained by hand — keep lastmod 
 .nojekyll             stop Pages from running Jekyll over the output
 og-image.png          social preview (1200×630)
 test/                 dev-only checks (not needed to run the site)
+.github/workflows/    CI: runs `npm run check` on every push and pull request
+.nvmrc                the Node major CI installs (mirrored by `engines` in package.json)
 package.json          dev tooling only
 ```
 
@@ -57,7 +61,7 @@ Practical consequences when editing:
 
 - **Motion:** Lenis smooth scroll + GSAP ScrollTrigger, preloader (plays once per browser session, skipped on repeat visits) and kinetic hero name, marquee, scroll reveals
 - **Interaction:** custom cursor with an "Open" label on the GitHub and LinkedIn links, and magnetic buttons (fine pointers only)
-- **3D:** the Skills section becomes a scroll-driven Three.js totem on desktop; everyone else gets the static grid. The totem is built from the `.skill-card` elements, so editing a skill in `index.html` updates it.
+- **3D:** the Skills section becomes a scroll-driven Three.js totem on desktop; everyone else gets the static grid. The totem is built from the `.skill-card` elements, so editing a skill in `index.html` updates it. A totem that cannot load is silent by design — set `window.__portfolioDebug = true` before load to see why in the console.
 - **Sections** (in this order): About, Projects, Skills, Experience, Education & Certifications, Contact. Numbers and nav order are checked by tests; if you reorder, keep both in sync.
 - **Navigation:** a hairline reading-progress bar under the bar on scroll, and an
   active-section indicator driven by an IntersectionObserver band across the
@@ -69,7 +73,8 @@ Practical consequences when editing:
   reduced-motion support, honest form status. Decorative SVGs are `aria-hidden`
   and their accent comes from `stroke="currentColor"`.
 - **Dark mode:** follows `prefers-color-scheme` with no JavaScript and no toggle.
-- Libraries load from jsDelivr at pinned versions, deferred: GSAP 3.15.0, Lenis 1.3.26, three 0.186.1
+- Libraries load from jsDelivr at pinned versions, deferred and **subresource-integrity checked**: GSAP 3.15.0, Lenis 1.3.26, three 0.186.1. three is the one exception to the hash — it arrives through the import map, and import maps have no `integrity` field.
+- Fonts are **self-hosted** (`css/fonts.css` + `fonts/`): no request leaves the site to render text, and the only third-party origins left are the three library files above.
 
 ## Case studies
 
@@ -168,7 +173,7 @@ To disable: clear `data-track-endpoint` on `index.html`'s form and on
 
 - All portfolio text lives in `index.html`. If you add or remove a skill, update the hard-coded `/ 06` totem counter in the Skills section; `npm test` fails if it drifts.
 - Update `sitemap.xml`'s `<lastmod>` by hand when you change a page — there is no build step to generate it, and a wrong date is worse than none.
-- Keep asset paths **relative** (`css/style.css`, not `/css/style.css`). Pages serves this site under `/portfolio-proj/`, so root-absolute paths 404. Tests enforce this in the HTML and the CSS. `404.html` is the single exception and uses `<base href="/portfolio-proj/">`.
+- Keep asset paths **relative** (`css/style.css`, not `/css/style.css`). Pages serves this site under `/portfolio-proj-update/`, so root-absolute paths 404. Tests enforce this in the HTML and the CSS. `404.html` is the single exception and uses `<base href="/portfolio-proj-update/">`.
 - **Contact form:** visitors choose what they're reaching out about (job opportunity, freelance project, other); it appears in the email subject/body and is sent as a `topic` field. The form owns its validation (the markup sets `novalidate`) so errors appear inline and are announced — keep the `.field-error` element and `aria-describedby` on any required field you add. Paste a Formspree or Web3Forms URL into the form's `data-endpoint` to send without opening a mail app. Left empty, it opens the visitor's mail app instead.
 
 ## Run locally
@@ -187,14 +192,17 @@ npm run check      # eslint + html-validate + tests
 ```
 
 The suites are run with `node --test` from `test/`, so their relative reads work —
-run `npm test`, or `cd test` first.
+run `npm test`, or `cd test` first. CI runs exactly this on every push to `main`
+and every pull request (`.github/workflows/ci.yml`), using the Node version in
+`.nvmrc`.
 
 | File | Guards |
 | --- | --- |
 | `test/main.smoke.test.mjs` | boot without libraries, menu focus trap, reveal/nav observers, form validation + busy state, cursor, reduced motion, case-study open/close/deep-link, totem success/failure, intro session logic |
 | `test/site.integrity.test.mjs` | relative asset paths, absolute SEO metadata, no placeholders, real content, section/nav order, accessibility plumbing, résumé content and cross-links, JSON-LD parity |
 | `test/contrast.test.mjs` | WCAG AA contrast for every pair in the palette, in both colour schemes |
-| `test/stylesheet.test.mjs` | balanced braces, every `var()` resolves, no self-referential token, no unused token, no raw colour in a component rule, no ad-hoc font sizes |
+| `test/stylesheet.test.mjs` | balanced braces, every `var()` resolves, no self-referential token, no unused token, no raw colour in a component rule, no ad-hoc font sizes, no remote or root-absolute CSS asset |
+| `test/a11y.test.mjs` | axe-core over all four pages: landmarks, accessible names and ARIA wiring (contrast is left to the suite above, which needs real layout) |
 | `test/case-studies.test.mjs` | one opener per card, labelled dialog + close control, card ↔ dialog copy cannot drift, no stray URLs |
 | `test/static-site.test.mjs` | robots ↔ sitemap agreement, sitemap entries resolve to real files, 404 is no-indexed and self-contained, `.nojekyll` present |
 | `test/totem.test.mjs` | the 3D layout/rotation/paint math |
