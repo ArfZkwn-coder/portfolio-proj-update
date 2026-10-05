@@ -45,7 +45,7 @@ test('stylesheet: braces are balanced in every stylesheet', () => {
 // Custom properties that JavaScript owns: it writes them with setProperty and
 // the stylesheet only ever reads them. Keeping the list explicit means a typo
 // in a static var() still fails the suite.
-const JS_OWNED = new Set(['--i', '--x', '--y', '--mx', '--my', '--nav-progress']);
+const JS_OWNED = new Set(['--i', '--x', '--y', '--mx', '--my', '--nav-progress', '--d']);
 
 // Tokens declared for the dark-scheme comprehension of the palette rather than
 // for a rule in this file. Anything else unused is dead weight.

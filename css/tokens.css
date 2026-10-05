@@ -101,6 +101,12 @@
 
   --font-display: 'DM Serif Display', 'Iowan Old Style', Georgia, serif;
   --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  /* Blueprint (Direction A). Decorative surfaces only — the drafting grid
+     behind the page and the fill of a diagram node; neither carries text. */
+  --grid-line: rgba(15, 15, 15, 0.05);
+  --node-fill: #fbfaf6;
 }
 
 :root[data-contrast='high'] {
@@ -152,5 +158,8 @@
     --scrim: rgba(0, 0, 0, 0.65);
     --dialog-surface: #1c1c1c;
     --dialog-text: #f5f2ec;
+
+    --grid-line: rgba(245, 242, 236, 0.05);
+    --node-fill: #1a1a1a;
   }
 }

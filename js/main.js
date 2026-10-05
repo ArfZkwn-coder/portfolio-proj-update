@@ -579,6 +579,53 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Diagrams — the pipelines draw themselves once they are on screen    */
+  /* ------------------------------------------------------------------ */
+  // The hidden first frame lives under `html.motion`, which is only added
+  // here. No JS, no IntersectionObserver, or a reduced-motion preference all
+  // mean the class is never added and the finished drawing shows instead.
+  // Returns a function that draws whatever is on screen already: the observer
+  // needs rendering frames, and a background tab produces none, so the boot
+  // sequence calls it once the intro has lifted rather than trusting a
+  // callback to arrive.
+  function initDiagrams() {
+    const diagrams = $$('.diagram');
+    if (diagrams.length === 0 || prefersReducedMotion() || !('IntersectionObserver' in window)) {
+      return () => {};
+    }
+
+    const draw = (diagram) => {
+      if (diagram.classList.contains('draw')) return;
+      diagram.classList.add('draw');
+      $$('.box, .wire, .wire-accent, .wire-dash', diagram).forEach((part, index) => {
+        part.style.setProperty('--d', `${Math.min(index, 7) * 90}ms`);
+      });
+    };
+
+    root.classList.add('motion');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          draw(entry.target);
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.35 }
+    );
+    diagrams.forEach((diagram) => observer.observe(diagram));
+
+    return () => {
+      diagrams
+        .filter((diagram) => {
+          const rect = diagram.getBoundingClientRect();
+          return rect.top < window.innerHeight && rect.bottom > 0;
+        })
+        .forEach(draw);
+    };
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Contact form — inline validation + honest status                     */
   /* ------------------------------------------------------------------ */
   function initForm() {
@@ -776,15 +823,27 @@
         opener = button;
         const hash = `#case-${slug}`;
         if (window.location.hash === hash) open(slug, button);
-        else window.history.pushState(null, '', hash);
+        // The marker tells requestClose() this entry is ours to go back to.
+        else window.history.pushState({ caseStudy: true }, '', hash);
         syncFromHash();
       });
     });
 
     dialogs.forEach((dialog) => {
+      // A panel opened from a shared #case- URL sits on the tab's first history
+      // entry, where history.back() has nowhere to go. Relying on it would leave
+      // the dialog open and the page locked with no way out, so only the entries
+      // this script pushed are closed by going back; a deep link is closed by
+      // clearing its hash in place instead.
       const requestClose = () => {
-        if (window.location.hash) window.history.back();
-        else close();
+        if (window.history.state && window.history.state.caseStudy) {
+          window.history.back();
+          return;
+        }
+        if (window.location.hash) {
+          window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        }
+        close();
       };
       $('.case-study-close', dialog)?.addEventListener('click', requestClose);
       // The platform fires `cancel` for Escape; routing it through the same
@@ -828,10 +887,12 @@
 
   initScrollEffects();
   initTotem();
+  const drawDiagramsInView = initDiagrams();
 
   runIntro().then(() => {
     root.classList.remove('is-loading');
     root.classList.add('is-ready');
     if (window.ScrollTrigger) window.ScrollTrigger.refresh();
+    drawDiagramsInView();
   });
 })();

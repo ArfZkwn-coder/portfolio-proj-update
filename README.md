@@ -51,9 +51,9 @@ Practical consequences when editing:
 - **Modal surfaces** use `--dialog-surface`/`--dialog-text`/`--scrim`.
 - **Type scale.** Use `--fs-*`; a test rejects a new ad-hoc `font-size`. The
   résumé's print rules are the one exception, because paper wants `pt`.
-- **Dynamic custom properties.** `--i`, `--x`, `--y`, `--mx`, `--my` and
-  `--nav-progress` are written by `js/main.js` and only read by CSS; they are
-  listed in `test/stylesheet.test.mjs`.
+- **Dynamic custom properties.** `--i`, `--x`, `--y`, `--mx`, `--my`,
+  `--nav-progress` and `--d` are written by `js/main.js` and only read by CSS;
+  they are listed in `test/stylesheet.test.mjs`.
 - **A token that resolves to itself is a bug**, not a no-op: `--x: var(--x)`
   computes to nothing and silently drops the declaration. A test fails on it.
 
@@ -86,7 +86,9 @@ dialog API.
 - **Deep links:** every panel is `#case-<slug>`, where the slug comes from the
   card's `data-case`. Opening pushes a history entry; closing, Escape and a
   backdrop click go back through it, so the URL and the visible panel cannot
-  disagree.
+  disagree. A panel opened straight from a shared link — the tab's first history
+  entry, where `back()` has nowhere to go — is closed by clearing its hash in
+  place instead of going back.
 - **Authoring rule:** the dialog copy is the card's own text, expanded. A test
   (`test/case-studies.test.mjs`) asserts the dialog's outcome and stack match the
   card **verbatim**, so the two cannot drift. If you reword a card, reword the

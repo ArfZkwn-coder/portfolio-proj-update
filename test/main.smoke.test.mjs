@@ -12,11 +12,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const openDoms = [];
 after(() => { for (const d of openDoms) d.window.close(); });
 
-function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl = false, libs = false, totem = null, fetchImpl = null, introSeen = false, captureMailto = false, formTimeoutMs = null, debug = false } = {}) {
+function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl = false, libs = false, totem = null, fetchImpl = null, introSeen = false, captureMailto = false, formTimeoutMs = null, debug = false, hash = '' } = {}) {
   const errors = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', (e) => errors.push(e.message));
-  const dom = new JSDOM(html, { runScripts: 'outside-only', pretendToBeVisual: true, url: 'http://localhost/', virtualConsole: vc });
+  const dom = new JSDOM(html, { runScripts: 'outside-only', pretendToBeVisual: true, url: `http://localhost/${hash}`, virtualConsole: vc });
   openDoms.push(dom);
   const { window } = dom;
   const { document } = window;
@@ -61,8 +61,12 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
   };
   window.history.back = () => {
     window.__history.push(['back']);
-    // A real back() pops to the previous entry; in these tests that is the
-    // document without a hash, so clear it and announce the change.
+    // A real back() pops to the previous entry when there is one, and is a
+    // no-op when the tab has nothing to go back to. Mirroring that no-op
+    // matters: a shared #case- link opens on the tab's *first* entry, and a
+    // stub that always "succeeds" would hide the fact that close() there has
+    // no history to fall back on.
+    if (window.history.length <= 1) return;
     const { origin, pathname, search } = window.location;
     window.history.replaceState(null, '', `${origin}${pathname}${search}`);
     window.dispatchEvent(new window.Event('popstate'));
@@ -669,6 +673,24 @@ test('case studies: the close control closes, unlocks, and returns focus to the 
   assert.equal(dialog.open, false, 'the panel is closed');
   assert.ok(!root.classList.contains('case-open'), 'page scroll is released');
   assert.equal(document.activeElement, button, 'focus returns to the control that opened it');
+});
+
+test('case studies: a shared #case- link closes even when there is no history to go back to', () => {
+  // A shared link arrives with the hash on the initial load, so the panel is
+  // the tab's first (and only) history entry and back() is a no-op there. The
+  // panel must still close: otherwise the scrim stays locked over the page with
+  // nothing that can dismiss it.
+  const { window, document, root } = makeEnv({ hash: '#case-dabox-chatbot-ai' });
+  const button = document.querySelector('.project-case-open[data-case="dabox-chatbot-ai"]');
+  const dialog = document.getElementById('case-dabox-chatbot-ai');
+  assert.equal(dialog.open, true, 'the deep link opens the panel on load');
+  assert.equal(window.history.length, 1, 'and it is the only history entry');
+
+  dialog.querySelector('.case-study-close').click();
+  assert.equal(dialog.open, false, 'the panel closes without a back() to rely on');
+  assert.equal(window.location.hash, '', 'the hash is cleared in place');
+  assert.ok(!root.classList.contains('case-open'), 'page scroll is released');
+  assert.equal(document.activeElement, button, 'focus lands on the card control, not a stale element');
 });
 
 test('case studies: Escape and a backdrop click both close the panel', () => {
