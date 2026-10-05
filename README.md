@@ -49,6 +49,11 @@ Practical consequences when editing:
   `--ink`/`--paper`. That keeps buttons and the dark Skills panel cream-on-dark
   in both colour schemes.
 - **Modal surfaces** use `--dialog-surface`/`--dialog-text`/`--scrim`.
+- **A surface token that carries text needs a dark-scheme value.** The scrolled
+  nav bar is the one translucent surface (`--nav-bg`, plus `--nav-bg-solid` for
+  browsers without `backdrop-filter`); `test/contrast.test.mjs` composites it
+  over `--paper`, checks the logo and links on it, and fails if the dark
+  override goes missing.
 - **Type scale.** Use `--fs-*`; a test rejects a new ad-hoc `font-size`. The
   résumé's print rules are the one exception, because paper wants `pt`.
 - **Dynamic custom properties.** `--i`, `--x`, `--y`, `--mx`, `--my`,

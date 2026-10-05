@@ -130,6 +130,13 @@
        sections that use --ink as a fill would otherwise flash light. */
     --section-alt: #1b1b1b;
 
+    /* The scrolled bar must be this scheme's own paper: left at the light
+       default it would carry light --ink text at ~1.1:1. Same reason the
+       select control's arrow is redrawn in the dark muted colour. */
+    --nav-bg: rgba(18, 18, 18, 0.92);
+    --nav-bg-solid: #121212;
+    --field-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%239b9993' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+
     --muted: #9b9993;
     --text-body: #c7c4bd;
     --text-faint: #6f6d67;

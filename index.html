@@ -118,7 +118,10 @@
            pipeline, signals in, outcome delivered. Inline SVG, so it themes
            itself and needs no image assets. -->
       <figure class="hero-canvas">
-        <svg class="diagram" viewBox="0 0 620 320" role="img" aria-label="Diagram: schedules and webhooks feed an n8n workflow, which calls AI and CRM services, then delivers the outcome by Telegram or email.">
+        <!-- fill/stroke here (and fill="none" on the shapes) is the no-stylesheet
+             fallback: unstyled SVG shapes otherwise paint solid black and the
+             diagram reads as blank. The stylesheet still owns every real colour. -->
+        <svg class="diagram" viewBox="0 0 620 320" fill="currentColor" stroke="currentColor" role="img" aria-label="Diagram: schedules and webhooks feed an n8n workflow, which calls AI and CRM services, then delivers the outcome by Telegram or email.">
           <defs>
             <marker id="bp-arw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
               <path d="M0 0L7 3.5L0 7z" class="hi"/>
@@ -130,42 +133,42 @@
           <text class="kicker" x="460" y="42">03 · DELIVERY</text>
 
           <g>
-            <rect class="box" x="40" y="80" width="170" height="56"/>
+            <rect class="box" x="40" y="80" width="170" height="56" fill="none"/>
             <text class="kicker" x="52" y="103">TRIGGER</text>
             <text class="name" x="52" y="122">Cron schedule</text>
           </g>
           <g>
-            <rect class="box" x="40" y="240" width="170" height="56"/>
+            <rect class="box" x="40" y="240" width="170" height="56" fill="none"/>
             <text class="kicker" x="52" y="263">TRIGGER</text>
             <text class="name" x="52" y="282">Webhook / form</text>
           </g>
           <g>
-            <rect class="box" x="250" y="80" width="170" height="56"/>
+            <rect class="box" x="250" y="80" width="170" height="56" fill="none"/>
             <text class="kicker" x="262" y="103">AUTOMATE</text>
             <text class="name" x="262" y="122">n8n workflow</text>
           </g>
           <g>
-            <rect class="box" x="250" y="240" width="170" height="56"/>
+            <rect class="box" x="250" y="240" width="170" height="56" fill="none"/>
             <text class="kicker" x="262" y="263">ENRICH</text>
             <text class="name" x="262" y="282">AI · CRM lookup</text>
           </g>
           <g>
-            <rect class="box" x="460" y="80" width="120" height="56"/>
+            <rect class="box" x="460" y="80" width="120" height="56" fill="none"/>
             <text class="kicker" x="472" y="103">DELIVER</text>
             <text class="name" x="472" y="122">Telegram</text>
           </g>
           <g>
-            <rect class="box" x="460" y="240" width="120" height="56"/>
+            <rect class="box" x="460" y="240" width="120" height="56" fill="none"/>
             <text class="kicker" x="472" y="263">DELIVER</text>
             <text class="name" x="472" y="282">Email</text>
           </g>
 
-          <path class="wire" d="M210 108 H242" marker-end="url(#bp-arw)"/>
-          <path class="wire" d="M210 268 H242" marker-end="url(#bp-arw)"/>
-          <path class="wire" d="M420 108 H452" marker-end="url(#bp-arw)"/>
-          <path class="wire-accent" d="M420 268 H452" marker-end="url(#bp-arw)"/>
-          <path class="wire-dash" d="M335 136 V232" marker-end="url(#bp-arw)"/>
-          <path class="wire-dash" d="M210 268 C226 268 230 136 242 108"/>
+          <path class="wire" d="M210 108 H242" fill="none" marker-end="url(#bp-arw)"/>
+          <path class="wire" d="M210 268 H242" fill="none" marker-end="url(#bp-arw)"/>
+          <path class="wire" d="M420 108 H452" fill="none" marker-end="url(#bp-arw)"/>
+          <path class="wire-accent" d="M420 268 H452" fill="none" marker-end="url(#bp-arw)"/>
+          <path class="wire-dash" d="M335 136 V232" fill="none" marker-end="url(#bp-arw)"/>
+          <path class="wire-dash" d="M210 268 C226 268 230 136 242 108" fill="none"/>
         </svg>
         <!-- The wide diagram's labels scale below readable size on a phone, so
              small screens get the same pipeline as a vertical list instead. -->
@@ -258,14 +261,14 @@
         <div class="project-index" aria-hidden="true">01</div>
         <h3 class="project-title">N8n Automations</h3>
         <p class="project-desc">Automated server management workflows built with n8n — including auto-update routines and real-time server health monitoring delivered via Telegram messages. Keeps infrastructure healthy with zero manual intervention.</p>
-        <svg class="diagram diagram-card" viewBox="0 0 320 40" role="img" aria-label="Pipeline: a schedule triggers n8n, which runs a health check and alerts over Telegram.">
-          <rect class="box" x="0" y="4" width="96" height="32"/>
+        <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: a schedule triggers n8n, which runs a health check and alerts over Telegram.">
+          <rect class="box" x="0" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="48" y="24" text-anchor="middle">CRON</text>
-          <path class="wire" d="M96 20 H112" marker-end="url(#bp-arw)"/>
-          <rect class="box" x="112" y="4" width="96" height="32"/>
+          <path class="wire" d="M96 20 H112" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="112" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="160" y="24" text-anchor="middle">N8N</text>
-          <path class="wire" d="M208 20 H224" marker-end="url(#bp-arw)"/>
-          <rect class="box" x="224" y="4" width="96" height="32"/>
+          <path class="wire" d="M208 20 H224" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="224" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="272" y="24" text-anchor="middle">TELEGRAM</text>
         </svg>
         <p class="project-outcome">Health checks and updates run unattended, with anything unusual pushed to Telegram instead of waiting for a manual check.</p>
@@ -284,14 +287,14 @@
         <div class="project-index" aria-hidden="true">02</div>
         <h3 class="project-title">Personal Homelab &amp; Game Server</h3>
         <p class="project-desc">Maintain a local Linux-based server environment utilizing Docker to host self-hosted services and game servers. Implemented secure remote access using Tailscale, ensuring encrypted connectivity without exposing local ports.</p>
-        <svg class="diagram diagram-card" viewBox="0 0 320 40" role="img" aria-label="Pipeline: Docker hosts the services, Tailscale provides encrypted connectivity, and they are reachable remotely.">
-          <rect class="box" x="0" y="4" width="96" height="32"/>
+        <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: Docker hosts the services, Tailscale provides encrypted connectivity, and they are reachable remotely.">
+          <rect class="box" x="0" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="48" y="24" text-anchor="middle">DOCKER</text>
-          <path class="wire" d="M96 20 H112" marker-end="url(#bp-arw)"/>
-          <rect class="box" x="112" y="4" width="96" height="32"/>
+          <path class="wire" d="M96 20 H112" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="112" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="160" y="24" text-anchor="middle">TAILSCALE</text>
-          <path class="wire" d="M208 20 H224" marker-end="url(#bp-arw)"/>
-          <rect class="box" x="224" y="4" width="96" height="32"/>
+          <path class="wire" d="M208 20 H224" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="224" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="272" y="24" text-anchor="middle">REMOTE</text>
         </svg>
         <p class="project-outcome">Services are containerised and reachable remotely over an encrypted mesh, with no inbound ports published to the internet.</p>
@@ -309,14 +312,14 @@
         <div class="project-index" aria-hidden="true">03</div>
         <h3 class="project-title">Dabox Chatbot AI</h3>
         <p class="project-desc">An AI-powered chatbot system with craftable persona roles — allowing dynamic, context-aware chat responses tailored to different business personalities and use cases. Designed for flexibility and natural customer interaction.</p>
-        <svg class="diagram diagram-card" viewBox="0 0 320 40" role="img" aria-label="Pipeline: a visitor message is matched to a craftable persona, and the AI replies in that voice.">
-          <rect class="box" x="0" y="4" width="96" height="32"/>
+        <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: a visitor message is matched to a craftable persona, and the AI replies in that voice.">
+          <rect class="box" x="0" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="48" y="24" text-anchor="middle">VISITOR</text>
-          <path class="wire" d="M96 20 H112" marker-end="url(#bp-arw)"/>
-          <rect class="box" x="112" y="4" width="96" height="32"/>
+          <path class="wire" d="M96 20 H112" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="112" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="160" y="24" text-anchor="middle">PERSONA</text>
-          <path class="wire" d="M208 20 H224" marker-end="url(#bp-arw)"/>
-          <rect class="box" x="224" y="4" width="96" height="32"/>
+          <path class="wire" d="M208 20 H224" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="224" y="4" width="96" height="32" fill="none"/>
           <text class="kicker" x="272" y="24" text-anchor="middle">AI REPLY</text>
         </svg>
         <p class="project-outcome">One chatbot engine covers several business voices, so a new persona is a configuration change rather than a rebuild.</p>
