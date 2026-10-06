@@ -714,12 +714,10 @@
       const topic = String(data.get('topic') || '').trim();
       const endpoint = form.dataset.endpoint;
 
-      // The webhook relay (js/tracking.js) is a parallel delivery path: it carries
-      // the submission plus the outbound clicks that led to it. It never gates
-      // the visitor — if it is unconfigured or fails, the paths below still run.
       const tracking = window.PortfolioTracking && window.PortfolioTracking.runtime;
-      if (tracking) tracking.submit({ name, email, message, topic });
 
+      // A Formspree/Web3Forms endpoint (data-endpoint) takes precedence when it is
+      // configured — it is the one path that posts the raw FormData.
       if (endpoint) {
         setBusy(true);
         try {
@@ -743,7 +741,31 @@
         return;
       }
 
-      // No endpoint configured: hand off to the visitor's mail app. The form is
+      // Otherwise the relay (js/tracking.js) is the primary delivery path: it
+      // carries the message plus the outbound clicks that led to it, and the page
+      // reports success or failure from the relay's answer. The typed message is
+      // kept on failure so it can be copied into a direct email.
+      const canSend = tracking && typeof tracking.shouldTrack === 'function' && tracking.shouldTrack();
+      if (canSend) {
+        setBusy(true);
+        try {
+          const delivered = await Promise.race([
+            tracking.submit({ name, email, message, topic }),
+            new Promise((resolve) => setTimeout(() => resolve(false), submitTimeoutMs)),
+          ]);
+          if (!delivered) throw new Error('the relay did not accept the submission');
+          form.reset();
+          requiredFields.forEach(clear);
+          show("Message sent. I'll get back to you soon.");
+        } catch {
+          show('That did not go through. Please email me directly at arifzakwan2001@gmail.com.', true);
+        } finally {
+          setBusy(false);
+        }
+        return;
+      }
+
+      // No endpoint and no relay: hand off to the visitor's mail app. The form is
       // NOT reset, so nothing typed is lost if no mail app opens.
       const subject = `Portfolio enquiry${topic ? `: ${topic}` : ''} (from ${name})`;
       const body = `${message}\n\n${topic ? `Topic: ${topic}\n` : ''}From: ${name}\nEmail: ${email}`;
