@@ -510,21 +510,22 @@
         </div>
 
         <!-- To send without opening a mail app: create a free form at formspree.io (or web3forms.com)
-             and paste its URL into data-endpoint below. Empty = falls back to mailto.
+             and paste its URL into data-endpoint below. Empty = the form sends through the
+             relay (data-track-endpoint), or falls back to mailto when no relay is configured.
              novalidate: this form reports its own inline, focusable errors (see initForm in main.js)
              instead of relying on the browser's transient bubbles.
 
-             data-track-endpoint: where a submission is sent (see js/tracking.js).
-               - a Pabbly Connect webhook URL → the page posts straight to the workflow
-               - a relay Worker URL          → the Worker validates, then forwards
-               - empty                       → tracking off; the form only emails
+             data-track-endpoint: the relay Worker URL (see js/tracking.js and relay/).
+               - the relay holds the Pabbly webhook URL server-side, validates the
+                 submission, then forwards it — this is the primary delivery path
+               - empty                          → tracking off; the form only emails
 
-             NOTE: a webhook URL in public markup is readable by anyone, who could then
-             post into the workflow. Clear this attribute to turn tracking off, and
-             rotate the URL in Pabbly if it is ever abused. See relay/README.md for the
-             relay option, which keeps the URL server-side. -->
+             NOTE: after `wrangler deploy`, replace YOUR-SUBDOMAIN below with the
+             account subdomain Cloudflare prints (the full URL ends in .workers.dev).
+             Never put a Pabbly webhook URL here — in public markup it is readable by
+             anyone, who could then post into the workflow. See relay/README.md. -->
         <form class="contact-form" id="contactForm" data-endpoint=""
-              data-track-endpoint="https://connect.pabbly.com/webhook-listener/webhook/IjU3NjEwNTZkMDYzMjA0MzA1MjZiNTUzYyI_3D_pc/IjU3NjcwNTY4MDYzMTA0M2Q1MjY1NTUzMzUxMzYi_pc"
+              data-track-endpoint="https://portfolio-webhook-relay.YOUR-SUBDOMAIN.workers.dev"
               novalidate>
           <div class="form-row">
             <div class="form-field">

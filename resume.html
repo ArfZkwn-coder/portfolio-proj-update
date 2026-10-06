@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <!-- data-track-endpoint: tracked outbound links (GitHub, LinkedIn) queue a click
      count here and send it with a form submission. There is no form on this page,
-     so the endpoint lives on <html>. Empty = tracking off. The automation's own
-     webhook URL is public when placed here; see the note in index.html. -->
-<html lang="en" data-track-endpoint="https://connect.pabbly.com/webhook-listener/webhook/IjU3NjEwNTZkMDYzMjA0MzA1MjZiNTUzYyI_3D_pc/IjU3NjcwNTY4MDYzMTA0M2Q1MjY1NTUzMzUxMzYi_pc">
+     so the endpoint lives on <html>. Empty = tracking off. This must be the relay
+     Worker URL — never the automation webhook (public here means readable by anyone).
+     Replace YOUR-SUBDOMAIN after `wrangler deploy`; see relay/README.md. -->
+<html lang="en" data-track-endpoint="https://portfolio-webhook-relay.YOUR-SUBDOMAIN.workers.dev">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

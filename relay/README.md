@@ -1,9 +1,10 @@
 # Webhook relay (optional)
 
-The relay keeps the automation webhook URL **server-side**. The site currently
-runs without it — the Pabbly webhook URL sits in `data-track-endpoint` in the
-markup, which is simpler but makes that URL public. Deploy this when you want the
-URL hidden and every payload validated before it reaches the workflow.
+The relay keeps the automation webhook URL **server-side**. The site already
+points `data-track-endpoint` at this Worker (relay mode), but the URL in the
+markup is still a `YOUR-SUBDOMAIN` placeholder until the Worker is deployed and
+its public URL copied back. Deploying it hides the webhook URL and validates every
+payload before it reaches the workflow.
 
 ```
 browser                          relay (this Worker)               automation
@@ -52,6 +53,21 @@ npm run deploy
 
 `npm run deploy` is `wrangler deploy`, which reads `wrangler.toml` — the name,
 the `worker.js` entry point and the compatibility date all live there.
+
+`wrangler deploy` prints the live URL, e.g.
+`https://portfolio-webhook-relay.<your-subdomain>.workers.dev`. Copy that URL
+into `data-track-endpoint` in `index.html` (on the contact form) and
+`resume.html` (on `<html>`), replacing the `YOUR-SUBDOMAIN` placeholder — that
+is what switches the site from mailto fallback to relay delivery.
+
+### Local development
+
+For `npm run dev` (i.e. `wrangler dev`) the Worker reads its variables from a
+gitignored `.dev.vars` file in this folder instead of the deployed secrets. It is
+already present with the current `PABBLY_WEBHOOK_URL`, `ALLOWED_ORIGIN` and a
+generated `PABBLY_SIGNING_SECRET`; edit it freely — it is never committed. When
+you set the production secrets above, reuse the same `PABBLY_SIGNING_SECRET` so a
+submission signed in staging still verifies in production.
 
 Generate the signing secret with any long random value, for example:
 

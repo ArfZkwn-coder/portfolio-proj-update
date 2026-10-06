@@ -17,7 +17,7 @@ css/style.css         index.html + 404.html + privacy.html styles, incl. print r
 css/resume.css        résumé layout + its A4 print rules
 fonts/                self-hosted .woff2 files and their SIL OFL licences
 js/main.js            scroll, nav, cursor, intro, form, case-study dialogs, totem loader
-js/tracking.js        sends form submissions to the webhook relay (off by default)
+js/tracking.js        sends form submissions to the webhook relay (relay mode)
 js/totem.js           Three.js skills "totem" (lazy-loaded, desktop + WebGL only)
 relay/                Cloudflare Worker that holds the webhook URL (see relay/README.md)
 robots.txt            allows crawling, points at the sitemap
@@ -122,8 +122,9 @@ HTML with a two-line inline script for the print button — no dependency on
 
 ## Contact form → Pabbly Connect
 
-The contact form posts to a **Pabbly Connect webhook**. The URL lives in the
-markup (`data-track-endpoint`), and the tracker detects the route from the host:
+The contact form posts to a **Pabbly Connect webhook** through a relay. The relay
+Worker URL lives in the markup (`data-track-endpoint`), and the tracker detects
+the route from the host:
 
 ```
 form submit ──→ Pabbly webhook URL in data-track-endpoint ──→ your workflow
@@ -133,28 +134,28 @@ form submit ──→ relay Worker URL in data-track-endpoint ──→ Pabbly �
                 (relay mode: URL stays secret, validated and signed)
 ```
 
-It ships in **direct mode** with the webhook URL in [index.html](index.html)'s
-form and on [resume.html](resume.html)'s `<html>`.
+It ships in **relay mode**: [index.html](index.html)'s form and
+[resume.html](resume.html)'s `<html>` point `data-track-endpoint` at the relay
+Worker URL, and the Pabbly webhook URL stays a Worker secret.
 
-### The direct-mode trade-off (read this)
+### Before the relay is deployed (read this)
 
-A webhook URL in public markup is **readable by anyone** — view-source, or the
-GitHub repo — and whoever has it can post into your workflow. That is the price
-of not running infrastructure; it was a deliberate choice, not an oversight.
+The URL in the markup is `https://portfolio-webhook-relay.YOUR-SUBDOMAIN.workers.dev`
+— a placeholder. Deploy the Worker (see [relay/README.md](relay/README.md)) and
+replace `YOUR-SUBDOMAIN` with the subdomain Cloudflare prints after
+`wrangler deploy`. Until then the form cannot reach a relay, so it falls back to
+opening the visitor's mail app — nothing is lost, but no data reaches Pabbly.
 
-Two consequences worth acting on:
+Never put a Pabbly webhook URL in the markup. Public markup is **readable by
+anyone** — view-source, or the GitHub repo — and whoever has the URL can post
+into your workflow with no origin check, rate limit, size cap or honeypot
+re-check. If a direct-mode URL was ever committed and published, treat it as
+leaked: delete that Webhook Trigger in Pabbly (which kills the URL) and create a
+new one, then store the new URL only as a Worker secret.
 
-1. **Treat the workflow as untrusted input.** Validate email format and cap
-   field lengths in the workflow itself, because nothing sits in front of it —
-   no origin check, no rate limit, no size cap, no honeypot re-check.
-2. **If it is ever abused**, delete that Webhook Trigger in Pabbly (which kills
-   the URL) and create a new one. Clearing `data-track-endpoint` turns tracking
-   off instantly without any other change.
-
-The [relay/](relay/) Worker exists to remove exactly this trade-off: it keeps the
-webhook URL server-side and adds the checks. Deploy it, put the Worker URL in
-`data-track-endpoint`, and direct mode stops being used — the tracker picks the
-route from the host automatically.
+The [relay/](relay/) Worker is what removes this trade-off: it keeps the webhook
+URL server-side and validates, signs and rate-limits everything before it is
+forwarded.
 
 - **What is sent:** one flat JSON object — form fields, click attribution,
   campaign parameters and browser context — with the contract tabulated in
@@ -181,7 +182,7 @@ To disable: clear `data-track-endpoint` on `index.html`'s form and on
 - All portfolio text lives in `index.html`. If you add or remove a skill, update the hard-coded `/ 06` totem counter in the Skills section; `npm test` fails if it drifts.
 - Update `sitemap.xml`'s `<lastmod>` by hand when you change a page — there is no build step to generate it, and a wrong date is worse than none.
 - Keep asset paths **relative** (`css/style.css`, not `/css/style.css`). Pages serves this site under `/portfolio-proj-update/`, so root-absolute paths 404. Tests enforce this in the HTML and the CSS. `404.html` is the single exception and uses `<base href="/portfolio-proj-update/">`.
-- **Contact form:** visitors choose what they're reaching out about (job opportunity, freelance project, other); it appears in the email subject/body and is sent as a `topic` field. The form owns its validation (the markup sets `novalidate`) so errors appear inline and are announced — keep the `.field-error` element and `aria-describedby` on any required field you add. Paste a Formspree or Web3Forms URL into the form's `data-endpoint` to send without opening a mail app. Left empty, it opens the visitor's mail app instead.
+- **Contact form:** visitors choose what they're reaching out about (job opportunity, freelance project, other); it appears in the email subject/body and is sent as a `topic` field. The form owns its validation (the markup sets `novalidate`) so errors appear inline and are announced — keep the `.field-error` element and `aria-describedby` on any required field you add. Paste a Formspree or Web3Forms URL into the form's `data-endpoint` to send without opening a mail app. Left empty, the form sends through the relay (`data-track-endpoint`) and only opens the visitor's mail app when no relay is configured.
 
 ## Run locally
 
