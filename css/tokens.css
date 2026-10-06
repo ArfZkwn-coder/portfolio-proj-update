@@ -11,15 +11,15 @@
   /* Surfaces. --ink is the *text* colour and --paper the page colour; the
      --solid/--solid-text pair is a fixed dark fill (primary buttons, inverted
      panels) that keeps cream-on-ink contrast under either scheme. */
-  --paper: #f5f2ec;          /* page background */
-  --card: #efece5;           /* alternating section background */
+  --paper: #f4f3f0;          /* page background */
+  --card: #edebe6;           /* alternating section background */
   --ink: #0f0f0f;            /* primary text */
   --ink-raised: #171717;     /* dark card */
   --ink-hover: #1f1f1f;      /* dark card, hovered */
   --ink-line: #262625;       /* divider on dark surfaces */
   --solid: #0f0f0f;          /* fixed dark fill, does not invert */
   --solid-text: #f5f2ec;     /* text on --solid: 17.4:1 */
-  --section-alt: #efece5;    /* alternate section band */
+  --section-alt: #edebe6;    /* alternate section band */
 
   /* Text — all verified against their intended surface */
   --muted: #5f5e58;          /* 6.0:1 on --paper, 5.6:1 on --card */
@@ -40,8 +40,8 @@
   --accent-tint: #f3e4da;
 
   /* Lines */
-  --line: #dddad3;
-  --line-strong: #c9c5bc;
+  --line: #d8d6cf;
+  --line-strong: #c2c0b8;
 
   /* Feedback states */
   --ok-bg: #eaf5ea;
@@ -55,7 +55,7 @@
   /* Overlays. The scrim dims the page behind a modal dialog; the panel itself
      paints its own surface so the UA default can never leak through. */
   --scrim: rgba(15, 15, 15, 0.55);
-  --dialog-surface: #efece5;
+  --dialog-surface: #eeede9;
   --dialog-text: #0f0f0f;
 
   /* Space scale (fluid where it matters) */
@@ -73,8 +73,8 @@
   /* 0.92 alpha over --paper is visually indistinguishable from --paper (1.03:1),
      which is the point: the bar only needs enough coverage that --ink text on
      it keeps its 17:1 ratio. */
-  --nav-bg: rgba(245, 242, 236, 0.92);
-  --nav-bg-solid: #f5f2ec;   /* fallback when backdrop-filter is unsupported */
+  --nav-bg: rgba(244, 243, 240, 0.92);
+  --nav-bg-solid: #f4f3f0;   /* fallback when backdrop-filter is unsupported */
   --field-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%235f5e58' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
   --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
 
@@ -106,7 +106,7 @@
   /* Blueprint (Direction A). Decorative surfaces only — the drafting grid
      behind the page and the fill of a diagram node; neither carries text. */
   --grid-line: rgba(15, 15, 15, 0.05);
-  --node-fill: #fbfaf6;
+  --node-fill: #fafaf8;
 }
 
 :root[data-contrast='high'] {
@@ -119,16 +119,16 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #121212;
-    --card: #191919;
+    --card: #1b1c1d;
     --ink: #f5f2ec;
-    --ink-raised: #1c1c1c;
-    --ink-hover: #242424;
-    --ink-line: #2c2c2c;
+    --ink-raised: #1e1f21;
+    --ink-hover: #26272a;
+    --ink-line: #2c2d30;
     --solid: #0f0f0f;
     --solid-text: #f5f2ec;
     /* Kept dark: --card here is a *raised* surface, not an inverted panel, so
        sections that use --ink as a fill would otherwise flash light. */
-    --section-alt: #1b1b1b;
+    --section-alt: #18191b;
 
     /* The scrolled bar must be this scheme's own paper: left at the light
        default it would carry light --ink text at ~1.1:1. Same reason the
@@ -150,8 +150,8 @@
     --accent-on-dark: #e58150;
     --accent-tint: #2a1c13;
 
-    --line: #33312e;
-    --line-strong: #454340;
+    --line: #303235;
+    --line-strong: #424549;
 
     --ok-bg: #16281a;
     --ok-border: #2f5233;
@@ -163,10 +163,10 @@
 
     /* A modal panel in dark mode is a raised dark surface, not a light one. */
     --scrim: rgba(0, 0, 0, 0.65);
-    --dialog-surface: #1c1c1c;
+    --dialog-surface: #1d1e20;
     --dialog-text: #f5f2ec;
 
     --grid-line: rgba(245, 242, 236, 0.05);
-    --node-fill: #1a1a1a;
+    --node-fill: #1b1c1d;
   }
 }
