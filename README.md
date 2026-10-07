@@ -187,10 +187,17 @@ To disable: clear `data-track-endpoint` on `index.html`'s form and on
 ## Run locally
 
 ```bash
-python3 -m http.server 8000     # then open http://localhost:8000
+npm run dev
+# then open http://localhost:8000
 ```
 
-Use a server rather than opening the file directly: the totem is an ES module and browsers block those on `file://`.
+This starts a lightweight local static server for the site. Use a server rather than opening the file directly: the totem is an ES module and browsers block those on `file://`.
+
+If you prefer the system Python server, this remains valid:
+
+```bash
+python3 -m http.server 8000
+```
 
 ## Checks
 

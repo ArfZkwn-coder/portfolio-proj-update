@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Arif Zakwan portfolio (static site; dev tooling only)",
   "scripts": {
+    "dev": "npx serve . -l 8000",
+    "preview": "npm run dev",
+    "start": "npm run dev",
     "test": "cd test && node --test --test-timeout=60000 main.smoke.test.mjs totem.test.mjs site.integrity.test.mjs contrast.test.mjs stylesheet.test.mjs case-studies.test.mjs static-site.test.mjs a11y.test.mjs tracking.test.mjs relay.test.mjs",
     "lint": "eslint -c test/eslint.config.mjs js relay test/*.mjs",
     "validate": "html-validate -c test/htmlvalidate.json index.html resume.html 404.html privacy.html",
@@ -22,6 +25,7 @@
     "jsdom": "^30.1.1",
     "lenis": "^1.3.26",
     "postcss": "^8.5.28",
+    "serve": "^14.2.5",
     "three": "^0.186.1"
   }
 }
