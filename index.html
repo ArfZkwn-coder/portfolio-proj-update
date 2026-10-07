@@ -74,6 +74,7 @@
   <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Site menu" inert>
     <a href="#about">About</a>
     <a href="#projects">Projects</a>
+    <a href="#impact">Impact</a>
     <a href="#skills">Skills</a>
     <a href="#experience">Experience</a>
     <a href="#education">Education</a>
@@ -86,6 +87,7 @@
     <ul class="nav-links">
       <li><a href="#about">About</a></li>
       <li><a href="#projects">Projects</a></li>
+      <li><a href="#impact">Impact</a></li>
       <li><a href="#skills">Skills</a></li>
       <li><a href="#experience">Experience</a></li>
       <li><a href="#education">Education</a></li>
@@ -256,8 +258,14 @@
       <h2 class="section-title">Projects</h2>
       <div class="section-line"></div>
     </div>
+    <div class="project-filters" role="toolbar" aria-label="Project categories">
+      <button type="button" class="project-filter-btn is-active" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="project-filter-btn" data-filter="automation" aria-pressed="false">Automation</button>
+      <button type="button" class="project-filter-btn" data-filter="infrastructure" aria-pressed="false">Infrastructure</button>
+      <button type="button" class="project-filter-btn" data-filter="ai" aria-pressed="false">AI</button>
+    </div>
     <div class="projects-grid">
-      <div class="project-card reveal" data-case="n8n-automations">
+      <div class="project-card reveal" data-case="n8n-automations" data-category="automation">
         <div class="project-index" aria-hidden="true">01</div>
         <h3 class="project-title">N8n Automations</h3>
         <p class="project-desc">Automated server management workflows built with n8n — including auto-update routines and real-time server health monitoring delivered via Telegram messages. Keeps infrastructure healthy with zero manual intervention.</p>
@@ -283,7 +291,7 @@
           Read case study <span aria-hidden="true">→</span>
         </button>
       </div>
-      <div class="project-card reveal" data-case="homelab-game-server">
+      <div class="project-card reveal" data-case="homelab-game-server" data-category="infrastructure">
         <div class="project-index" aria-hidden="true">02</div>
         <h3 class="project-title">Personal Homelab &amp; Game Server</h3>
         <p class="project-desc">Maintain a local Linux-based server environment utilizing Docker to host self-hosted services and game servers. Implemented secure remote access using Tailscale, ensuring encrypted connectivity without exposing local ports.</p>
@@ -308,7 +316,7 @@
           Read case study <span aria-hidden="true">→</span>
         </button>
       </div>
-      <div class="project-card reveal" data-case="dabox-chatbot-ai">
+      <div class="project-card reveal" data-case="dabox-chatbot-ai" data-category="ai">
         <div class="project-index" aria-hidden="true">03</div>
         <h3 class="project-title">Dabox Chatbot AI</h3>
         <p class="project-desc">An AI-powered chatbot system with craftable persona roles — allowing dynamic, context-aware chat responses tailored to different business personalities and use cases. Designed for flexibility and natural customer interaction.</p>
@@ -337,10 +345,37 @@
     </div>
   </section>
 
+  <!-- IMPACT -->
+  <section id="impact" class="impact-section">
+    <div class="section-header reveal">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Impact</h2>
+      <div class="section-line"></div>
+    </div>
+    <ul class="impact-grid" aria-label="Portfolio impact metrics">
+      <li class="impact-stat reveal">
+        <div class="impact-value">3+</div>
+        <div class="impact-label">years building automation and digital workflows</div>
+      </li>
+      <li class="impact-stat reveal">
+        <div class="impact-value">20+</div>
+        <div class="impact-label">infrastructure and workflow automations delivered</div>
+      </li>
+      <li class="impact-stat reveal">
+        <div class="impact-value">24/7</div>
+        <div class="impact-label">monitoring and alerting for critical services</div>
+      </li>
+      <li class="impact-stat reveal">
+        <div class="impact-value">99%</div>
+        <div class="impact-label">focus on reliable, low-noise operational systems</div>
+      </li>
+    </ul>
+  </section>
+
   <!-- SKILLS -->
   <section id="skills">
     <div class="section-header reveal">
-      <span class="section-number">03</span>
+      <span class="section-number">04</span>
       <h2 class="section-title">Skills &amp; Stack</h2>
       <div class="section-line"></div>
     </div>
@@ -393,7 +428,7 @@
   <!-- EXPERIENCE / TIMELINE -->
   <section id="experience">
     <div class="section-header reveal">
-      <span class="section-number">04</span>
+      <span class="section-number">05</span>
       <h2 class="section-title">Experience</h2>
       <div class="section-line"></div>
     </div>
@@ -440,7 +475,7 @@
   <!-- EDUCATION & CERTIFICATIONS -->
   <section id="education">
     <div class="section-header reveal">
-      <span class="section-number">05</span>
+      <span class="section-number">06</span>
       <h2 class="section-title">Education &amp; Certifications</h2>
       <div class="section-line"></div>
     </div>
@@ -477,7 +512,7 @@
   <!-- CONTACT -->
   <section id="contact">
     <div class="section-header reveal">
-      <span class="section-number">06</span>
+      <span class="section-number">07</span>
       <h2 class="section-title">Get In Touch</h2>
       <div class="section-line"></div>
     </div>
