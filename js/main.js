@@ -372,6 +372,37 @@
     items.forEach((item) => observer.observe(item));
   }
 
+  function initProjectFilters() {
+    const section = $('#projects');
+    if (!section) return;
+
+    const buttons = $$('.project-filter-btn', section);
+    const cards = $$('.project-card', section);
+    if (buttons.length === 0 || cards.length === 0) return;
+
+    const applyFilter = (filter) => {
+      const activeFilter = filter || 'all';
+      buttons.forEach((button) => {
+        const isActive = button.dataset.filter === activeFilter;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+
+      cards.forEach((card) => {
+        const matches = activeFilter === 'all' || card.dataset.category === activeFilter;
+        card.classList.toggle('is-hidden', !matches);
+        if (matches) card.removeAttribute('hidden');
+        else card.setAttribute('hidden', 'hidden');
+      });
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => applyFilter(button.dataset.filter));
+    });
+
+    applyFilter('all');
+  }
+
   // Drifts constantly; speeds up and reverses with scroll velocity/direction.
   function initMarquee() {
     const marquee = $('.marquee');
@@ -900,6 +931,7 @@
   initCursor();
   initMagnetic();
   initReveal();
+  initProjectFilters();
   initMarquee();
   initForm();
   initCaseStudies(lenis);

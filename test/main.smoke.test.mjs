@@ -180,6 +180,37 @@ test('reveal + active-nav observers do their jobs', async () => {
   assert.equal(document.querySelectorAll('.nav-links a.active').length, 1);
 });
 
+test('projects: filter buttons expose categories and hide non-matching cards', () => {
+  const { document } = makeEnv();
+  const buttons = [...document.querySelectorAll('.project-filter-btn')];
+  assert.ok(buttons.length >= 4, 'at least four category filters are present');
+
+  const allBtn = buttons.find((button) => button.dataset.filter === 'all');
+  assert.ok(allBtn, 'All filter should exist');
+  assert.equal(allBtn.getAttribute('aria-pressed'), 'true');
+
+  const automationBtn = buttons.find((button) => button.dataset.filter === 'automation');
+  assert.ok(automationBtn, 'Automation filter should exist');
+  automationBtn.click();
+
+  const matching = [...document.querySelectorAll('.project-card')].filter((card) => card.dataset.category === 'automation');
+  const hidden = [...document.querySelectorAll('.project-card.is-hidden')];
+  assert.ok(matching.length > 0, 'automation category should have at least one card');
+  assert.ok(hidden.length > 0, 'non-matching cards should be hidden');
+  assert.equal(automationBtn.getAttribute('aria-pressed'), 'true');
+  assert.equal(allBtn.getAttribute('aria-pressed'), 'false');
+});
+
+test('impact metrics: deliver proof points and a consistent stat grid', () => {
+  const { document } = makeEnv();
+  const metrics = document.querySelectorAll('.impact-stat');
+  assert.ok(metrics.length >= 4, 'at least four impact metrics should be rendered');
+  const intro = document.querySelector('#impact');
+  assert.ok(intro, 'impact section should exist');
+  assert.match(intro.textContent, /impact|results|automation/i);
+  assert.ok([...metrics].every((stat) => stat.querySelector('.impact-value') && stat.querySelector('.impact-label')));
+});
+
 test('form (no endpoint): mailto hand-off, honest status, nothing typed is lost; honeypot ignored', () => {
   const { window, document, errors } = makeEnv();
   const form = document.getElementById('contactForm'); const status = document.getElementById('formStatus');
