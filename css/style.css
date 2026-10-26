@@ -13,7 +13,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.6;
   overflow-x: hidden;
 }
@@ -1144,7 +1144,7 @@ footer {
 /* ── 404 PAGE ── */
 /* 404.html links tokens.css + this stylesheet and nothing else, so it needs the
    baseline that the reset would otherwise leave to the browser. */
-body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-weight: 300; line-height: 1.6; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-weight: 400; line-height: 1.6; }
 .notfound-page nav { background: var(--nav-bg-solid); border-bottom: 1px solid var(--line); }
 .notfound {
   min-height: 60svh;
@@ -2129,3 +2129,13 @@ html.has-totem .totem-meta { font-family: var(--font-mono); font-style: normal; 
   0%, 49.9% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
+
+/* ── Whole-card click target ──
+   The case-study button stretches over its card, so the hover lift the card
+   already shows is also a click. Keyboard users still land on the button. */
+.js .project-case-open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.js .project-card { cursor: pointer; }

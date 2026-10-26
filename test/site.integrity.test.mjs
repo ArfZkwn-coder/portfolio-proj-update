@@ -34,9 +34,9 @@ test('all local assets are relative (root-absolute paths 404 on a Pages project 
 
 test('social/SEO metadata is absolute and the og-image is a real PNG', () => {
   const meta = (p) => document.querySelector(`meta[property="${p}"]`)?.getAttribute('content');
-  assert.equal(meta('og:url'), SITE);
+  assert.equal(meta('og:url'), `${SITE}/`);
   assert.equal(meta('og:image'), `${SITE}/og-image.png`);
-  assert.equal(document.querySelector('link[rel="canonical"]').getAttribute('href'), SITE);
+  assert.equal(document.querySelector('link[rel="canonical"]').getAttribute('href'), `${SITE}/`);
   const png = fs.readFileSync('../og-image.png');
   assert.deepEqual([...png.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 'og-image.png has a PNG signature');
   const ld = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
