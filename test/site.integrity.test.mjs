@@ -207,15 +207,15 @@ test('"Open" cursor label is wired to external links that exist', () => {
   for (const t of targets) assert.equal(t.getAttribute('target'), '_blank');
 });
 
-test('sections: nav and mobile menu follow DOM order, every link resolves, numbers run 01–06 in order', () => {
+test('sections: nav and mobile menu follow DOM order, every link resolves, numbers run 01–07 in order', () => {
   const sectionIds = [...document.querySelectorAll('main > section')].map((s) => s.id);
-  assert.deepEqual(sectionIds, ['hero', 'about', 'projects', 'skills', 'experience', 'education', 'contact']);
+  assert.deepEqual(sectionIds, ['hero', 'about', 'projects', 'impact', 'skills', 'experience', 'education', 'contact']);
   const hrefs = (sel) => [...document.querySelectorAll(sel)].map((a) => a.getAttribute('href').slice(1));
   const expected = sectionIds.filter((id) => id !== 'hero');
   assert.deepEqual(hrefs('.nav-links a'), expected, 'desktop nav order');
   assert.deepEqual(hrefs('#mobileMenu a'), expected, 'mobile menu order');
   const numbers = [...document.querySelectorAll('.section-number')].map((n) => n.textContent.trim());
-  assert.deepEqual(numbers, ['01', '02', '03', '04', '05', '06']);
+  assert.deepEqual(numbers, ['01', '02', '03', '04', '05', '06', '07']);
   assert.equal(document.getElementById('certifications'), null, 'old #certifications id is gone');
 });
 
