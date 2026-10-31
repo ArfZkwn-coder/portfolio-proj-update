@@ -762,9 +762,11 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
   padding-top: var(--space-7);
 }
 
+/* The column count matches the number of stats in index.html; a test fails if
+   they drift, since a missing stat leaves an empty cell in the ruled grid. */
 .impact-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   background: var(--line);
   border: 1px solid var(--line);

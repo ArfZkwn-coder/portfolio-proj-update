@@ -51,6 +51,10 @@ test('config: an endpoint is only usable when it is a real URL', () => {
   assert.equal(isConfigured(null), false);
   assert.equal(isConfigured('not a url'), false);
   assert.equal(isConfigured('javascript:alert(1)'), false, 'a javascript: URL is never an endpoint');
+  assert.equal(isConfigured('https://portfolio-webhook-relay.YOUR-SUBDOMAIN.workers.dev'), false,
+    'the undeployed placeholder is "off", so the form falls back to mailto');
+  assert.equal(isConfigured('https://portfolio-webhook-relay.arif.workers.dev'), true,
+    'a real subdomain in the same shape is a relay');
 });
 
 test('config: local development never talks to the CRM', () => {
