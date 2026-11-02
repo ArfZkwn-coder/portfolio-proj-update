@@ -756,6 +756,15 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
   display: none;
 }
 .project-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 0;
+  background: var(--accent-bright);
+  transition: height 0.4s ease;
+}
+.project-card:hover::before,
+.project-card:focus-within::before { height: 100%; }
 
 /* ── IMPACT ── */
 .impact-section {
@@ -795,16 +804,6 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
   color: var(--text-body);
   max-width: 16ch;
 }
-
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 3px; height: 0;
-  background: var(--accent-bright);
-  transition: height 0.4s ease;
-}
-.project-card:hover::before,
-.project-card:focus-within::before { height: 100%; }
 
 /* Decorative watermark, not content: hidden from assistive tech in the markup
    sense by being purely presentational, and tinted to stay legible as a shape. */
@@ -1106,6 +1105,8 @@ footer {
   .skills-grid { grid-template-columns: 1fr; }
   .about-facts { grid-template-columns: 1fr; }
   .certs-grid { grid-template-columns: 1fr; }
+  .impact-grid { grid-template-columns: 1fr; }
+  .impact-stat { min-height: 0; }
 }
 
 /* ==========================================================================
