@@ -12,7 +12,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const openDoms = [];
 after(() => { for (const d of openDoms) d.window.close(); });
 
-function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl = false, libs = false, totem = null, fetchImpl = null, introSeen = false, captureMailto = false, formTimeoutMs = null, debug = false, hash = '' } = {}) {
+function makeEnv({ finePointer = false, reduced = false, desktop = true, libs = false, fetchImpl = null, captureMailto = false, formTimeoutMs = null, hash = '' } = {}) {
   const errors = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', (e) => errors.push(e.message));
@@ -21,7 +21,7 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
   const { window } = dom;
   const { document } = window;
 
-  document.documentElement.classList.add('js', 'is-loading'); // what the inline <head> script does
+  document.documentElement.classList.add('js'); // what the inline <head> script does
 
   window.matchMedia = (q) => ({
     media: q,
@@ -33,9 +33,7 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
     constructor(cb, opts = {}) { this.cb = cb; this.opts = opts; this.targets = []; window.__ios.push(this); }
     observe(t) { this.targets.push(t); } unobserve() {} disconnect() { this.targets = []; }
   };
-  window.ResizeObserver = class { observe() {} disconnect() {} };
-  Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve(), load: () => Promise.resolve([]) }, configurable: true });
-  window.HTMLCanvasElement.prototype.getContext = () => (webgl ? {} : null);
+  window.ResizeObserver = class { observe() {} disconnect() {} }; // Lenis watches the document's size
   window.scrollTo = () => {}; // jsdom doesn't implement it; Lenis/ScrollTrigger call it normally
   window.fetch = fetchImpl ?? (async () => ({ ok: true }));
   const warns = [];
@@ -79,17 +77,11 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, webgl =
     window.eval(lib('lenis/dist/lenis.min.js'));
   }
 
-  if (introSeen) window.sessionStorage.setItem('intro-seen', '1');
-  if (debug) window.__portfolioDebug = true; // must be set before main.js runs
-
   let src = mainSrc;
   if (captureMailto) { // jsdom can't navigate; expose the mailto URL the form would have opened
     src = src.replace('window.location.href = `mailto:', 'window.__mailto = `mailto:');
     assert.ok(src !== mainSrc, 'mailto capture substitution applied');
   }
-  if (totem === 'ok') { window.__totemCalls = []; window.__fakeTotem = { createTotem: async () => ({ setActive: (i) => window.__totemCalls.push(['active', i]), setProgress: (p) => window.__totemCalls.push(['progress', p]) }) }; src = src.replace("import('./totem.js')", 'Promise.resolve(window.__fakeTotem)'); }
-  if (totem === 'fail') src = src.replace("import('./totem.js')", "Promise.reject(new Error('boom'))");
-  assert.ok(totem ? src !== mainSrc : true, 'test harness substitution applied');
   if (formTimeoutMs != null) { // shrink the submit timeout so the abort is observable in a test
     const marker = 'const submitTimeoutMs = 15000;';
     assert.ok(src.includes(marker), 'harness found the submit timeout constant');
@@ -127,7 +119,7 @@ function spyOnRequests(window) {
   return calls;
 }
 
-test('baseline: no libs, coarse pointer — page boots, no errors, content never hidden', async () => {
+test('baseline: no libs, coarse pointer — page boots, no errors, content never hidden', () => {
   const { document, errors, root } = makeEnv();
   assert.equal(document.getElementById('year').textContent, String(new Date().getFullYear()));
 
@@ -141,14 +133,9 @@ test('baseline: no libs, coarse pointer — page boots, no errors, content never
   assert.ok(h1.querySelector('em .char'), 'chars inside <em> keep accent styling');
 
   assert.equal(root.classList.contains('has-cursor'), false);
-  assert.equal(root.classList.contains('has-totem'), false);
-  assert.ok(document.querySelector('.marquee').classList.contains('is-driven'));
-
-  assert.equal(root.classList.contains('is-ready'), false, 'intro still running');
-  await sleep(1750);
-  assert.equal(root.classList.contains('is-ready'), true);
-  assert.equal(root.classList.contains('is-loading'), false);
-  assert.equal(document.getElementById('preloaderCount').textContent, '100');
+  // No preloader: the hero entrance starts the moment the script boots.
+  assert.equal(root.classList.contains('is-ready'), true, 'ready on boot, with nothing to wait for');
+  assert.equal(document.getElementById('preloader'), null, 'no preloader ships');
   assert.deepEqual(errors, []);
 });
 
@@ -159,7 +146,7 @@ test('menu: aria-expanded, inert and scroll-lock class follow state; Escape clos
   assert.equal(btn.getAttribute('aria-expanded'), 'true'); assert.equal(menu.inert, false); assert.ok(root.classList.contains('menu-open')); assert.ok(menu.classList.contains('open'));
   document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' }));
   assert.equal(btn.getAttribute('aria-expanded'), 'false'); assert.equal(menu.inert, true); assert.ok(!root.classList.contains('menu-open'));
-  btn.click(); menu.querySelector('a[href="#skills"]').click();
+  btn.click(); menu.querySelector('a[href="#journey"]').click();
   assert.equal(btn.getAttribute('aria-expanded'), 'false', 'clicking a menu link closes it');
 });
 
@@ -173,47 +160,39 @@ test('reveal + active-nav observers do their jobs', async () => {
   assert.ok(reveal.targets.length >= 10);
 
   const navIO = io((o) => o.opts.rootMargin === '-45% 0px -50% 0px');
-  navIO.cb([{ isIntersecting: true, target: document.getElementById('skills') }]);
+  navIO.cb([{ isIntersecting: true, target: document.getElementById('journey') }]);
   const active = document.querySelector('.nav-links a.active');
-  assert.equal(active.getAttribute('href'), '#skills'); assert.equal(active.getAttribute('aria-current'), 'true');
+  assert.equal(active.getAttribute('href'), '#journey'); assert.equal(active.getAttribute('aria-current'), 'true');
   navIO.cb([{ isIntersecting: true, target: document.getElementById('projects') }]);
   assert.equal(document.querySelectorAll('.nav-links a.active').length, 1);
 });
 
-test('projects: filter buttons expose categories and hide non-matching cards', () => {
+test('work: every project shows at once, in a row that leaves no empty cell', () => {
   const { document } = makeEnv();
-  const buttons = [...document.querySelectorAll('.project-filter-btn')];
-  assert.ok(buttons.length >= 4, 'at least four category filters are present');
-
-  const allBtn = buttons.find((button) => button.dataset.filter === 'all');
-  assert.ok(allBtn, 'All filter should exist');
-  assert.equal(allBtn.getAttribute('aria-pressed'), 'true');
-
-  const automationBtn = buttons.find((button) => button.dataset.filter === 'automation');
-  assert.ok(automationBtn, 'Automation filter should exist');
-  automationBtn.click();
-
-  const matching = [...document.querySelectorAll('.project-card')].filter((card) => card.dataset.category === 'automation');
-  const hidden = [...document.querySelectorAll('.project-card.is-hidden')];
-  assert.ok(matching.length > 0, 'automation category should have at least one card');
-  assert.ok(hidden.length > 0, 'non-matching cards should be hidden');
-  assert.equal(automationBtn.getAttribute('aria-pressed'), 'true');
-  assert.equal(allBtn.getAttribute('aria-pressed'), 'false');
+  const cards = [...document.querySelectorAll('#projects .project-card')];
+  assert.equal(cards.length, 3);
+  assert.equal(document.querySelectorAll('.project-filter-btn').length, 0, 'no filters: three projects need none');
+  assert.ok(cards.every((card) => !card.hidden && !card.classList.contains('is-hidden')), 'nothing is hidden');
+  const css = fs.readFileSync('../css/style.css', 'utf8');
+  const wide = /@media \(min-width: 1100px\)\s*\{\s*\.projects-grid\s*\{\s*grid-template-columns:\s*repeat\((\d+)/.exec(css);
+  assert.ok(wide, 'the wide layout declares its column count');
+  assert.equal(Number(wide[1]), cards.length, 'one column per project, so the ruled grid never shows an empty cell');
 });
 
-test('impact metrics: deliver proof points and a consistent stat grid', () => {
+test('proof strip: three numbers right under the hero, in a grid sized to them', () => {
   const { document } = makeEnv();
-  const metrics = document.querySelectorAll('.impact-stat');
-  assert.ok(metrics.length >= 3, 'at least three impact metrics should be rendered');
+  const proof = document.querySelector('.proof');
+  assert.ok(proof, 'the proof strip ships');
+  assert.equal(document.getElementById('hero').nextElementSibling, proof, 'it sits directly under the hero');
+  const stats = [...proof.querySelectorAll('.proof-stat')];
+  assert.equal(stats.length, 3);
+  assert.ok(stats.every((stat) => stat.querySelector('.proof-value') && stat.querySelector('.proof-label')));
   const css = fs.readFileSync('../css/style.css', 'utf8');
-  const columns = /\.impact-grid\s*\{[^}]*grid-template-columns:\s*repeat\((\d+)/.exec(css);
-  assert.ok(columns, '.impact-grid declares its column count');
-  assert.equal(Number(columns[1]), metrics.length,
-    'one column per stat, so the ruled grid never shows an empty cell');
-  const intro = document.querySelector('#impact');
-  assert.ok(intro, 'impact section should exist');
-  assert.match(intro.textContent, /impact|results|automation/i);
-  assert.ok([...metrics].every((stat) => stat.querySelector('.impact-value') && stat.querySelector('.impact-label')));
+  const columns = /\.proof-grid\s*\{[^}]*grid-template-columns:\s*repeat\((\d+)/.exec(css);
+  assert.ok(columns, '.proof-grid declares its column count');
+  assert.equal(Number(columns[1]), stats.length, 'one column per stat');
+  assert.match(proof.querySelector('.proof-status').textContent, /Open to freelance/);
+  assert.equal(document.getElementById('impact'), null, 'the old Impact section is gone, not duplicated');
 });
 
 test('form (no endpoint): mailto hand-off, honest status, nothing typed is lost; honeypot ignored', () => {
@@ -299,110 +278,53 @@ test('fine pointer: custom cursor on, follows pointer, external links show an "O
   assert.equal(cta.style.getPropertyValue('--mx'), '');
 });
 
-test('reduced motion: everything visible immediately, no marquee drive, no totem, intro skipped', async () => {
-  const { document, root, io } = makeEnv({ reduced: true, webgl: true });
+test('reduced motion: everything visible immediately and ready on boot', () => {
+  const { document, root } = makeEnv({ reduced: true });
   assert.ok([...document.querySelectorAll('.reveal')].every((el) => el.classList.contains('visible')));
-  assert.ok(!document.querySelector('.marquee').classList.contains('is-driven'));
-  await sleep(10);
-  assert.ok(root.classList.contains('is-ready'), 'no preloader delay');
-  assert.ok(!io((o) => o.opts.rootMargin === '600px 0px'), 'totem loader never armed');
+  assert.ok(root.classList.contains('is-ready'), 'no delay');
+  assert.ok(!root.classList.contains('motion'), 'diagrams show finished, without the draw-in');
 });
 
-test('totem success path: lazy load -> has-totem, active card + counter + progress wired', async () => {
-  const { window, document, root, io } = makeEnv({ webgl: true, totem: 'ok' });
-  const loader = io((o) => o.opts.rootMargin === '600px 0px');
-  assert.ok(loader, 'loader armed on desktop + WebGL');
-  assert.ok(!root.classList.contains('has-totem'), 'nothing happens until the section approaches');
-  loader.cb([{ isIntersecting: true, target: document.getElementById('skills') }]);
-  await sleep(20);
-  assert.ok(root.classList.contains('has-totem'));
-  assert.equal(document.getElementById('totemTotal').textContent, '/ 06');
-  assert.deepEqual(window.__totemCalls[0], ['active', 0]);
-
-  const cardsIO = io((o) => o.opts.rootMargin === '-45% 0px -45% 0px');
-  const cards = [...document.querySelectorAll('.skill-card')];
-  assert.equal(cardsIO.targets.length, 6);
-  cardsIO.cb([{ isIntersecting: true, target: cards[3] }]);
-  assert.ok(cards[3].classList.contains('is-active')); assert.equal(cards.filter((c) => c.classList.contains('is-active')).length, 1);
-  assert.equal(document.getElementById('totemIndex').textContent, '04');
-  assert.deepEqual(window.__totemCalls.at(-1), ['active', 3]);
-
-  window.dispatchEvent(new window.Event('scroll'));
-  await sleep(40);
-  const progress = window.__totemCalls.filter((c) => c[0] === 'progress').at(-1);
-  assert.ok(progress && progress[1] >= 0 && progress[1] <= 1, 'progress within 0..1');
-  // loader only fires once
-  loader.cb([{ isIntersecting: true, target: document.getElementById('skills') }]);
-  assert.equal(window.__totemCalls.filter((c) => c[0] === 'active' && c[1] === 0).length, 1);
+test('no 3D: three.js is never requested, and the stack is a plain list', () => {
+  const { document } = makeEnv({ libs: false });
+  assert.equal(document.querySelector('script[type="importmap"]'), null, 'no import map for three.js');
+  assert.ok(!/three/.test(document.head.innerHTML), 'the head names no 3D library');
+  assert.ok(!/totem/.test(mainSrc), 'main.js has no totem loader');
+  assert.ok(!fs.existsSync('../js/totem.js'), 'the totem module is gone');
+  const items = [...document.querySelectorAll('#skills .stack-item')];
+  assert.equal(items.length, 6, 'all six skills are listed');
+  assert.ok(items.every((item) => item.querySelector('.stack-name') && item.querySelector('.stack-tag') && item.querySelector('.stack-desc')));
 });
 
-test('totem failure path: falls back to the static grid, warns only for a developer', async () => {
-  const arm = (env) => env.io((o) => o.opts.rootMargin === '600px 0px').cb([{ isIntersecting: true, target: env.document.getElementById('skills') }]);
-
-  const quiet = makeEnv({ webgl: true, totem: 'fail' });
-  arm(quiet);
-  await sleep(20);
-  assert.ok(!quiet.root.classList.contains('has-totem'), 'class removed again');
-  assert.deepEqual(quiet.warns, [], 'a failed enhancement is not the visitor\'s problem');
-
-  const loud = makeEnv({ webgl: true, totem: 'fail', debug: true });
-  arm(loud);
-  await sleep(20);
-  assert.ok(loud.warns.some((w) => /3D totem unavailable/.test(w)), 'a developer who opts in sees it');
-});
-
-test('no WebGL or mobile viewport: totem loader is never armed', () => {
-  assert.ok(!makeEnv({ webgl: false }).io((o) => o.opts.rootMargin === '600px 0px'));
-  assert.ok(!makeEnv({ webgl: true, desktop: false }).io((o) => o.opts.rootMargin === '600px 0px'));
-});
-
-test('with real GSAP + ScrollTrigger + Lenis loaded: boots without errors and wires them', async () => {
-  const { window, document, root, errors, warns } = makeEnv({ libs: true, finePointer: true, webgl: false });
+test('with real GSAP + ScrollTrigger + Lenis loaded: boots without errors and wires them', () => {
+  const { window, document, root, errors, warns } = makeEnv({ libs: true, finePointer: true });
   assert.ok(window.gsap && window.ScrollTrigger && window.Lenis);
   assert.ok(root.classList.contains('lenis'), 'Lenis initialised (adds .lenis to <html>)');
-  assert.ok(window.ScrollTrigger.getAll().length >= 3, `ScrollTrigger instances created: ${window.ScrollTrigger.getAll().length}`);
-  await sleep(1750);
+  // The hero's two parallax layers (desktop).
+  assert.ok(window.ScrollTrigger.getAll().length >= 2, `ScrollTrigger instances created: ${window.ScrollTrigger.getAll().length}`);
   assert.ok(root.classList.contains('is-ready'));
   // menu open/close drives lenis.stop/start without throwing
   document.getElementById('hamburger').click(); document.getElementById('hamburger').click();
   assert.deepEqual(errors, []); assert.deepEqual(warns, []);
 });
 
-test('intro: plays once per session — marked seen after playing, skipped when already seen, never marked under reduced motion', async () => {
-  const first = makeEnv();
-  assert.equal(first.window.sessionStorage.getItem('intro-seen'), null, 'not seen before the intro plays');
-  await sleep(1750);
-  assert.ok(first.root.classList.contains('is-ready'));
-  assert.equal(first.window.sessionStorage.getItem('intro-seen'), '1', 'intro marks itself as seen');
-
-  const repeat = makeEnv({ introSeen: true });
-  await sleep(60); // far below the 1.1s minimum the intro takes on a first visit
-  assert.ok(repeat.root.classList.contains('is-ready'), 'repeat visit is ready almost immediately');
-  assert.equal(repeat.document.getElementById('preloaderCount').textContent, '000', 'preloader counter never ran');
-
-  const reduced = makeEnv({ reduced: true });
-  await sleep(60);
-  assert.ok(reduced.root.classList.contains('is-ready'));
-  assert.equal(reduced.window.sessionStorage.getItem('intro-seen'), null, 'skipping for reduced motion is not "having seen it"');
-});
-
-test('intro: blocked sessionStorage fails soft — intro still completes, no errors', async () => {
+test('hero entrance: needs no storage, so blocked storage cannot stall it', () => {
   const errors = [];
   const vc = new VirtualConsole(); vc.on('jsdomError', (e) => errors.push(e.message));
   const dom = new JSDOM(html, { runScripts: 'outside-only', pretendToBeVisual: true, url: 'http://localhost/', virtualConsole: vc });
   openDoms.push(dom);
   const { window } = dom;
-  Object.defineProperty(window, 'sessionStorage', { get() { throw new window.DOMException('blocked', 'SecurityError'); } });
-  window.document.documentElement.classList.add('js', 'is-loading');
+  let touched = false;
+  for (const name of ['sessionStorage', 'localStorage']) {
+    Object.defineProperty(window, name, { get() { touched = true; throw new window.DOMException('blocked', 'SecurityError'); } });
+  }
+  window.document.documentElement.classList.add('js');
   window.matchMedia = (q) => ({ media: q, matches: false, addEventListener() {}, removeEventListener() {} });
   window.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} };
-  window.ResizeObserver = class { observe() {} disconnect() {} };
-  Object.defineProperty(window.document, 'fonts', { value: { ready: Promise.resolve(), load: () => Promise.resolve([]) }, configurable: true });
-  window.HTMLCanvasElement.prototype.getContext = () => null;
   window.scrollTo = () => {};
   window.eval(mainSrc);
-  await sleep(1750);
-  assert.ok(window.document.documentElement.classList.contains('is-ready'), 'page still becomes ready');
+  assert.ok(window.document.documentElement.classList.contains('is-ready'), 'ready on boot');
+  assert.equal(touched, false, 'main.js never reaches for storage');
   assert.deepEqual(errors, []);
 });
 

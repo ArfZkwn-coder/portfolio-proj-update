@@ -346,35 +346,6 @@ nav.scrolled {
   margin-top: 0.3rem;
 }
 
-/* The dark-skills layout dims inactive cards; that rule lives in the totem
-   block further down, where it is scoped to desktop with the 3D stage. */
-
-.hero-scroll {
-  position: absolute;
-  bottom: var(--space-5);
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--muted);
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  opacity: 0;
-  animation: fadeIn 1s 1.6s forwards;
-}
-/* Only worth showing when the hero fills the viewport with room to spare. */
-@media (min-width: 901px) and (min-height: 760px) {
-  .hero-scroll { display: flex; }
-}
-.scroll-line {
-  width: 1px; height: 40px;
-  background: linear-gradient(to bottom, var(--accent-bright), transparent);
-  animation: scrollDrop 2s infinite;
-}
-
 /* ── SECTION BASE ── */
 section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset-right)) var(--pad-section) max(var(--pad-inline), env(safe-area-inset-left)); position: relative; scroll-margin-top: var(--nav-h); }
 
@@ -430,95 +401,8 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
 }
 .about-body p + p { margin-top: 1rem; }
 
-.about-facts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--line);
-}
-.about-fact {
-  background: var(--paper);
-  padding: 2rem 1.5rem;
-}
-.about-fact-value {
-  font-family: var(--font-display);
-  font-size: var(--fs-5xl);
-  color: var(--accent);
-  font-style: italic;
-  line-height: 1;
-}
-.about-fact-label {
-  font-size: var(--fs-xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-top: 0.4rem;
-}
-
-/* ── SKILLS ── */
-/* A fixed dark panel under either scheme, so --solid is the fill and the
-   dark-surface text tokens carry the copy. */
-#skills { background: var(--solid); color: var(--text-on-dark); }
-#skills .section-title { color: var(--text-on-dark); }
-#skills .section-number { color: var(--accent-on-dark); }
-#skills .section-line { background: var(--ink-line); }
-
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--ink-line);
-}
-
-.skill-card {
-  background: var(--ink-raised);
-  padding: var(--space-6) var(--space-5);
-  transition: background var(--dur-fast);
-  position: relative;
-  overflow: hidden;
-}
-.skill-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0;
-  width: 0; height: 2px;
-  background: var(--accent-bright);
-  transition: width 0.4s;
-}
-.skill-card:hover { background: var(--ink-hover); }
-.skill-card:hover::after { width: 100%; }
-
-.skill-icon {
-  width: 36px; height: 36px;
-  margin-bottom: var(--space-4);
-  /* The SVGs use stroke="currentColor" so the accent lives in one place. */
-  color: var(--accent-on-dark);
-  stroke: currentColor !important;
-}
-.skill-name {
-  font-family: var(--font-display);
-  font-size: var(--fs-2xl);
-  color: var(--text-on-dark);
-  margin-bottom: 0.5rem;
-}
-.skill-desc {
-  font-size: var(--fs-sm);
-  color: var(--muted-dark);
-  line-height: 1.7;
-}
-.skill-tag {
-  display: inline-block;
-  margin-top: var(--space-4);
-  padding: 0.2rem 0.7rem;
-  border: 1px solid var(--ink-line);
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent-on-dark);
-}
-
-/* ── EXPERIENCE / TIMELINE ── */
-#experience { background: var(--paper); }
+/* ── JOURNEY: work timeline and study, side by side ── */
+#journey { background: var(--paper); }
 
 .timeline {
   position: relative;
@@ -614,7 +498,6 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
 .timeline-item.is-active:last-child::before { bottom: 0; }
 
 /* ── CERTIFICATIONS ── */
-#education { background: var(--section-alt); }
 
 .certs-grid {
   display: grid;
@@ -699,41 +582,7 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
 .cert-card:hover .cert-verify,
 .cert-card:focus-within .cert-verify { color: var(--accent-on-dark); border-bottom-color: transparent; }
 
-
 /* ── PROJECTS ── */
-.project-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-}
-
-.project-filter-btn {
-  appearance: none;
-  border: 1px solid var(--line-strong);
-  background: transparent;
-  color: var(--text-body);
-  padding: 0.6rem 0.9rem;
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast), transform var(--dur-fast);
-}
-
-.project-filter-btn.is-active,
-.project-filter-btn:hover,
-.project-filter-btn:focus-visible {
-  background: var(--solid);
-  border-color: var(--solid);
-  color: var(--solid-text);
-}
-
-.project-filter-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .projects-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -752,9 +601,7 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
 }
 .project-card:hover,
 .project-card:focus-within { background: var(--section-alt); }
-.project-card.is-hidden {
-  display: none;
-}
+
 .project-card::before {
   content: '';
   position: absolute;
@@ -765,58 +612,6 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
 }
 .project-card:hover::before,
 .project-card:focus-within::before { height: 100%; }
-
-/* ── IMPACT ── */
-.impact-section {
-  padding-top: var(--space-7);
-}
-
-/* The column count matches the number of stats in index.html; a test fails if
-   they drift, since a missing stat leaves an empty cell in the ruled grid. */
-.impact-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-}
-
-.impact-stat {
-  background: var(--paper);
-  padding: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-height: 12rem;
-}
-
-.impact-value {
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 3vw, 4rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: var(--accent);
-}
-
-.impact-label {
-  font-size: var(--fs-sm);
-  line-height: 1.7;
-  color: var(--text-body);
-  max-width: 16ch;
-}
-
-/* Decorative watermark, not content: hidden from assistive tech in the markup
-   sense by being purely presentational, and tinted to stay legible as a shape. */
-.project-index {
-  font-family: var(--font-display);
-  font-size: var(--fs-6xl);
-  color: var(--line-strong);
-  line-height: 1;
-  margin-bottom: var(--space-4);
-  font-style: italic;
-  transition: color var(--dur-base);
-}
-.project-card:hover .project-index { color: var(--text-faint); }
 
 .project-title {
   font-family: var(--font-display);
@@ -854,7 +649,7 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
 }
 
 /* ── CONTACT ── */
-#contact { background: var(--section-alt); border-top: 1px solid var(--line); } /* Education and Contact are both cream: keep a visible seam */
+#contact { background: var(--section-alt); border-top: 1px solid var(--line); }
 
 .contact-inner {
   display: grid;
@@ -1094,7 +889,7 @@ footer {
   .hero-right { flex-direction: column; align-items: stretch; max-width: none; justify-self: stretch; }
   .hero-capability:hover { transform: none; }
   .about-inner { grid-template-columns: 1fr; gap: var(--space-7); }
-  .skills-grid { grid-template-columns: 1fr 1fr; }
+
   .projects-grid { grid-template-columns: 1fr; }
   .contact-inner { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
@@ -1102,11 +897,9 @@ footer {
   .certs-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 600px) {
-  .skills-grid { grid-template-columns: 1fr; }
-  .about-facts { grid-template-columns: 1fr; }
+
   .certs-grid { grid-template-columns: 1fr; }
-  .impact-grid { grid-template-columns: 1fr; }
-  .impact-stat { min-height: 0; }
+
 }
 
 /* ==========================================================================
@@ -1121,9 +914,7 @@ footer {
   border-radius: var(--radius);
 }
 /* On dark surfaces the light accent tier keeps the ring visible. */
-#skills :focus-visible,
 .mobile-menu :focus-visible,
-.preloader :focus-visible,
 .cert-card:hover :focus-visible,
 .contact-link:hover :focus-visible {
   outline-color: var(--accent-on-dark);
@@ -1336,39 +1127,12 @@ html.lenis { scroll-behavior: auto !important; }
 .lenis [data-lenis-prevent-wheel],
 .lenis [data-lenis-prevent-touch] { overscroll-behavior: contain; }
 
-/* Preloader */
-html.is-loading { overflow: hidden; }
-.preloader {
-  position: fixed;
-  inset: 0;
-  z-index: 9990;
-  display: none;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: var(--space-6) max(var(--pad-inline), env(safe-area-inset-right)) calc(var(--space-6) + env(safe-area-inset-bottom)) max(var(--pad-inline), env(safe-area-inset-left));
-  background: var(--solid);
-  color: var(--solid-text);
-  transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1), visibility 0s linear 0.9s;
-}
-.js .preloader { display: flex; }
-html.is-ready .preloader { transform: translateY(-100%); visibility: hidden; pointer-events: none; }
-.preloader-name { font-family: var(--font-display); font-size: var(--fs-xl); }
-.preloader-count {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: clamp(5rem, 18vw, 14rem);
-  line-height: 0.85;
-  color: var(--accent-on-dark);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Hero intro waits for the preloader; name is split into masked characters */
+/* Hero entrance waits for is-ready; the name is split into masked characters */
 html.js:not(.is-ready) .hero-label,
 html.js:not(.is-ready) .hero-lead,
 html.js:not(.is-ready) .hero-bio,
 html.js:not(.is-ready) .hero-actions,
-html.js:not(.is-ready) .hero-right,
-html.js:not(.is-ready) .hero-scroll { animation-play-state: paused; }
+html.js:not(.is-ready) .hero-right{ animation-play-state: paused; }
 
 .js .hero-name { opacity: 1; animation: none; }
 .word {
@@ -1394,42 +1158,6 @@ html.is-ready .char { transform: none; }
 }
 .js .section-header.visible .section-line { transform: none; }
 
-/* Scroll-velocity marquee */
-.marquee {
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  padding: var(--space-4) 0;
-  background: var(--paper);
-  border-block: 1px solid var(--line);
-}
-.marquee-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation: marquee 40s linear infinite;
-}
-.marquee.is-driven .marquee-track { animation: none; }
-.marquee-group {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: var(--space-6);
-  padding-right: var(--space-6);
-  /* A hairline between the two identical groups, so the loop point reads as
-     intentional rather than as a jump. */
-  border-right: 1px solid var(--line);
-}
-.marquee-item {
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
-  font-style: italic;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-.marquee-item:nth-child(4n + 3) { color: var(--accent); }
-.marquee-sep { color: var(--accent); font-size: var(--fs-base); }
-@keyframes marquee { to { transform: translateX(-50%); } }
 
 /* Timeline progress line + dots that light up as you scroll */
 .timeline-progress {
@@ -1465,62 +1193,6 @@ html.has-cursor .form-submit {
 }
 .cursor-ring.has-label { width: 84px; height: 84px; background: var(--accent); opacity: 0.95; }
 .cursor-ring.has-label .cursor-label { opacity: 1; }
-.cursor.is-hidden { opacity: 0; }
-
-/* ==========================================================================
-   PHASE 3 — 3D skills totem (desktop, WebGL, motion allowed)
-   ========================================================================== */
-
-.totem-stage { display: none; }
-
-@media (min-width: 901px) {
-  html.has-totem .skills-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 4rem;
-    align-items: start;
-  }
-  /* The counter gets its own row under the canvas rather than floating over it:
-     the active slab sits low in the frame, and an overlaid counter covered its
-     label. totem.js measures #totemCanvas, so the stack re-frames to fit. */
-  html.has-totem .totem-stage {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    position: sticky;
-    top: 5.5rem;
-    height: calc(100vh - 8rem);
-    min-height: 420px;
-  }
-  html.has-totem .totem-canvas { position: relative; flex: 1 1 0; min-height: 0; }
-  html.has-totem .totem-canvas canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-  html.has-totem .totem-meta {
-    flex: none;
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    font-family: var(--font-display);
-    font-style: italic;
-    pointer-events: none;
-  }
-  html.has-totem .totem-meta .current { font-size: var(--fs-6xl); line-height: 1; color: var(--accent-on-dark); }
-  html.has-totem .totem-meta .total { font-size: var(--fs-base); color: var(--muted-dark); }
-
-  html.has-totem .skills-grid { grid-template-columns: 1fr; gap: 0; background: transparent; }
-  html.has-totem .skill-card {
-    min-height: 56vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background: transparent;
-    border-top: 1px solid var(--ink-line);
-  }
-  html.has-totem .skill-card > * { opacity: 0.28; transition: opacity 0.5s ease; }
-  html.has-totem .skill-card.is-active > * { opacity: 1; }
-  html.has-totem .skill-name { font-size: var(--fs-5xl); margin-bottom: 0.75rem; }
-  html.has-totem .skill-desc { font-size: var(--fs-base); max-width: 42ch; }
-  html.has-totem .skill-icon { width: 44px; height: 44px; }
-}
 
 /* ==========================================================================
    Reduced motion — content first, decoration off
@@ -1538,8 +1210,8 @@ html.has-cursor .form-submit {
   .js .reveal { opacity: 1; transform: none; }
   .js .section-header .section-line { transform: none; }
   .char { transform: none; }
-  .marquee-track { animation: none !important; }
-  .scroll-line, .availability-dot { animation: none !important; }
+
+  .availability-dot { animation: none !important; }
   .nav-progress { transition: none; }
 }
 
@@ -1558,11 +1230,8 @@ html.has-cursor .form-submit {
 
   .cursor,
   .cursor-ring,
-  .preloader,
   nav,
   .mobile-menu,
-  .marquee,
-  .hero-scroll,
   .case-study,
   .project-case-open,
   .nav-progress { display: none !important; }
@@ -1580,10 +1249,8 @@ html.has-cursor .form-submit {
   .section-header { margin-bottom: 1rem; }
 
   .project-card,
-  .skill-card,
   .cert-card,
-  .timeline-item,
-  .about-fact { break-inside: avoid; page-break-inside: avoid; }
+  .timeline-item{ break-inside: avoid; page-break-inside: avoid; }
 
   /* A printed page cannot hover, so state must not depend on it. */
   .project-card:hover,
@@ -1783,16 +1450,12 @@ body::after {
 .nav-links a,
 .nav-cta,
 .hero-label,
-.project-index,
 .tag,
-.skill-tag,
 .timeline-period,
 .timeline-skill-tag,
 .cert-year,
 .form-field label,
-.footer-links a,
-.status-strip b,
-.diagram-note {
+.footer-links a{
   font-family: var(--font-mono);
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -1800,8 +1463,8 @@ body::after {
 
 .section-number { font-size: var(--fs-xs); color: var(--accent); }
 .hero-label { font-size: var(--fs-2xs); color: var(--muted); }
-.project-index { font-size: var(--fs-2xs); color: var(--accent); }
-.tag, .skill-tag, .timeline-skill-tag { font-size: var(--fs-2xs); }
+
+.tag, .timeline-skill-tag { font-size: var(--fs-2xs); }
 .timeline-period { font-size: var(--fs-2xs); color: var(--muted); }
 .cert-year { font-size: var(--fs-2xs); color: var(--muted); }
 .form-field label { font-size: var(--fs-2xs); color: var(--muted); }
@@ -1818,56 +1481,6 @@ body::after {
 
 /* ── 4. HERO ── */
 .hero-name { font-size: clamp(3rem, 7.5vw, 5.25rem); letter-spacing: -0.02em; }
-
-/* The pipeline panel replaces the abstract capability chips: the hero now
-   shows the shape of the work instead of describing it. Crop marks are the
-   blueprint signature. */
-.hero-canvas {
-  position: relative;
-  margin: 0;
-  padding: clamp(1rem, 2.5vw, 1.75rem);
-  background: var(--node-fill);
-  border: 1px solid var(--line);
-}
-.hero-canvas::before,
-.hero-canvas::after {
-  content: '';
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border: 1px solid var(--accent-bright);
-}
-.hero-canvas::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
-.hero-canvas::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
-.diagram-note {
-  margin-top: var(--space-4);
-  font-size: var(--fs-2xs);
-  color: var(--muted);
-}
-
-/* ── 5. STATUS STRIP — the marquee's quiet, factual sibling ── */
-.status-strip {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: var(--space-7);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-.status-strip span {
-  flex: 1 1 220px;
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border-right: 1px solid var(--line);
-}
-.status-strip span:last-child { border-right: 0; }
-.status-strip b {
-  font-size: var(--fs-2xs);
-  font-weight: 500;
-  color: var(--muted);
-}
-.status-strip i { font-style: normal; font-size: var(--fs-sm); color: var(--text-body); }
 
 /* ── 6. DIAGRAMS ── */
 .diagram { display: block; width: 100%; height: auto; }
@@ -1909,14 +1522,6 @@ body::after {
   text-transform: uppercase;
   color: var(--muted);
 }
-
-/* ── 8. SKILLS (the 3D totem keeps its own rules; these apply to the grid) ── */
-.skills-grid .skill-card {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  transition: border-color var(--dur-base) var(--ease-out);
-}
-.skills-grid .skill-card:hover { border-color: var(--accent-bright); }
 
 /* ── 9. EXPERIENCE ── */
 .timeline .timeline-item:first-child .timeline-dot {
@@ -1981,32 +1586,13 @@ html.motion .diagram .wire-dash { opacity: 0; }
    DIRECTION A — PASS 2: the sections themselves
    Pass 1 restyled the shell (nav, hero, cards, diagrams). This pass re-lays
    the interior sections so the whole page reads as a drawing: stacked section
-   headers, a light toolchain panel, blueprint cards, square timeline nodes.
-   The 3D totem keeps its own dark stage, so every rule below is scoped to
-   `html:not(.has-totem)` where the two looks would collide.
+   headers, blueprint cards, square timeline nodes.
    ========================================================================== */
 
 /* ── Section headers: kicker above the title, rule underneath ── */
 .section-header { display: block; margin-bottom: var(--space-7); }
 .section-header .section-number { display: block; margin-bottom: var(--space-3); }
 .section-header .section-line { margin-top: var(--space-4); }
-
-/* ── About: facts as node blocks ── */
-.about-fact { background: var(--node-fill); border: 1px solid var(--line); padding: var(--space-5); }
-.about-fact-value { font-style: normal; }
-
-/* ── Skills: a light toolchain panel when the totem is not driving it ── */
-html:not(.has-totem) #skills { background: var(--paper); color: var(--ink); }
-html:not(.has-totem) #skills .section-title { color: var(--ink); }
-html:not(.has-totem) #skills .section-number { color: var(--accent); }
-html:not(.has-totem) #skills .section-line { background: var(--line); }
-html:not(.has-totem) .skills-grid { gap: var(--space-4); background: transparent; }
-html:not(.has-totem) .skills-grid .skill-card { background: var(--node-fill); border: 1px solid var(--line); }
-html:not(.has-totem) .skills-grid .skill-card:hover { background: var(--node-fill); border-color: var(--accent-bright); }
-html:not(.has-totem) .skills-grid .skill-name { color: var(--ink); }
-html:not(.has-totem) .skills-grid .skill-desc { color: var(--text-body); }
-html:not(.has-totem) .skills-grid .skill-icon { color: var(--accent); }
-html:not(.has-totem) .skills-grid .skill-tag { color: var(--muted); border-color: var(--line-strong); background: var(--section-alt); }
 
 /* ── Certificates: blueprint cards, no flip-to-dark on hover ── */
 .certs-grid { gap: var(--space-5); background: transparent; }
@@ -2032,56 +1618,6 @@ html:not(.has-totem) .skills-grid .skill-tag { color: var(--muted); border-color
 
 /* ── Contact: the form is a node panel, not floating fields ── */
 .contact-form { background: var(--node-fill); border: 1px solid var(--line); padding: var(--space-5); }
-
-/* ── Hero pipeline on small screens: list, not diagram ──
-   The 620-unit-wide SVG keeps its type legible by dropping it; the same three
-   steps arrive as a list, so nothing is lost on a phone. */
-.hero-steps { display: none; }
-
-@media (max-width: 760px) {
-  .hero-canvas .diagram { display: none; }
-  .hero-steps {
-    display: grid;
-    gap: var(--space-3);
-    margin: var(--space-4) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .hero-steps li {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
-    font-size: var(--fs-sm);
-    color: var(--text-body);
-  }
-  .hero-steps b {
-    font-family: var(--font-mono);
-    font-size: var(--fs-2xs);
-    letter-spacing: 0.09em;
-    color: var(--accent);
-  }
-}
-
-/* ==========================================================================
-   DIRECTION A — PASS 3: the totem keeps its 3D, loses the black box
-   The scroll-driven totem runs exactly as before; its stage now sits on the
-   same paper as every other section instead of a fixed dark panel, so the
-   page has one surface from top to bottom.
-   ========================================================================== */
-
-html.has-totem #skills { background: var(--paper); color: var(--ink); }
-html.has-totem #skills .section-title { color: var(--ink); }
-html.has-totem #skills .section-number { color: var(--accent); }
-html.has-totem #skills .section-line { background: var(--line); }
-html.has-totem .totem-stage { background: transparent; }
-html.has-totem .totem-meta { border-color: var(--line); }
-html.has-totem .totem-meta .current { color: var(--accent); }
-html.has-totem .totem-meta .total { color: var(--muted); }
-html.has-totem .skills-grid .skill-card { border-top-color: var(--line); }
-html.has-totem .skills-grid .skill-name { color: var(--ink); }
-html.has-totem .skills-grid .skill-desc { color: var(--text-body); }
-html.has-totem .skills-grid .skill-icon { color: var(--accent); }
-html.has-totem .skills-grid .skill-tag { color: var(--muted); border-color: var(--line-strong); background: var(--section-alt); }
 
 /* ==========================================================================
    TERMINAL EDITORIAL
@@ -2125,14 +1661,7 @@ html.has-totem .skills-grid .skill-tag { color: var(--muted); border-color: var(
   align-self: center;
 }
 
-/* ── Status strip: terminal key: value rows ── */
-.status-strip b::after { content: ':'; }
-.status-strip b { color: var(--accent); }
-.status-strip i { font-family: var(--font-mono); }
-
 /* ── Project cards as deploy records ── */
-.project-index { font-size: var(--fs-xs); color: var(--accent); }
-.project-index::after { content: '/03'; color: var(--text-faint); }
 .tag {
   background: transparent;
   border: 1px solid var(--line-strong);
@@ -2186,19 +1715,15 @@ footer {
 .about-tagline em { font-style: normal; color: var(--accent); }
 .contact-text .big { font-family: var(--font-body); font-weight: 500; }
 .contact-text .big em { font-style: normal; color: var(--accent); }
-.about-fact-value { font-family: var(--font-mono); font-style: normal; }
-.skill-name { font-family: var(--font-body); font-weight: 500; letter-spacing: -0.01em; }
+
 .timeline-role { font-family: var(--font-body); font-weight: 500; letter-spacing: -0.01em; }
 .cert-name { font-family: var(--font-body); font-weight: 500; }
-.marquee-item { font-family: var(--font-mono); font-style: normal; }
+
 .mobile-menu a {
   font-family: var(--font-mono);
   font-style: normal;
   font-size: clamp(1.5rem, 7vw, 2.25rem);
 }
-.preloader-name,
-.preloader-count { font-family: var(--font-mono); font-style: normal; }
-html.has-totem .totem-meta { font-family: var(--font-mono); font-style: normal; }
 
 /* ── Blinking motion is opt-in only ── */
 @media (prefers-reduced-motion: no-preference) {
@@ -2219,3 +1744,132 @@ html.has-totem .totem-meta { font-family: var(--font-mono); font-style: normal; 
   inset: 0;
 }
 .js .project-card { cursor: pointer; }
+
+/* ==========================================================================
+   REDESIGN — five blocks: hero with the featured project, a proof strip,
+   selected work, about + stack, journey (work and study), contact.
+   ========================================================================== */
+
+/* ── Hero: the featured project replaces the abstract diagram ── */
+.hero-feature {
+  position: relative; /* the case-study button's ::after covers the whole card */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: var(--node-fill);
+  border: 1px solid var(--line);
+  transition: border-color var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+.hero-feature:hover { border-color: var(--accent-bright); transform: translateY(-3px); }
+.hero-feature:hover .wire { stroke: var(--accent-bright); }
+.js .hero-feature { cursor: pointer; }
+.hero-feature-kicker,
+.proof-status,
+.stack-title,
+.stack-tag,
+.journey-title {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hero-feature-kicker { color: var(--accent); }
+.hero-feature-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.hero-feature-desc {
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  color: var(--text-body);
+  max-width: 46ch;
+}
+
+/* ── Proof strip: three numbers, then availability ── */
+.proof {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-6) var(--pad-inline);
+  background: var(--paper);
+  border-block: 1px solid var(--line);
+}
+.proof-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+.proof-stat { display: flex; flex-direction: column; gap: var(--space-2); }
+.proof-value {
+  font-family: var(--font-display);
+  font-size: var(--fs-6xl);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+.proof-label {
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-body);
+  max-width: 28ch;
+}
+.proof-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* ── Work: all three projects in one row once there is room ── */
+@media (min-width: 1100px) {
+  .projects-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ── About + stack: a compact grid in place of the 3D totem ── */
+.stack-title { margin-bottom: var(--space-4); }
+.stack-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.stack-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-4);
+  background: var(--node-fill);
+}
+.stack-name { font-size: var(--fs-base); font-weight: 500; color: var(--ink); }
+.stack-desc {
+  grid-column: 1 / -1;
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+/* ── Journey: the timeline beside education and certificates ── */
+.journey-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+.journey-title { margin-bottom: var(--space-5); }
+.journey-col .certs-grid { grid-template-columns: 1fr; }
+
+@media (max-width: 900px) {
+  .journey-inner { grid-template-columns: 1fr; gap: var(--space-7); }
+}
+@media (max-width: 600px) {
+  .proof-grid { grid-template-columns: 1fr; gap: var(--space-4); }
+  .stack-list { grid-template-columns: 1fr; }
+}

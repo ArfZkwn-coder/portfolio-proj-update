@@ -107,7 +107,6 @@ const PAIRS = [
   ['--dialog-text', '--dialog-surface', 4.5, 'case-study dialog body copy'],
   ['--muted', '--dialog-surface', 4.5, 'case-study dialog labels and stack tags'],
   ['--accent', '--dialog-surface', 4.5, 'case-study dialog accents and links'],
-  ['--text-faint', '--paper', 3, 'large decorative type (project index, counters)'],
   ['--live', '--card', 3, 'availability dot is a non-text indicator'],
   ['--accent', '--paper', 3, 'focus ring: non-text UI'],
   ['--line-strong', '--paper', 1.5, 'section rules and input borders stay perceptible'],
@@ -147,7 +146,6 @@ const DARK_PAIRS = [
   ['--dialog-text', '--dialog-surface', 4.5, 'case-study dialog body copy in dark mode'],
   ['--muted', '--dialog-surface', 4.5, 'case-study dialog labels in dark mode'],
   ['--accent', '--dialog-surface', 4.5, 'case-study dialog accents in dark mode'],
-  ['--text-faint', '--card', 3, 'large decorative type in dark mode'],
   ['--live', '--card', 3, 'availability dot in dark mode'],
 ];
 
@@ -175,9 +173,9 @@ test('tokens: every colour token is a literal hex, and the accent tiers stay dis
 
 test('stylesheet: the token contract above is complete', () => {
   const required = [
-    '--paper', '--card', '--ink', '--ink-raised', '--ink-hover', '--ink-line',
+    '--paper', '--card', '--ink', '--ink-raised', '--ink-line',
     '--solid', '--solid-text', '--section-alt',
-    '--muted', '--text-body', '--text-faint', '--muted-dark', '--text-on-dark', '--text-faint-dark',
+    '--muted', '--text-body', '--muted-dark', '--text-on-dark', '--text-faint-dark',
     '--accent', '--accent-strong', '--accent-bright', '--accent-on-dark', '--accent-tint',
     '--line', '--line-strong',
     '--ok-bg', '--ok-border', '--ok-text', '--error-bg', '--error-border', '--error-text', '--live',

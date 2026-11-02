@@ -15,7 +15,6 @@
   --card: #edebe6;           /* alternating section background */
   --ink: #0f0f0f;            /* primary text */
   --ink-raised: #171717;     /* dark card */
-  --ink-hover: #1f1f1f;      /* dark card, hovered */
   --ink-line: #262625;       /* divider on dark surfaces */
   --solid: #0f0f0f;          /* fixed dark fill, does not invert */
   --solid-text: #f5f2ec;     /* text on --solid: 17.4:1 */
@@ -24,7 +23,6 @@
   /* Text — all verified against their intended surface */
   --muted: #5f5e58;          /* 6.0:1 on --paper, 5.6:1 on --card */
   --text-body: #4a4944;      /* 8.4:1 on --paper */
-  --text-faint: #84827a;     /* 3.5:1 — large text / decorative only */
   --muted-dark: #a3a19a;     /* 7.1:1 on --ink */
   --text-on-dark: #ece9e3;   /* 15.3:1 on --ink */
   --text-faint-dark: #8f8d86;/* 5.6:1 on --ink */
@@ -112,7 +110,6 @@
 :root[data-contrast='high'] {
   --line: var(--line-strong);
   --muted: #46453f;
-  --text-faint: #5f5e58;
 }
 
 /* Dark OS preference: same tokens, remapped. No JS, no toggle. */
@@ -122,7 +119,6 @@
     --card: #1b1c1d;
     --ink: #f5f2ec;
     --ink-raised: #1e1f21;
-    --ink-hover: #26272a;
     --ink-line: #2c2d30;
     --solid: #0f0f0f;
     --solid-text: #f5f2ec;
@@ -139,7 +135,6 @@
 
     --muted: #9b9993;
     --text-body: #c7c4bd;
-    --text-faint: #6f6d67;
     --muted-dark: #a3a19a;
     --text-on-dark: #ece9e3;
     --text-faint-dark: #8f8d86;

@@ -38,21 +38,14 @@
   <meta name="twitter:image" content="https://docs-publisher.tail62b6df.ts.net/portfolio-proj-update/og-image.png">
   <meta property="og:site_name" content="Arif Zakwan">
   <meta property="og:locale" content="en_GB">
-  <!-- three.js is only downloaded on desktop when the Skills section approaches (see js/main.js) -->
-  <script type="importmap">
-    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" } }
-  </script>
   <script>
-    /* Content stays visible without JS. First visit in a session: the preloader owns the intro
-       (the timeout is a fail-safe so a script error can never trap the page). Repeat visits skip it. */
+    /* Content stays visible without JS. main.js adds is-ready as soon as it boots,
+       which plays the hero entrance; the timeout is a fail-safe so a script error
+       can never leave the hero paused. */
     (function () {
       var c = document.documentElement.classList;
-      var seen = false;
-      try { seen = sessionStorage.getItem('intro-seen') === '1'; } catch (e) { /* storage blocked */ }
       c.add('js');
-      if (seen) { c.add('is-ready'); return; }
-      c.add('is-loading');
-      setTimeout(function () { c.remove('is-loading'); c.add('is-ready'); }, 6000);
+      setTimeout(function () { c.add('is-ready'); }, 3000);
     })();
   </script>
 </head>
@@ -60,11 +53,6 @@
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <!-- PRELOADER -->
-  <div class="preloader" id="preloader" aria-hidden="true">
-    <span class="preloader-name">Arif Zakwan</span>
-    <span class="preloader-count" id="preloaderCount">000</span>
-  </div>
 
   <!-- CURSOR (created only for fine pointers) -->
   <div class="cursor" id="cursor" aria-hidden="true"></div>
@@ -72,12 +60,9 @@
 
   <!-- MOBILE MENU -->
   <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Site menu" inert>
+    <a href="#projects">Work</a>
     <a href="#about">About</a>
-    <a href="#projects">Projects</a>
-    <a href="#impact">Impact</a>
-    <a href="#skills">Skills</a>
-    <a href="#experience">Experience</a>
-    <a href="#education">Education</a>
+    <a href="#journey">Journey</a>
     <a href="#contact">Contact</a>
   </div>
 
@@ -85,12 +70,9 @@
   <nav id="nav">
     <a href="#hero" class="nav-logo">Arif Zakwan</a>
     <ul class="nav-links">
+      <li><a href="#projects">Work</a></li>
       <li><a href="#about">About</a></li>
-      <li><a href="#projects">Projects</a></li>
-      <li><a href="#impact">Impact</a></li>
-      <li><a href="#skills">Skills</a></li>
-      <li><a href="#experience">Experience</a></li>
-      <li><a href="#education">Education</a></li>
+      <li><a href="#journey">Journey</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
     <a class="nav-cta" href="resume.html">Résumé ↗</a>
@@ -116,157 +98,67 @@
       </div>
     </div>
     <div class="hero-right">
-      <!-- The hero shows the shape of the work instead of describing it: one
-           pipeline, signals in, outcome delivered. Inline SVG, so it themes
-           itself and needs no image assets. -->
-      <figure class="hero-canvas">
+      <!-- The first screen shows real work: the featured project, its pipeline,
+           and a way into its case study. -->
+      <article class="hero-feature">
+        <p class="hero-feature-kicker">Featured project</p>
+        <h2 class="hero-feature-title">Docs Publisher MCP Connector</h2>
+        <p class="hero-feature-desc">Lets Claude write, edit and illustrate tutorials on a Git-based docs site. Every change commits to GitHub and the site rebuilds itself.</p>
         <!-- fill/stroke here (and fill="none" on the shapes) is the no-stylesheet
-             fallback: unstyled SVG shapes otherwise paint solid black and the
-             diagram reads as blank. The stylesheet still owns every real colour. -->
-        <svg class="diagram" viewBox="0 0 620 320" fill="currentColor" stroke="currentColor" role="img" aria-label="Diagram: schedules and webhooks feed an n8n workflow, which calls AI and CRM services, then delivers the outcome by Telegram or email.">
+             fallback: unstyled SVG shapes otherwise paint solid black. The
+             stylesheet still owns every real colour. This SVG also defines the
+             arrowhead every pipeline diagram on the page references. -->
+        <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: Claude calls the MCP connector, which commits to GitHub and redeploys the live docs site.">
           <defs>
             <marker id="bp-arw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
               <path d="M0 0L7 3.5L0 7z" class="hi"/>
             </marker>
           </defs>
-
-          <text class="kicker" x="40" y="42">01 · SIGNALS</text>
-          <text class="kicker" x="250" y="42">02 · ENGINE</text>
-          <text class="kicker" x="460" y="42">03 · DELIVERY</text>
-
-          <g>
-            <rect class="box" x="40" y="80" width="170" height="56" fill="none"/>
-            <text class="kicker" x="52" y="103">TRIGGER</text>
-            <text class="name" x="52" y="122">Cron schedule</text>
-          </g>
-          <g>
-            <rect class="box" x="40" y="240" width="170" height="56" fill="none"/>
-            <text class="kicker" x="52" y="263">TRIGGER</text>
-            <text class="name" x="52" y="282">Webhook / form</text>
-          </g>
-          <g>
-            <rect class="box" x="250" y="80" width="170" height="56" fill="none"/>
-            <text class="kicker" x="262" y="103">AUTOMATE</text>
-            <text class="name" x="262" y="122">n8n workflow</text>
-          </g>
-          <g>
-            <rect class="box" x="250" y="240" width="170" height="56" fill="none"/>
-            <text class="kicker" x="262" y="263">ENRICH</text>
-            <text class="name" x="262" y="282">AI · CRM lookup</text>
-          </g>
-          <g>
-            <rect class="box" x="460" y="80" width="120" height="56" fill="none"/>
-            <text class="kicker" x="472" y="103">DELIVER</text>
-            <text class="name" x="472" y="122">Telegram</text>
-          </g>
-          <g>
-            <rect class="box" x="460" y="240" width="120" height="56" fill="none"/>
-            <text class="kicker" x="472" y="263">DELIVER</text>
-            <text class="name" x="472" y="282">Email</text>
-          </g>
-
-          <path class="wire" d="M210 108 H242" fill="none" marker-end="url(#bp-arw)"/>
-          <path class="wire" d="M210 268 H242" fill="none" marker-end="url(#bp-arw)"/>
-          <path class="wire" d="M420 108 H452" fill="none" marker-end="url(#bp-arw)"/>
-          <path class="wire-accent" d="M420 268 H452" fill="none" marker-end="url(#bp-arw)"/>
-          <path class="wire-dash" d="M335 136 V232" fill="none" marker-end="url(#bp-arw)"/>
-          <path class="wire-dash" d="M210 268 C226 268 230 136 242 108" fill="none"/>
+          <rect class="box" x="0" y="4" width="96" height="32" fill="none"/>
+          <text class="kicker" x="48" y="24" text-anchor="middle">CLAUDE</text>
+          <path class="wire" d="M96 20 H112" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="112" y="4" width="96" height="32" fill="none"/>
+          <text class="kicker" x="160" y="24" text-anchor="middle">MCP</text>
+          <path class="wire" d="M208 20 H224" fill="none" marker-end="url(#bp-arw)"/>
+          <rect class="box" x="224" y="4" width="96" height="32" fill="none"/>
+          <text class="kicker" x="272" y="24" text-anchor="middle">LIVE DOCS</text>
         </svg>
-        <!-- The wide diagram's labels scale below readable size on a phone, so
-             small screens get the same pipeline as a vertical list instead. -->
-        <ol class="hero-steps">
-          <li><b>01</b><span>Signals — schedules and webhook submissions</span></li>
-          <li><b>02</b><span>Engine — n8n workflow, with AI and CRM lookups</span></li>
-          <li><b>03</b><span>Delivery — Telegram alerts and email</span></li>
-        </ol>
-        <figcaption class="diagram-note">Fig. 01 — signals in, workflow runs, outcome delivered.</figcaption>
-      </figure>
-    </div>
-    <div class="hero-scroll" aria-hidden="true">
-      <div class="scroll-line"></div>
-      <span>Scroll</span>
+        <button type="button" class="project-case-open hero-feature-open" data-case="docs-publisher-mcp"
+                aria-haspopup="dialog" aria-controls="case-docs-publisher-mcp">
+          Read case study <span aria-hidden="true">→</span>
+        </button>
+      </article>
     </div>
   </section>
 
-  <!-- STATUS STRIP — facts instead of noise, tucked between the hero and the ticker -->
-  <div class="status-strip">
-    <span><b>Status</b><i>Open to freelance &amp; full-time</i></span>
-    <span><b>Focus</b><i>Automation · AI · CRM · Linux</i></span>
-    <span><b>Base</b><i>Malaysia · remote-friendly</i></span>
+  <!-- PROOF: three numbers and availability, straight under the hero -->
+  <div class="proof">
+    <ul class="proof-grid" aria-label="At a glance">
+      <li class="proof-stat">
+        <span class="proof-value">1+</span>
+        <span class="proof-label">year building automation and digital workflows</span>
+      </li>
+      <li class="proof-stat">
+        <span class="proof-value">20+</span>
+        <span class="proof-label">infrastructure and workflow automations delivered</span>
+      </li>
+      <li class="proof-stat">
+        <span class="proof-value">24/7</span>
+        <span class="proof-label">monitoring and alerting for critical services</span>
+      </li>
+    </ul>
+    <p class="proof-status"><span class="availability-dot"></span>Open to freelance &amp; full-time · Malaysia, remote-friendly</p>
   </div>
 
-  <!-- MARQUEE (decorative; speed follows scroll velocity) -->
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      <div class="marquee-group">
-        <span class="marquee-item">n8n Workflows</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">AI Automation</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">CRM Pipelines</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">Data Analytics</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">Marketing Automation</span><span class="marquee-sep">✦</span>
-      </div>
-      <div class="marquee-group">
-        <span class="marquee-item">n8n Workflows</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">AI Automation</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">CRM Pipelines</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">Data Analytics</span><span class="marquee-sep">✦</span>
-        <span class="marquee-item">Marketing Automation</span><span class="marquee-sep">✦</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ABOUT -->
-  <section id="about">
-    <div class="section-header reveal">
-      <span class="section-number">01</span>
-      <h2 class="section-title">About</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="about-inner">
-      <div class="reveal">
-        <h3 class="about-tagline">Building systems that work <em>while you sleep.</em></h3>
-        <div class="about-body">
-          <p>I'm Arif Zakwan — an IT enthusiast in AI-driven automation and marketing technology. My focus is on building intelligent systems that remove manual bottlenecks and let teams focus on what actually matters.</p>
-          <p>From orchestrating multi-step n8n workflows to integrating AI into CRM pipelines, I bridge the gap between cutting-edge technology and practical business impact.</p>
-        </div>
-      </div>
-      <div class="about-facts reveal">
-        <div class="about-fact">
-          <div class="about-fact-value">1+</div>
-          <div class="about-fact-label">Year in Automation</div>
-        </div>
-        <div class="about-fact">
-          <div class="about-fact-value">AI</div>
-          <div class="about-fact-label">First Mindset</div>
-        </div>
-        <div class="about-fact">
-          <div class="about-fact-value">n8n</div>
-          <div class="about-fact-label">Power User</div>
-        </div>
-        <div class="about-fact">
-          <div class="about-fact-value">MY</div>
-          <div class="about-fact-label">Based in Malaysia</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PROJECTS -->
+  <!-- WORK -->
   <section id="projects">
     <div class="section-header reveal">
-      <span class="section-number">02</span>
-      <h2 class="section-title">Projects</h2>
+      <span class="section-number">01</span>
+      <h2 class="section-title">Selected Work</h2>
       <div class="section-line"></div>
-    </div>
-    <div class="project-filters" role="toolbar" aria-label="Project categories">
-      <button type="button" class="project-filter-btn is-active" data-filter="all" aria-pressed="true">All</button>
-      <button type="button" class="project-filter-btn" data-filter="automation" aria-pressed="false">Automation</button>
-      <button type="button" class="project-filter-btn" data-filter="infrastructure" aria-pressed="false">Infrastructure</button>
-      <button type="button" class="project-filter-btn" data-filter="ai" aria-pressed="false">AI</button>
     </div>
     <div class="projects-grid">
       <div class="project-card reveal" data-case="n8n-automations" data-category="automation">
-        <div class="project-index" aria-hidden="true">01</div>
         <h3 class="project-title">N8n Automations</h3>
         <p class="project-desc">Automated server management workflows built with n8n — including auto-update routines and real-time server health monitoring delivered via Telegram messages. Keeps infrastructure healthy with zero manual intervention.</p>
         <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: a schedule triggers n8n, which runs a health check and alerts over Telegram.">
@@ -292,7 +184,6 @@
         </button>
       </div>
       <div class="project-card reveal" data-case="homelab-game-server" data-category="infrastructure">
-        <div class="project-index" aria-hidden="true">02</div>
         <h3 class="project-title">Personal Homelab &amp; Game Server</h3>
         <p class="project-desc">Maintain a local Linux-based server environment utilizing Docker to host self-hosted services and game servers. Implemented secure remote access using Tailscale, ensuring encrypted connectivity without exposing local ports.</p>
         <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: Docker hosts the services, Tailscale provides encrypted connectivity, and they are reachable remotely.">
@@ -317,7 +208,6 @@
         </button>
       </div>
       <div class="project-card reveal" data-case="docs-publisher-mcp" data-category="ai">
-        <div class="project-index" aria-hidden="true">03</div>
         <h3 class="project-title">Docs Publisher MCP Connector</h3>
         <p class="project-desc">A side project: an MCP connector that lets Claude write, edit and illustrate tutorials on a Git-based documentation site. Every change commits straight to the docs repo on GitHub and the site rebuilds itself, so a request in chat becomes a live page a minute or two later.</p>
         <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: Claude calls the MCP connector, which commits to GitHub and redeploys the live docs site.">
@@ -345,162 +235,138 @@
     </div>
   </section>
 
-  <!-- IMPACT -->
-  <section id="impact" class="impact-section">
+  <!-- ABOUT + STACK -->
+  <section id="about">
+    <div class="section-header reveal">
+      <span class="section-number">02</span>
+      <h2 class="section-title">About &amp; Stack</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="about-inner">
+      <div class="reveal">
+        <h3 class="about-tagline">Building systems that work <em>while you sleep.</em></h3>
+        <div class="about-body">
+          <p>I'm Arif Zakwan — an IT enthusiast in AI-driven automation and marketing technology. My focus is on building intelligent systems that remove manual bottlenecks and let teams focus on what actually matters.</p>
+          <p>From orchestrating multi-step n8n workflows to integrating AI into CRM pipelines, I bridge the gap between cutting-edge technology and practical business impact.</p>
+        </div>
+      </div>
+      <div class="stack reveal" id="skills">
+        <h3 class="stack-title">Stack</h3>
+        <ul class="stack-list">
+          <li class="stack-item">
+            <span class="stack-name">Python</span>
+            <span class="stack-tag">Language</span>
+            <p class="stack-desc">Scripting, automation, and data processing pipelines for business intelligence workflows.</p>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">SQL &amp; Data Analytics</span>
+            <span class="stack-tag">Data</span>
+            <p class="stack-desc">Querying, transforming, and surfacing meaningful insights from complex datasets.</p>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">AI &amp; Machine Learning</span>
+            <span class="stack-tag">AI</span>
+            <p class="stack-desc">Building and integrating AI models into real-world marketing and operational workflows.</p>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">CRM Tools</span>
+            <span class="stack-tag">CRM</span>
+            <p class="stack-desc">HubSpot and similar platforms to drive customer engagement and retention strategies.</p>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Marketing Automation</span>
+            <span class="stack-tag">Automation</span>
+            <p class="stack-desc">End-to-end automation of marketing funnels, lead nurturing, and campaign workflows.</p>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Linux System Administration</span>
+            <span class="stack-tag">SysAdmin</span>
+            <p class="stack-desc">Managing Linux servers, automating system tasks with shell scripting, and maintaining secure, stable infrastructure environments.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNEY: work history and study, side by side -->
+  <section id="journey">
     <div class="section-header reveal">
       <span class="section-number">03</span>
-      <h2 class="section-title">Impact</h2>
+      <h2 class="section-title">Journey</h2>
       <div class="section-line"></div>
     </div>
-    <ul class="impact-grid" aria-label="Portfolio impact metrics">
-      <li class="impact-stat reveal">
-        <div class="impact-value">1+</div>
-        <div class="impact-label">year building automation and digital workflows</div>
-      </li>
-      <li class="impact-stat reveal">
-        <div class="impact-value">20+</div>
-        <div class="impact-label">infrastructure and workflow automations delivered</div>
-      </li>
-      <li class="impact-stat reveal">
-        <div class="impact-value">24/7</div>
-        <div class="impact-label">monitoring and alerting for critical services</div>
-      </li>
-    </ul>
-  </section>
-
-  <!-- SKILLS -->
-  <section id="skills">
-    <div class="section-header reveal">
-      <span class="section-number">04</span>
-      <h2 class="section-title">Skills &amp; Stack</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="skills-layout">
-    <div class="totem-stage" id="totemStage" aria-hidden="true">
-      <div class="totem-canvas" id="totemCanvas"></div>
-      <div class="totem-meta"><span class="current" id="totemIndex">01</span><span class="total" id="totemTotal">/ 06</span></div>
-    </div>
-    <div class="skills-grid" id="skillsGrid">
-      <div class="skill-card reveal">
-        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        <div class="skill-name">Python</div>
-        <div class="skill-desc">Scripting, automation, and data processing pipelines for business intelligence workflows.</div>
-        <span class="skill-tag">Language</span>
-      </div>
-      <div class="skill-card reveal">
-        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-        <div class="skill-name">SQL &amp; Data Analytics</div>
-        <div class="skill-desc">Querying, transforming, and surfacing meaningful insights from complex datasets.</div>
-        <span class="skill-tag">Data</span>
-      </div>
-      <div class="skill-card reveal">
-        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-        <div class="skill-name">AI &amp; Machine Learning</div>
-        <div class="skill-desc">Building and integrating AI models into real-world marketing and operational workflows.</div>
-        <span class="skill-tag">AI</span>
-      </div>
-      <div class="skill-card reveal">
-        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <div class="skill-name">CRM Tools</div>
-        <div class="skill-desc">HubSpot and similar platforms to drive customer engagement and retention strategies.</div>
-        <span class="skill-tag">CRM</span>
-      </div>
-      <div class="skill-card reveal">
-        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <div class="skill-name">Marketing Automation</div>
-        <div class="skill-desc">End-to-end automation of marketing funnels, lead nurturing, and campaign workflows.</div>
-        <span class="skill-tag">Automation</span>
-      </div>
-      <div class="skill-card reveal">
-        <svg class="skill-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-        <div class="skill-name">Linux System Administration</div>
-        <div class="skill-desc">Managing Linux servers, automating system tasks with shell scripting, and maintaining secure, stable infrastructure environments.</div>
-        <span class="skill-tag">SysAdmin</span>
-      </div>
-    </div>
-    </div>
-  </section>
-
-  <!-- EXPERIENCE / TIMELINE -->
-  <section id="experience">
-    <div class="section-header reveal">
-      <span class="section-number">05</span>
-      <h2 class="section-title">Experience</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="timeline">
-      <div class="timeline-item reveal">
-        <div class="timeline-dot"></div>
-        <div class="timeline-period">Apr 2026 — Present</div>
-        <div class="timeline-role">Customer Service Officer</div>
-        <div class="timeline-company">Team Fames Sdn Bhd</div>
-        <div class="timeline-desc">Diagnose critical issues on the Wabot.io / Wabot.my platform, trace them to root causes and resolve them with minimal downtime. Test new features with developers before release, develop SOPs and escalation protocols, and optimize ticketing workflows to reduce Average Handling Time. Investigate billing and account discrepancies, including payment failures and webhook errors.</div>
-        <div class="timeline-skills">
-          <span class="timeline-skill-tag">Technical Support</span>
-          <span class="timeline-skill-tag">QA Testing</span>
-          <span class="timeline-skill-tag">SOP Development</span>
+    <div class="journey-inner">
+      <div class="journey-col" id="experience">
+        <h3 class="journey-title">Work</h3>
+      <div class="timeline">
+        <div class="timeline-item reveal">
+          <div class="timeline-dot"></div>
+          <div class="timeline-period">Apr 2026 — Present</div>
+          <div class="timeline-role">Customer Service Officer</div>
+          <div class="timeline-company">Team Fames Sdn Bhd</div>
+          <div class="timeline-desc">Diagnose critical issues on the Wabot.io / Wabot.my platform, trace them to root causes and resolve them with minimal downtime. Test new features with developers before release, develop SOPs and escalation protocols, and optimize ticketing workflows to reduce Average Handling Time. Investigate billing and account discrepancies, including payment failures and webhook errors.</div>
+          <div class="timeline-skills">
+            <span class="timeline-skill-tag">Technical Support</span>
+            <span class="timeline-skill-tag">QA Testing</span>
+            <span class="timeline-skill-tag">SOP Development</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal">
+          <div class="timeline-dot"></div>
+          <div class="timeline-period">Dec 2024 — Jan 2026</div>
+          <div class="timeline-role">Marketing Assistant</div>
+          <div class="timeline-company">S&amp;S Hana Enterprise · Bangi, Malaysia</div>
+          <div class="timeline-desc">Streamlined client communications by developing automated WhatsApp workflows and AI-powered chatbots using Dabox and OpenAI, significantly reducing manual follow-up time and team workload. Providing end-to-end technical support and documentation to simplify troubleshooting, analyzing customer feedback patterns to inform and optimize marketing ad strategies. Built a data collection workflow to track user interactions and conversion paths across automation workflows, supporting KPI monitoring, reporting and analysis of user behavior.</div>
+          <div class="timeline-skills">
+            <span class="timeline-skill-tag">AI Chatbot</span>
+            <span class="timeline-skill-tag">CRM</span>
+            <span class="timeline-skill-tag">Marketing Automation</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal">
+          <div class="timeline-dot"></div>
+          <div class="timeline-period">Sept 2021 — Feb 2022</div>
+          <div class="timeline-role">Intern Frontend Flutter Developer</div>
+          <div class="timeline-company">AqWise · Selangor, Malaysia</div>
+          <div class="timeline-desc">Collaborated within agile teams to develop client-focused mobile applications, specializing in crafting responsive and adaptive UI components.</div>
+          <div class="timeline-skills">
+            <span class="timeline-skill-tag">Flutter Framework</span>
+            <span class="timeline-skill-tag">Dart</span>
+            <span class="timeline-skill-tag">Mobile App Development</span>
+          </div>
         </div>
       </div>
-      <div class="timeline-item reveal">
-        <div class="timeline-dot"></div>
-        <div class="timeline-period">Dec 2024 — Jan 2026</div>
-        <div class="timeline-role">Marketing Assistant</div>
-        <div class="timeline-company">S&amp;S Hana Enterprise · Bangi, Malaysia</div>
-        <div class="timeline-desc">Streamlined client communications by developing automated WhatsApp workflows and AI-powered chatbots using Dabox and OpenAI, significantly reducing manual follow-up time and team workload. Providing end-to-end technical support and documentation to simplify troubleshooting, analyzing customer feedback patterns to inform and optimize marketing ad strategies. Built a data collection workflow to track user interactions and conversion paths across automation workflows, supporting KPI monitoring, reporting and analysis of user behavior.</div>
-        <div class="timeline-skills">
-          <span class="timeline-skill-tag">AI Chatbot</span>
-          <span class="timeline-skill-tag">CRM</span>
-          <span class="timeline-skill-tag">Marketing Automation</span>
+      </div>
+      <div class="journey-col" id="education">
+        <h3 class="journey-title">Education &amp; certifications</h3>
+      <div class="certs-grid">
+        <div class="cert-card reveal">
+          <div class="cert-badge">
+            <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+          </div>
+          <div class="cert-issuer">Universiti Teknologi MARA (UiTM)</div>
+          <div class="cert-name">Bachelor of Information System (Hons.), Intelligent System Engineering</div>
+          <div class="cert-year">Mar 2022 — Feb 2024</div>
+        </div>
+        <div class="cert-card reveal">
+          <div class="cert-badge">
+            <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+          </div>
+          <div class="cert-issuer">Universiti Teknologi MARA (UiTM)</div>
+          <div class="cert-name">Diploma in Computer Science</div>
+          <div class="cert-year">Aug 2019 — Feb 2022</div>
+        </div>
+        <div class="cert-card reveal">
+          <div class="cert-badge">
+            <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          </div>
+          <div class="cert-issuer">Google</div>
+          <div class="cert-name">Google Data Analytics Professional Certificate</div>
+          <div class="cert-year">2024</div>
+          <a href="https://www.coursera.org/professional-certificates/google-data-analytics" target="_blank" rel="noopener noreferrer" class="cert-verify" aria-label="Verify the Google Data Analytics Professional Certificate on Coursera (opens in a new tab)"
+             data-track="outbound" data-track-channel="coursera">Verify ↗</a>
         </div>
       </div>
-      <div class="timeline-item reveal">
-        <div class="timeline-dot"></div>
-        <div class="timeline-period">Sept 2021 — Feb 2022</div>
-        <div class="timeline-role">Intern Frontend Flutter Developer</div>
-        <div class="timeline-company">AqWise · Selangor, Malaysia</div>
-        <div class="timeline-desc">Collaborated within agile teams to develop client-focused mobile applications, specializing in crafting responsive and adaptive UI components.</div>
-        <div class="timeline-skills">
-          <span class="timeline-skill-tag">Flutter Framework</span>
-          <span class="timeline-skill-tag">Dart</span>
-          <span class="timeline-skill-tag">Mobile App Development</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- EDUCATION & CERTIFICATIONS -->
-  <section id="education">
-    <div class="section-header reveal">
-      <span class="section-number">06</span>
-      <h2 class="section-title">Education &amp; Certifications</h2>
-      <div class="section-line"></div>
-    </div>
-    <div class="certs-grid">
-      <div class="cert-card reveal">
-        <div class="cert-badge">
-          <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
-        </div>
-        <div class="cert-issuer">Universiti Teknologi MARA (UiTM)</div>
-        <div class="cert-name">Bachelor of Information System (Hons.), Intelligent System Engineering</div>
-        <div class="cert-year">Mar 2022 — Feb 2024</div>
-      </div>
-      <div class="cert-card reveal">
-        <div class="cert-badge">
-          <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
-        </div>
-        <div class="cert-issuer">Universiti Teknologi MARA (UiTM)</div>
-        <div class="cert-name">Diploma in Computer Science</div>
-        <div class="cert-year">Aug 2019 — Feb 2022</div>
-      </div>
-      <div class="cert-card reveal">
-        <div class="cert-badge">
-          <svg width="22" height="22" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-        </div>
-        <div class="cert-issuer">Google</div>
-        <div class="cert-name">Google Data Analytics Professional Certificate</div>
-        <div class="cert-year">2024</div>
-        <a href="https://www.coursera.org/professional-certificates/google-data-analytics" target="_blank" rel="noopener noreferrer" class="cert-verify" aria-label="Verify the Google Data Analytics Professional Certificate on Coursera (opens in a new tab)"
-           data-track="outbound" data-track-channel="coursera">Verify ↗</a>
       </div>
     </div>
   </section>
@@ -508,7 +374,7 @@
   <!-- CONTACT -->
   <section id="contact">
     <div class="section-header reveal">
-      <span class="section-number">07</span>
+      <span class="section-number">04</span>
       <h2 class="section-title">Get In Touch</h2>
       <div class="section-line"></div>
     </div>
