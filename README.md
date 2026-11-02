@@ -1,8 +1,8 @@
 # Arif Zakwan — Portfolio
 
-Live: https://arfzkwn-coder.github.io/portfolio-proj-update
+Live: https://docs-publisher.tail62b6df.ts.net/portfolio-proj-update
 
-Single-page portfolio for an IT enthusiast and automation specialist, plus a print-first résumé page. Plain HTML, CSS and JavaScript with no build step, hosted on GitHub Pages straight from the repo root. Motion and 3D are progressive enhancements: if a library, WebGL, a fine pointer or motion is unavailable (or the visitor prefers reduced motion), that feature skips itself and the page still works.
+Single-page portfolio for an IT enthusiast and automation specialist, plus a print-first résumé page. Plain HTML, CSS and JavaScript with no build step, self-hosted on a ZimaOS server (nginx behind Tailscale Funnel) and published by Gitea Actions once CI passes — see [Deploy](#deploy). Motion and 3D are progressive enhancements: if a library, WebGL, a fine pointer or motion is unavailable (or the visitor prefers reduced motion), that feature skips itself and the page still works.
 
 ## Structure
 
@@ -10,7 +10,7 @@ Single-page portfolio for an IT enthusiast and automation specialist, plus a pri
 index.html            the portfolio — all page content (edit your text here)
 resume.html           print-first résumé, built from the same copy
 privacy.html          what is recorded, and how to opt out
-404.html              GitHub Pages fallback; pins <base> because it is served at any depth
+404.html              nginx's not-found page; pins <base> because it is served at any depth
 css/fonts.css         self-hosted DM Sans / DM Serif Display @font-face rules
 css/tokens.css        the only place colours, sizes, space and motion are declared
 css/style.css         index.html + 404.html + privacy.html styles, incl. print rules
@@ -22,7 +22,7 @@ js/totem.js           Three.js skills "totem" (lazy-loaded, desktop + WebGL only
 relay/                Cloudflare Worker that holds the webhook URL (see relay/README.md)
 robots.txt            allows crawling, points at the sitemap
 sitemap.xml           the three real pages (maintained by hand — keep lastmod honest)
-.nojekyll             stop Pages from running Jekyll over the output
+.nojekyll             kept so the repo still publishes verbatim if GitHub Pages is re-enabled
 og-image.png          social preview (1200×630)
 test/                 dev-only checks (not needed to run the site)
 .github/workflows/    CI: runs `npm run check` on every push and pull request
@@ -181,7 +181,7 @@ To disable: clear `data-track-endpoint` on `index.html`'s form and on
 
 - All portfolio text lives in `index.html`. If you add or remove a skill, update the hard-coded `/ 06` totem counter in the Skills section; `npm test` fails if it drifts.
 - Update `sitemap.xml`'s `<lastmod>` by hand when you change a page — there is no build step to generate it, and a wrong date is worse than none.
-- Keep asset paths **relative** (`css/style.css`, not `/css/style.css`). Pages serves this site under `/portfolio-proj-update/`, so root-absolute paths 404. Tests enforce this in the HTML and the CSS. `404.html` is the single exception and uses `<base href="/portfolio-proj-update/">`.
+- Keep asset paths **relative** (`css/style.css`, not `/css/style.css`). The site is served under `/portfolio-proj-update/`, so root-absolute paths 404. Tests enforce this in the HTML and the CSS. `404.html` is the single exception and uses `<base href="/portfolio-proj-update/">`.
 - **Contact form:** visitors choose what they're reaching out about (job opportunity, freelance project, other); it appears in the email subject/body and is sent as a `topic` field. The form owns its validation (the markup sets `novalidate`) so errors appear inline and are announced — keep the `.field-error` element and `aria-describedby` on any required field you add. Paste a Formspree or Web3Forms URL into the form's `data-endpoint` to send without opening a mail app. Left empty, the form sends through the relay (`data-track-endpoint`) and only opens the visitor's mail app when no relay is configured.
 
 ## Run locally
@@ -198,6 +198,25 @@ If you prefer the system Python server, this remains valid:
 ```bash
 python3 -m http.server 8000
 ```
+
+## Deploy
+
+Live at <https://docs-publisher.tail62b6df.ts.net/portfolio-proj-update/>, served
+from the ZimaOS box (`192.168.0.108`):
+
+- A push to `main` on the Gitea remote runs `ci.yml`. When `check` passes, the
+  `deploy` job (Gitea only — GitHub skips it) replaces the contents of
+  `/DATA/AppData/portfolio-site/html` with the files listed in its `cp` line.
+  Add any new top-level folder the pages load to that list;
+  `test/static-site.test.mjs` fails until you do.
+- `/DATA/AppData/portfolio-site/` holds the nginx container (`docker-compose.yml`,
+  `nginx.conf`). It listens on `127.0.0.1:8090` only, serves the folder
+  read-only, keeps no access log (the privacy page promises no IPs are kept) and
+  answers missing paths with `404.html`.
+- Tailscale Funnel maps `/portfolio-proj-update` on port 443 to that nginx;
+  `/` stays with the docs publisher. Remove the site from the internet with
+  `docker exec tailscale tailscale funnel --https=443 --set-path=/portfolio-proj-update off`.
+- The site is up only while the box and the home connection are.
 
 ## Checks
 
@@ -219,7 +238,7 @@ and every pull request (`.github/workflows/ci.yml`), using the Node version in
 | `test/stylesheet.test.mjs` | balanced braces, every `var()` resolves, no self-referential token, no unused token, no raw colour in a component rule, no ad-hoc font sizes, no remote or root-absolute CSS asset |
 | `test/a11y.test.mjs` | axe-core over all four pages: landmarks, accessible names and ARIA wiring (contrast is left to the suite above, which needs real layout) |
 | `test/case-studies.test.mjs` | one opener per card, labelled dialog + close control, card ↔ dialog copy cannot drift, no stray URLs |
-| `test/static-site.test.mjs` | robots ↔ sitemap agreement, sitemap entries resolve to real files, 404 is no-indexed and self-contained, `.nojekyll` present |
+| `test/static-site.test.mjs` | robots ↔ sitemap agreement, sitemap entries resolve to real files, 404 is no-indexed and self-contained, `.nojekyll` present, canonical path matches the 404 `<base>`, the deploy list covers every file the pages load and nothing private |
 | `test/totem.test.mjs` | the 3D layout/rotation/paint math |
 | `test/tracking.test.mjs` | the client tracker: config gates, privacy signals, payload contract and caps, queue pruning, markup instrumentation, and that no credential ships |
 | `test/relay.test.mjs` | the relay's validation boundary: origin allowlist, size and rate limits, schema enforcement, markup rejection, honeypot, HMAC signature, and the flat Mapper-safe payload |

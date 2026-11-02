@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://arfzkwn-coder.github.io/portfolio-proj-update/sitemap.xml
+Sitemap: https://docs-publisher.tail62b6df.ts.net/portfolio-proj-update/sitemap.xml

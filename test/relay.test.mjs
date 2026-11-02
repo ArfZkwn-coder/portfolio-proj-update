@@ -18,7 +18,7 @@ import {
   validateSubmission,
 } from '../relay/lib.js';
 
-const ORIGIN = 'https://arfzkwn-coder.github.io';
+const ORIGIN = 'https://docs-publisher.tail62b6df.ts.net';
 
 const headerRequest = (headers) => new Request('https://relay.test/submit', { method: 'POST', headers });
 
@@ -44,7 +44,7 @@ test('origin: only the allowlisted site origin passes', () => {
   assert.equal(isAllowedOrigin(headerRequest({ Referer: `${ORIGIN}/index.html` }), ORIGIN), false,
     'a Referer path is not the bare origin');
   assert.equal(isAllowedOrigin(headerRequest({ Origin: 'https://evil.example' }), ORIGIN), false);
-  assert.equal(isAllowedOrigin(headerRequest({ Origin: 'https://arfzkwn-coder.github.io.evil.example' }), ORIGIN), false,
+  assert.equal(isAllowedOrigin(headerRequest({ Origin: 'https://docs-publisher.tail62b6df.ts.net.evil.example' }), ORIGIN), false,
     'a lookalike host is rejected');
   assert.equal(isAllowedOrigin(headerRequest({}), ORIGIN), false, 'a missing Origin fails closed');
   assert.equal(isAllowedOrigin(headerRequest({ Origin: ORIGIN }), ''), false, 'an unset allowlist allows nothing');
