@@ -42,6 +42,38 @@ test('stylesheet: braces are balanced in every stylesheet', () => {
   assert.ok(page.includes('2. PAGE SHELL'), 'the page stylesheet is sectioned');
 });
 
+test('stylesheet: no rule is pasted inside another rule', () => {
+  // Balanced braces are not enough: a block pasted between a selector and its
+  // declarations still balances, and modern CSS nesting then scopes it under
+  // that selector, so it silently never matches (this hid the Impact grid).
+  // Only at-rules (@media, @supports, @keyframes, …) may contain blocks.
+  const blank = (match) => match.replace(/[^\n]/g, ' ');
+  for (const { name, source } of PAGE_FILES) {
+    const code = source
+      .replace(/\/\*[\s\S]*?\*\//g, blank)
+      .replace(/"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'/g, blank);
+    const stack = [];
+    let start = 0;
+    for (let i = 0; i < code.length; i += 1) {
+      const character = code[i];
+      if (character === '{') {
+        const prelude = code.slice(start, i).trim();
+        if (stack.at(-1) === 'rule') {
+          const line = code.slice(0, i).split('\n').length;
+          assert.fail(`${name}:${line}: "${prelude.split('\n').pop().trim()}" opens inside a rule; close the outer rule first`);
+        }
+        stack.push(prelude.startsWith('@') ? 'at' : 'rule');
+        start = i + 1;
+      } else if (character === '}') {
+        stack.pop();
+        start = i + 1;
+      } else if (character === ';') {
+        start = i + 1;
+      }
+    }
+  }
+});
+
 // Custom properties that JavaScript owns: it writes them with setProperty and
 // the stylesheet only ever reads them. Keeping the list explicit means a typo
 // in a static var() still fails the suite.
