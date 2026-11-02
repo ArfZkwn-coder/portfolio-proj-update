@@ -1480,19 +1480,22 @@ html.has-cursor .form-submit {
     gap: 4rem;
     align-items: start;
   }
+  /* The counter gets its own row under the canvas rather than floating over it:
+     the active slab sits low in the frame, and an overlaid counter covered its
+     label. totem.js measures #totemCanvas, so the stack re-frames to fit. */
   html.has-totem .totem-stage {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
     position: sticky;
     top: 5.5rem;
     height: calc(100vh - 8rem);
     min-height: 420px;
   }
-  html.has-totem .totem-canvas { position: absolute; inset: 0; }
-  html.has-totem .totem-canvas canvas { display: block; width: 100%; height: 100%; }
+  html.has-totem .totem-canvas { position: relative; flex: 1 1 0; min-height: 0; }
+  html.has-totem .totem-canvas canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
   html.has-totem .totem-meta {
-    position: absolute;
-    left: 0; bottom: 0;
-    z-index: 1;
+    flex: none;
     display: flex;
     align-items: baseline;
     gap: 0.6rem;

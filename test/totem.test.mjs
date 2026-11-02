@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {
-  damp, layoutY, targetRotation, stackHeight, paintFace, buildTotem,
-  SEGMENT_HEIGHT, SEGMENT_GAP,
+  damp, layoutY, targetRotation, stackHeight, paintFace, buildTotem, cameraDistance,
+  SEGMENT_WIDTH, SEGMENT_HEIGHT, SEGMENT_GAP, ACTIVE_LIFT, ACTIVE_SCALE, TILT_BASE, TILT_POINTER,
 } from '../js/totem.js';
 
 const skills = ['Python', 'SQL & Data Analytics', 'AI & Machine Learning', 'CRM Tools', 'Marketing Automation', 'Linux System Administration']
@@ -22,6 +22,45 @@ test('rotation: active faces camera; others alternate direction and advance with
   assert.equal(targetRotation(3, 3, 0.7), 0);
   assert.ok(targetRotation(0, 2, 0) > 0 && targetRotation(1, 2, 0) < 0, 'alternating sign');
   assert.ok(targetRotation(0, 2, 1) > targetRotation(0, 2, 0), 'keeps turning with scroll progress');
+});
+
+test('framing: every slab corner stays in frame through the full motion range', () => {
+  // Brute force, independent of cameraDistance's own reasoning: project the box
+  // corners of each slab, active (lifted, scaled, facing) or turned at any
+  // angle, under every tilt the pointer can produce, for tall and wide stages.
+  const fov = 32;
+  const n = 6;
+  const half = SEGMENT_WIDTH / 2;
+  const corners = [];
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) corners.push([sx, sy, sz]);
+
+  for (const aspect of [0.6, 0.8, 1.4]) {
+    const distance = cameraDistance(n, aspect, fov);
+    const tanY = Math.tan((fov * Math.PI) / 360);
+    const tanX = tanY * aspect;
+    for (let step = 0; step <= 8; step++) {
+      const tilt = TILT_BASE - TILT_POINTER + (2 * TILT_POINTER * step) / 8;
+      for (let index = 0; index < n; index++) {
+        for (const active of [true, false]) {
+          for (const turn of active ? [0] : [0, Math.PI / 8, Math.PI / 4, Math.PI / 3]) {
+            const scale = active ? ACTIVE_SCALE : 1;
+            for (const [sx, sy, sz] of corners) {
+              const point = new THREE.Vector3(sx * half * scale, sy * (SEGMENT_HEIGHT / 2) * scale, sz * half * scale)
+                .applyAxisAngle(new THREE.Vector3(0, 1, 0), turn)
+                .add(new THREE.Vector3(0, layoutY(index, n), active ? ACTIVE_LIFT : 0))
+                .applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt);
+              const depth = distance - point.z;
+              assert.ok(depth > 0, 'every corner is in front of the camera');
+              assert.ok(Math.abs(point.y) / depth <= tanY,
+                `slab ${index + 1} (${active ? 'active' : 'turned'}) leaves the frame vertically at tilt ${tilt.toFixed(2)}, aspect ${aspect}`);
+              assert.ok(Math.abs(point.x) / depth <= tanX,
+                `slab ${index + 1} (${active ? 'active' : 'turned'}) leaves the frame sideways at aspect ${aspect}`);
+            }
+          }
+        }
+      }
+    }
+  }
 });
 
 test('damp: converges monotonically, never overshoots, frame-rate independent', () => {

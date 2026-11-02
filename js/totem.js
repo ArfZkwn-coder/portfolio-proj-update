@@ -14,6 +14,15 @@ export const SEGMENT_WIDTH = 2.6;
 export const SEGMENT_HEIGHT = 0.86;
 export const SEGMENT_GAP = 0.14;
 
+// Motion envelope. cameraDistance() frames the worst case of all of these, so
+// change them here rather than inline in update().
+export const ACTIVE_LIFT = 0.45;    // the active slab moves this far toward the camera
+export const ACTIVE_SCALE = 1.05;
+const BOB = 0.025;                  // idle vertical drift
+export const TILT_BASE = 0.06;      // the stack leans back slightly (radians about x)
+export const TILT_POINTER = 0.12;   // plus or minus this much following the pointer
+const POINTER_TURN = 0.3;           // radians about y following the pointer
+
 const TEXTURE_WIDTH = 1024;
 const TEXTURE_HEIGHT = Math.round((TEXTURE_WIDTH * SEGMENT_HEIGHT) / SEGMENT_WIDTH);
 
@@ -40,6 +49,33 @@ export function targetRotation(index, active, progress) {
 
 export function stackHeight(count) {
   return count * SEGMENT_HEIGHT + (count - 1) * SEGMENT_GAP;
+}
+
+// Camera distance at which no slab leaves the frame. Slabs are SEGMENT_WIDTH
+// deep, so their faces sit nearer the camera than the stack's centre plane;
+// the active slab also lifts and grows, and the group tilts toward the pointer.
+// Framing only the centre plane let the active bottom slab's label spill off
+// the canvas. Every slab fits in a vertical cylinder of radius `reach`; its rim
+// is checked at both tilt extremes.
+export function cameraDistance(count, aspect, fovDegrees, margin = 0.1) {
+  const tanY = Math.tan((fovDegrees * Math.PI) / 360);
+  const tanX = tanY * aspect;
+  const half = (SEGMENT_WIDTH / 2) * ACTIVE_SCALE;
+  const reach = Math.max(Math.SQRT2 * half, Math.hypot(half, half + ACTIVE_LIFT));
+  const top = (stackHeight(count) / 2) * ACTIVE_SCALE + BOB + margin;
+
+  let distance = 0;
+  for (const tilt of [TILT_BASE - TILT_POINTER, TILT_BASE + TILT_POINTER]) {
+    const cos = Math.cos(tilt);
+    const sin = Math.sin(tilt);
+    for (const y of [top, -top]) {
+      for (const z of [reach, -reach]) {
+        distance = Math.max(distance, Math.abs(y * cos - z * sin) / tanY + (y * sin + z * cos));
+      }
+      distance = Math.max(distance, (reach + margin) / tanX + Math.abs(y * sin));
+    }
+  }
+  return distance;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -212,18 +248,14 @@ export async function createTotem({ container, skills }) {
   const pointer = { x: 0, y: 0 };
   totem.setActiveFace(state.active);
 
-  // Frame the whole stack (and a rotating slab's diagonal) at any stage aspect.
+  // Frame the whole stack, through its full motion, at any stage aspect.
   const fit = () => {
     const width = Math.max(1, container.clientWidth);
     const height = Math.max(1, container.clientHeight);
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-
-    const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
-    const byHeight = (stackHeight(skills.length) + 0.6) / 2 / Math.tan(halfFov);
-    const byWidth = (SEGMENT_WIDTH * 1.5) / 2 / (Math.tan(halfFov) * camera.aspect);
-    camera.position.set(0, 0, Math.max(byHeight, byWidth));
+    camera.position.set(0, 0, cameraDistance(skills.length, camera.aspect, camera.fov));
   };
   fit();
 
@@ -233,13 +265,13 @@ export async function createTotem({ container, skills }) {
       const isActive = index === state.active;
       const { mesh } = segment;
       mesh.rotation.y = damp(mesh.rotation.y, targetRotation(index, state.active, state.progress), 5, dt);
-      mesh.position.z = damp(mesh.position.z, isActive ? 0.45 : 0, 6, dt);
-      mesh.position.y = layoutY(index, skills.length) + Math.sin(state.time * 0.9 + index * 0.8) * 0.025;
-      mesh.scale.setScalar(damp(mesh.scale.x, isActive ? 1.05 : 1, 6, dt));
+      mesh.position.z = damp(mesh.position.z, isActive ? ACTIVE_LIFT : 0, 6, dt);
+      mesh.position.y = layoutY(index, skills.length) + Math.sin(state.time * 0.9 + index * 0.8) * BOB;
+      mesh.scale.setScalar(damp(mesh.scale.x, isActive ? ACTIVE_SCALE : 1, 6, dt));
       segment.edgeMaterial.opacity = damp(segment.edgeMaterial.opacity, isActive ? 0.95 : 0.3, 6, dt);
     });
-    totem.group.rotation.y = damp(totem.group.rotation.y, pointer.x * 0.3, 3, dt);
-    totem.group.rotation.x = damp(totem.group.rotation.x, 0.06 + pointer.y * 0.12, 3, dt);
+    totem.group.rotation.y = damp(totem.group.rotation.y, pointer.x * POINTER_TURN, 3, dt);
+    totem.group.rotation.x = damp(totem.group.rotation.x, TILT_BASE + pointer.y * TILT_POINTER, 3, dt);
   };
 
   let running = false;
