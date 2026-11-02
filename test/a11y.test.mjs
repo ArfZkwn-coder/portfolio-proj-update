@@ -23,7 +23,7 @@ function loadPage(file) {
   const dom = new JSDOM(html, {
     runScripts: 'outside-only',
     pretendToBeVisual: true,
-    url: `https://arfzkwn-coder.github.io/portfolio-proj-update/${file === 'index.html' ? '' : file}`,
+    url: `https://docs-publisher.tail62b6df.ts.net/portfolio-proj-update/${file === 'index.html' ? '' : file}`,
     virtualConsole,
   });
   dom.window.HTMLCanvasElement.prototype.getContext = () => null;

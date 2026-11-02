@@ -1,5 +1,5 @@
-// Guards the deploy-time facts that unit tests can't see: this is a GitHub Pages *project* site
-// (served from /portfolio-proj-update/), so asset paths must be relative, and no placeholder may ship.
+// Guards the deploy-time facts that unit tests can't see: the site is served from a sub-path
+// (/portfolio-proj-update/), so asset paths must be relative, and no placeholder may ship.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,7 +7,7 @@ import { JSDOM } from 'jsdom';
 
 const html = fs.readFileSync('../index.html', 'utf8');
 const { document } = new JSDOM(html).window;
-const SITE = 'https://arfzkwn-coder.github.io/portfolio-proj-update';
+const SITE = 'https://docs-publisher.tail62b6df.ts.net/portfolio-proj-update';
 
 test('all local assets are relative (root-absolute paths 404 on a Pages project site) and exist on disk', () => {
   const localRefs = (doc) => [...doc.querySelectorAll('link[href], script[src]')]

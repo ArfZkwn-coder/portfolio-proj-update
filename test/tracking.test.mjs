@@ -34,7 +34,7 @@ const {
 const ENDPOINT = 'https://relay.example.workers.dev';
 const baseConfig = (overrides = {}) => Object.assign({
   endpoint: ENDPOINT,
-  hostname: 'arfzkwn-coder.github.io',
+  hostname: 'docs-publisher.tail62b6df.ts.net',
   globalPrivacyControl: false,
   doNotTrack: '',
 }, overrides);
@@ -61,7 +61,7 @@ test('config: local development never talks to the CRM', () => {
   for (const host of ['localhost', 'LOCALHOST', '127.0.0.1', '[::1]', 'thing.local']) {
     assert.equal(isLocalHost(host), true, `${host} is local`);
   }
-  for (const host of ['arfzkwn-coder.github.io', 'example.com', 'notlocalhost.com', '']) {
+  for (const host of ['docs-publisher.tail62b6df.ts.net', 'example.com', 'notlocalhost.com', '']) {
     assert.equal(isLocalHost(host), false, `${host} is not local`);
   }
   assert.equal(shouldTrack(baseConfig({ hostname: 'localhost' })), false, 'local means no tracking');

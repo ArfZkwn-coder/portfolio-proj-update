@@ -20,3 +20,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+
+  deploy:
+    # Publishes the site to the ZimaOS box, served by nginx behind Tailscale
+    # Funnel. Only the self-hosted Gitea runner may mount that folder, so the
+    # job is skipped on GitHub.
+    name: deploy to ZimaOS
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.server_url != 'https://github.com'
+    runs-on: ubuntu-latest
+    container:
+      image: node:22-bookworm
+      volumes:
+        - /DATA/AppData/portfolio-site/html:/deploy
+    steps:
+      - uses: actions/checkout@v4
+      # Only what the pages load; tests, the relay and tooling stay private.
+      - run: |
+          find /deploy -mindepth 1 -delete
+          cp -r index.html resume.html 404.html privacy.html robots.txt sitemap.xml og-image.png css js fonts /deploy/

@@ -21,7 +21,7 @@
  * browser or Node globals would be worse than not linting it.
  *
  * Required environment (see relay/README.md):
- *   ALLOWED_ORIGIN         e.g. https://arfzkwn-coder.github.io
+ *   ALLOWED_ORIGIN         e.g. https://docs-publisher.tail62b6df.ts.net
  *   PABBLY_WEBHOOK_URL     the Webhook Trigger URL from the workflow
  *   PABBLY_SIGNING_SECRET  any long random string; shared with the workflow
  *

@@ -79,7 +79,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 | Variable | Notes |
 | --- | --- |
-| `ALLOWED_ORIGIN` | `https://arfzkwn-coder.github.io` — scheme and host only, **no trailing slash**, no path. Everything else gets `403`. |
+| `ALLOWED_ORIGIN` | `https://docs-publisher.tail62b6df.ts.net` — scheme and host only, **no trailing slash**, no path. Everything else gets `403`. |
 | `PABBLY_WEBHOOK_URL` | the Webhook Trigger URL from the workflow. This is the only credential, so it stays here and never in the markup. |
 | `PABBLY_SIGNING_SECRET` | any long random string. Sent as an HMAC signature so a leaked URL alone cannot write to the automation. |
 | `PABBLY_WAIT_FOR_PROCESSING` | optional; `1` asks Pabbly to wait for the workflow. See the caveat below. |
