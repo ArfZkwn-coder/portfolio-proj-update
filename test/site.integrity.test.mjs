@@ -76,7 +76,7 @@ test('skills: the totem counter matches the number of skill cards, and the real 
 
 test('real experience, certification and project content is intact', () => {
   const text = document.body.textContent.replace(/\s+/g, ' ');
-  for (const needle of ['Team Fames Sdn Bhd', 'Universiti Teknologi MARA (UiTM)', 'Diploma in Computer Science', 'S&S Hana Enterprise', 'AqWise', 'Google Data Analytics Professional Certificate', 'Personal Homelab & Game Server', 'Dabox Chatbot AI']) {
+  for (const needle of ['Team Fames Sdn Bhd', 'Universiti Teknologi MARA (UiTM)', 'Diploma in Computer Science', 'S&S Hana Enterprise', 'AqWise', 'Google Data Analytics Professional Certificate', 'Personal Homelab & Game Server', 'Docs Publisher MCP Connector']) {
     assert.ok(text.includes(needle), `missing: ${needle}`);
   }
   assert.equal(document.querySelectorAll('.timeline-item').length, 3);

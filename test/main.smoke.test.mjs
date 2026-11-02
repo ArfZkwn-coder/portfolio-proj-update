@@ -740,9 +740,9 @@ test('case studies: a shared #case- link closes even when there is no history to
   // the tab's first (and only) history entry and back() is a no-op there. The
   // panel must still close: otherwise the scrim stays locked over the page with
   // nothing that can dismiss it.
-  const { window, document, root } = makeEnv({ hash: '#case-dabox-chatbot-ai' });
-  const button = document.querySelector('.project-case-open[data-case="dabox-chatbot-ai"]');
-  const dialog = document.getElementById('case-dabox-chatbot-ai');
+  const { window, document, root } = makeEnv({ hash: '#case-docs-publisher-mcp' });
+  const button = document.querySelector('.project-case-open[data-case="docs-publisher-mcp"]');
+  const dialog = document.getElementById('case-docs-publisher-mcp');
   assert.equal(dialog.open, true, 'the deep link opens the panel on load');
   assert.equal(window.history.length, 1, 'and it is the only history entry');
 
@@ -755,8 +755,8 @@ test('case studies: a shared #case- link closes even when there is no history to
 
 test('case studies: Escape and a backdrop click both close the panel', () => {
   const { window, document } = makeEnv();
-  const button = document.querySelector('.project-case-open[data-case="dabox-chatbot-ai"]');
-  const dialog = document.getElementById('case-dabox-chatbot-ai');
+  const button = document.querySelector('.project-case-open[data-case="docs-publisher-mcp"]');
+  const dialog = document.getElementById('case-docs-publisher-mcp');
 
   button.click();
   const cancel = new window.Event('cancel', { cancelable: true });
@@ -776,10 +776,10 @@ test('case studies: Escape and a backdrop click both close the panel', () => {
 
 test('case studies: a shared #case- URL opens that panel on load', async () => {
   const { window, document } = makeEnv();
-  const dialog = document.getElementById('case-dabox-chatbot-ai');
+  const dialog = document.getElementById('case-docs-publisher-mcp');
   assert.equal(dialog.open, false, 'closed before the hash changes');
 
-  window.location.hash = '#case-dabox-chatbot-ai';
+  window.location.hash = '#case-docs-publisher-mcp';
   window.dispatchEvent(new window.HashChangeEvent('hashchange'));
   assert.equal(dialog.open, true, 'the deep link opens the right panel');
   assert.equal(document.getElementById('case-n8n-automations').open, false, 'and only that panel');

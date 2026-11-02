@@ -316,29 +316,29 @@
           Read case study <span aria-hidden="true">→</span>
         </button>
       </div>
-      <div class="project-card reveal" data-case="dabox-chatbot-ai" data-category="ai">
+      <div class="project-card reveal" data-case="docs-publisher-mcp" data-category="ai">
         <div class="project-index" aria-hidden="true">03</div>
-        <h3 class="project-title">Dabox Chatbot AI</h3>
-        <p class="project-desc">An AI-powered chatbot system with craftable persona roles — allowing dynamic, context-aware chat responses tailored to different business personalities and use cases. Designed for flexibility and natural customer interaction.</p>
-        <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: a visitor message is matched to a craftable persona, and the AI replies in that voice.">
+        <h3 class="project-title">Docs Publisher MCP Connector</h3>
+        <p class="project-desc">A side project: an MCP connector that lets Claude write, edit and illustrate tutorials on a Git-based documentation site. Every change commits straight to the docs repo on GitHub and the site rebuilds itself, so a request in chat becomes a live page a minute or two later.</p>
+        <svg class="diagram diagram-card" viewBox="0 0 320 40" fill="currentColor" stroke="currentColor" role="img" aria-label="Pipeline: Claude calls the MCP connector, which commits to GitHub and redeploys the live docs site.">
           <rect class="box" x="0" y="4" width="96" height="32" fill="none"/>
-          <text class="kicker" x="48" y="24" text-anchor="middle">VISITOR</text>
+          <text class="kicker" x="48" y="24" text-anchor="middle">CLAUDE</text>
           <path class="wire" d="M96 20 H112" fill="none" marker-end="url(#bp-arw)"/>
           <rect class="box" x="112" y="4" width="96" height="32" fill="none"/>
-          <text class="kicker" x="160" y="24" text-anchor="middle">PERSONA</text>
+          <text class="kicker" x="160" y="24" text-anchor="middle">MCP</text>
           <path class="wire" d="M208 20 H224" fill="none" marker-end="url(#bp-arw)"/>
           <rect class="box" x="224" y="4" width="96" height="32" fill="none"/>
-          <text class="kicker" x="272" y="24" text-anchor="middle">AI REPLY</text>
+          <text class="kicker" x="272" y="24" text-anchor="middle">LIVE DOCS</text>
         </svg>
-        <p class="project-outcome">One chatbot engine covers several business voices, so a new persona is a configuration change rather than a rebuild.</p>
+        <p class="project-outcome">Publishing a tutorial is a sentence to Claude instead of a Git workflow, and each person gets their own key that can be revoked on its own.</p>
         <div class="project-tags">
-          <span class="tag">AI</span>
-          <span class="tag">Chatbot</span>
-          <span class="tag">Persona Design</span>
-          <span class="tag">NLP</span>
+          <span class="tag">MCP</span>
+          <span class="tag">Node.js</span>
+          <span class="tag">GitHub API</span>
+          <span class="tag">Docker</span>
         </div>
-        <button type="button" class="project-case-open" data-case="dabox-chatbot-ai"
-                aria-haspopup="dialog" aria-controls="case-dabox-chatbot-ai">
+        <button type="button" class="project-case-open" data-case="docs-publisher-mcp"
+                aria-haspopup="dialog" aria-controls="case-docs-publisher-mcp">
           Read case study <span aria-hidden="true">→</span>
         </button>
       </div>
@@ -703,48 +703,50 @@
     </article>
   </dialog>
 
-  <dialog class="case-study" id="case-dabox-chatbot-ai" aria-labelledby="case-dabox-chatbot-ai-title">
+  <dialog class="case-study" id="case-docs-publisher-mcp" aria-labelledby="case-docs-publisher-mcp-title">
     <article>
       <header class="case-study-head">
         <p class="case-study-eyebrow">Case study</p>
-        <h2 class="case-study-title" id="case-dabox-chatbot-ai-title" tabindex="-1">Dabox Chatbot AI</h2>
+        <h2 class="case-study-title" id="case-docs-publisher-mcp-title" tabindex="-1">Docs Publisher MCP Connector</h2>
         <dl class="case-study-meta">
-          <div><dt>Status</dt><dd>Built and delivered</dd></div>
-          <div><dt>Built with</dt><dd>Dabox, OpenAI</dd></div>
+          <div><dt>Status</dt><dd>Side project, self-hosted</dd></div>
+          <div><dt>Built with</dt><dd>Node.js, MCP SDK, GitHub API, Docker, Tailscale Funnel</dd></div>
         </dl>
       </header>
 
       <section class="case-study-section">
         <h3>The problem</h3>
-        <p>Different businesses need a chatbot that sounds like them, and rebuilding the engine for every new personality does not scale.</p>
+        <p>Publishing a tutorial to a Git-based docs site means cloning the repo, writing Markdown, committing and redeploying. That keeps non-developers out and slows everyone else down.</p>
       </section>
 
       <section class="case-study-section">
         <h3>How it works</h3>
         <ul>
-          <li>Persona roles are craftable, so one engine covers several business voices.</li>
-          <li>Responses are context-aware rather than canned, which keeps conversations natural.</li>
-          <li>The design favours flexibility: a new use case is a configuration change, not a rebuild.</li>
+          <li>Seven MCP tools let Claude list, read, publish, edit and delete tutorials, add images and redeploy the site. It works with Docusaurus, MkDocs, VitePress and other Git-based generators.</li>
+          <li>Every change commits straight to the docs branch on GitHub, and the site rebuilds in the background. Changes that arrive mid-deploy are folded into one more deploy.</li>
+          <li>Images are stored in the docs repo rather than hotlinked. Uploads accept only JPEG, PNG, GIF and WebP up to 5 MB, check the file's real bytes, and refuse private-network addresses so the server cannot be used to reach its own network.</li>
+          <li>It runs in Docker on my homelab and is reachable from claude.ai through Tailscale Funnel, with no router ports opened. Each person gets a personal key that can be revoked on its own, and every commit records who asked for it.</li>
+          <li>n8n workflows and a Telegram bot hand out and revoke access through a private admin API that is never exposed to the internet.</li>
         </ul>
       </section>
 
       <section class="case-study-section">
         <h3>Outcome</h3>
-        <p>One chatbot engine covers several business voices, so a new persona is a configuration change rather than a rebuild.</p>
+        <p>Publishing a tutorial is a sentence to Claude instead of a Git workflow, and each person gets their own key that can be revoked on its own.</p>
       </section>
 
       <section class="case-study-section">
         <h3>Stack</h3>
         <ul class="case-study-stack">
-          <li>AI</li>
-          <li>Chatbot</li>
-          <li>Persona Design</li>
-          <li>NLP</li>
+          <li>MCP</li>
+          <li>Node.js</li>
+          <li>GitHub API</li>
+          <li>Docker</li>
         </ul>
       </section>
 
       <div class="case-study-links">
-        <a href="mailto:arifzakwan2001@gmail.com?subject=Portfolio%20question%3A%20Dabox%20Chatbot%20AI">Ask me about this project ↗</a>
+        <a href="mailto:arifzakwan2001@gmail.com?subject=Portfolio%20question%3A%20Docs%20Publisher%20MCP%20Connector">Ask me about this project ↗</a>
       </div>
 
       <button type="button" class="case-study-close" aria-label="Close case study">Close</button>
