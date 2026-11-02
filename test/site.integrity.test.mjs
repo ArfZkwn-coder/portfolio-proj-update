@@ -34,9 +34,9 @@ test('all local assets are relative (root-absolute paths 404 on a Pages project 
 
 test('social/SEO metadata is absolute and the og-image is a real PNG', () => {
   const meta = (p) => document.querySelector(`meta[property="${p}"]`)?.getAttribute('content');
-  assert.equal(meta('og:url'), SITE);
+  assert.equal(meta('og:url'), `${SITE}/`);
   assert.equal(meta('og:image'), `${SITE}/og-image.png`);
-  assert.equal(document.querySelector('link[rel="canonical"]').getAttribute('href'), SITE);
+  assert.equal(document.querySelector('link[rel="canonical"]').getAttribute('href'), `${SITE}/`);
   const png = fs.readFileSync('../og-image.png');
   assert.deepEqual([...png.subarray(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 'og-image.png has a PNG signature');
   const ld = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
@@ -83,7 +83,12 @@ test('real experience, certification and project content is intact', () => {
   assert.equal(document.querySelectorAll('.cert-card').length, 3, '2 degrees + 1 certificate');
   assert.equal(document.querySelectorAll('.cert-verify').length, 1, 'only the certificate has a verify link');
   assert.equal(document.querySelectorAll('.project-card').length, 3);
-  assert.equal(document.querySelector('.about-fact-value').textContent.trim(), '1');
+  const aboutYears = document.querySelector('.about-fact-value').textContent.trim();
+  assert.equal(aboutYears, '1+');
+  // About and Impact once claimed "1" and "3+" years; the same fact must read
+  // the same in both places.
+  assert.equal(document.querySelector('.impact-value').textContent.trim(), aboutYears,
+    'the Impact years stat matches the About fact');
 });
 
 test('accessibility plumbing ships with the markup', () => {

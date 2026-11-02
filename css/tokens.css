@@ -88,7 +88,7 @@
 
   /* Type scale. Small end: nothing a visitor has to read sits below 0.75rem.
      Large end: display steps, kept here so no component invents a size. */
-  --fs-2xs: 0.6875rem;
+  --fs-2xs: 0.75rem;
   --fs-xs: 0.75rem;
   --fs-sm: 0.8125rem;
   --fs-base: 0.9375rem;

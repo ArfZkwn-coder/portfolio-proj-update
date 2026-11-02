@@ -204,7 +204,12 @@ test('projects: filter buttons expose categories and hide non-matching cards', (
 test('impact metrics: deliver proof points and a consistent stat grid', () => {
   const { document } = makeEnv();
   const metrics = document.querySelectorAll('.impact-stat');
-  assert.ok(metrics.length >= 4, 'at least four impact metrics should be rendered');
+  assert.ok(metrics.length >= 3, 'at least three impact metrics should be rendered');
+  const css = fs.readFileSync('../css/style.css', 'utf8');
+  const columns = /\.impact-grid\s*\{[^}]*grid-template-columns:\s*repeat\((\d+)/.exec(css);
+  assert.ok(columns, '.impact-grid declares its column count');
+  assert.equal(Number(columns[1]), metrics.length,
+    'one column per stat, so the ruled grid never shows an empty cell');
   const intro = document.querySelector('#impact');
   assert.ok(intro, 'impact section should exist');
   assert.match(intro.textContent, /impact|results|automation/i);
@@ -543,6 +548,30 @@ test('tracking: with no relay configured, the page sends nothing at all', () => 
     assert.match(document.getElementById('formStatus').textContent, /Opening your email app/,
       'and the mailto fallback still runs');
   });
+});
+
+test('tracking: the shipped placeholder relay URL falls back to mailto, not a failed send', async () => {
+  const { window, document } = makeEnv();
+  const calls = spyOnRequests(window);
+  const form = document.getElementById('contactForm');
+  assert.match(form.getAttribute('data-track-endpoint'), /YOUR-SUBDOMAIN/,
+    'precondition: the markup still carries the placeholder');
+  // Lift the localhost exemption so this proves the placeholder rule itself,
+  // exactly as a visitor on the live site would hit it.
+  window.__portfolioTrackingTestMode = true;
+
+  const runtime = loadTracking(window);
+  assert.equal(runtime.shouldTrack(), false, 'an undeployed relay is off');
+
+  document.getElementById('fname').value = 'Test User';
+  document.getElementById('femail').value = 't@example.com';
+  document.getElementById('fmessage').value = 'Hello';
+  document.getElementById('ftopic').value = 'A job opportunity';
+  form.dispatchEvent(new window.Event('submit', { cancelable: true, bubbles: true }));
+  await sleep(30);
+
+  assert.deepEqual(calls, [], 'nothing is sent to a host that does not exist');
+  assert.match(document.getElementById('formStatus').textContent, /Opening your email app/);
 });
 
 test('tracking: a configured relay receives the submission plus the clicks before it', async () => {

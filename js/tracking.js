@@ -43,6 +43,12 @@
 
   const str = (value, max) => String(value == null ? '' : value).trim().slice(0, max || 500);
 
+  // The markup ships with this label in the relay URL until the Worker is
+  // deployed (see relay/README.md). It names no real host, so it must count as
+  // "off": otherwise every submission goes to a host that does not resolve and
+  // the form reports failure instead of falling back to mailto.
+  const PLACEHOLDER_LABEL = 'your-subdomain';
+
   // A tracking endpoint is only usable when it is configured and is a real
   // network origin. `new URL()` alone is not enough: it happily parses
   // `javascript:alert(1)`, and an empty string is the documented "off" state.
@@ -51,7 +57,8 @@
     if (!value) return false;
     try {
       const url = new URL(value);
-      return url.protocol === 'https:' || url.protocol === 'http:';
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+      return !url.hostname.toLowerCase().split('.').includes(PLACEHOLDER_LABEL);
     } catch {
       return false;
     }
