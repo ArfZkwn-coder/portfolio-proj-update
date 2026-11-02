@@ -22,9 +22,9 @@ test('all local assets are relative (root-absolute paths 404 on a Pages project 
   const resumeDoc = new JSDOM(resumeHtml).window.document;
   assert.deepEqual(localRefs(resumeDoc).sort(), ['css/fonts.css', 'css/resume.css', 'css/tokens.css', 'js/tracking.js']);
 
-  // totem.js is loaded lazily via import('./totem.js') from main.js, so it never appears as a <script src>
-  assert.ok(/import\('\.\/totem\.js'\)/.test(fs.readFileSync('../js/main.js', 'utf8')), 'main.js lazy-loads ./totem.js');
-  assert.ok(fs.existsSync('../js/totem.js'), 'js/totem.js exists');
+  // main.js is a classic script that loads nothing lazily: every file the page
+  // needs is listed above.
+  assert.ok(!/import\(/.test(fs.readFileSync('../js/main.js', 'utf8')), 'main.js imports no module at runtime');
   for (const ref of [...refs, ...localRefs(resumeDoc)]) {
     assert.ok(!ref.startsWith('/'), `root-absolute path breaks under /portfolio-proj-update/: ${ref}`);
     assert.ok(!ref.includes('site/'), `stale site/ subfolder reference: ${ref}`);
@@ -64,14 +64,16 @@ test('no placeholder content ships: no example.com links, no hidden credential l
   for (const a of document.querySelectorAll('.cert-verify')) assert.match(a.getAttribute('href'), /^https:\/\//);
 });
 
-test('skills: the totem counter matches the number of skill cards, and the real Linux skill is present', () => {
-  const cards = document.querySelectorAll('.skill-card');
-  const names = [...cards].map((c) => c.querySelector('.skill-name').textContent.trim());
+test('stack: all six skills are listed under About, including the real Linux skill', () => {
+  const items = [...document.querySelectorAll('#about #skills .stack-item')];
+  assert.equal(items.length, 6);
+  const names = items.map((item) => item.querySelector('.stack-name').textContent.trim());
   assert.ok(names.includes('Linux System Administration'));
   assert.ok(!names.some((n) => /Next\.js/.test(n)), 'stale Next.js placeholder skill');
-  const counter = document.body.textContent.match(/\/\s*(\d{2})/);
-  assert.ok(counter, 'totem counter text "/ NN" present');
-  assert.equal(Number(counter[1]), cards.length, 'totem counter is hard-coded in HTML; keep it in sync with the card count');
+  for (const item of items) {
+    assert.ok(item.querySelector('.stack-tag').textContent.trim(), 'every skill carries a tag');
+    assert.ok(item.querySelector('.stack-desc').textContent.trim().length > 20, 'every skill says what it covers');
+  }
 });
 
 test('real experience, certification and project content is intact', () => {
@@ -83,12 +85,11 @@ test('real experience, certification and project content is intact', () => {
   assert.equal(document.querySelectorAll('.cert-card').length, 3, '2 degrees + 1 certificate');
   assert.equal(document.querySelectorAll('.cert-verify').length, 1, 'only the certificate has a verify link');
   assert.equal(document.querySelectorAll('.project-card').length, 3);
-  const aboutYears = document.querySelector('.about-fact-value').textContent.trim();
-  assert.equal(aboutYears, '1+');
-  // About and Impact once claimed "1" and "3+" years; the same fact must read
-  // the same in both places.
-  assert.equal(document.querySelector('.impact-value').textContent.trim(), aboutYears,
-    'the Impact years stat matches the About fact');
+  // The years-of-experience figure lives in one place now (the proof strip);
+  // it once read "1" in one section and "3+" in another.
+  const years = [...document.querySelectorAll('.proof-stat')].find((stat) => /year/.test(stat.textContent));
+  assert.equal(years.querySelector('.proof-value').textContent.trim(), '1+');
+  assert.equal(document.querySelectorAll('.about-fact, .impact-stat').length, 0, 'no second copy of the stats');
 });
 
 test('accessibility plumbing ships with the markup', () => {
@@ -106,7 +107,7 @@ test('accessibility plumbing ships with the markup', () => {
   // Decorative icons must not be announced or focusable. An informative
   // diagram is the one exception, and it must carry a name of its own instead.
   const svgs = [...document.querySelectorAll('svg')];
-  assert.ok(svgs.length >= 12, `icons present: ${svgs.length}`);
+  assert.ok(svgs.length >= 6, `icons present: ${svgs.length}`);
   for (const svg of svgs) {
     if (svg.getAttribute('role') === 'img') {
       assert.ok(svg.getAttribute('aria-label'), 'a labelled diagram has an accessible name');
@@ -212,15 +213,19 @@ test('"Open" cursor label is wired to external links that exist', () => {
   for (const t of targets) assert.equal(t.getAttribute('target'), '_blank');
 });
 
-test('sections: nav and mobile menu follow DOM order, every link resolves, numbers run 01–07 in order', () => {
+test('sections: nav and mobile menu follow DOM order, every link resolves, numbers run 01–04 in order', () => {
   const sectionIds = [...document.querySelectorAll('main > section')].map((s) => s.id);
-  assert.deepEqual(sectionIds, ['hero', 'about', 'projects', 'impact', 'skills', 'experience', 'education', 'contact']);
+  assert.deepEqual(sectionIds, ['hero', 'projects', 'about', 'journey', 'contact']);
   const hrefs = (sel) => [...document.querySelectorAll(sel)].map((a) => a.getAttribute('href').slice(1));
   const expected = sectionIds.filter((id) => id !== 'hero');
   assert.deepEqual(hrefs('.nav-links a'), expected, 'desktop nav order');
   assert.deepEqual(hrefs('#mobileMenu a'), expected, 'mobile menu order');
   const numbers = [...document.querySelectorAll('.section-number')].map((n) => n.textContent.trim());
-  assert.deepEqual(numbers, ['01', '02', '03', '04', '05', '06', '07']);
+  assert.deepEqual(numbers, ['01', '02', '03', '04']);
+  // Old deep links keep landing in the right place inside the merged sections.
+  assert.equal(document.getElementById('skills').closest('section').id, 'about');
+  assert.equal(document.getElementById('experience').closest('section').id, 'journey');
+  assert.equal(document.getElementById('education').closest('section').id, 'journey');
   assert.equal(document.getElementById('certifications'), null, 'old #certifications id is gone');
 });
 
@@ -242,15 +247,16 @@ test('hero and contact speak to both audiences', () => {
   assert.ok(document.querySelector('label[for="ftopic"]'), 'select has a label');
 });
 
-test('head script: first visit shows the preloader, a repeat visit in the same session skips it', () => {
-  const run = (seen) => {
-    const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', beforeParse(w) { if (seen) w.sessionStorage.setItem('intro-seen', '1'); } });
-    const classes = [...dom.window.document.documentElement.classList];
-    dom.window.close();
-    return classes;
-  };
-  const first = run(false);
-  assert.ok(first.includes('js') && first.includes('is-loading') && !first.includes('is-ready'), `first visit: ${first}`);
-  const repeat = run(true);
-  assert.ok(repeat.includes('js') && repeat.includes('is-ready') && !repeat.includes('is-loading'), `repeat visit: ${repeat}`);
+test('head script: marks JS on, and a fail-safe readies the hero if main.js never boots', async () => {
+  // Only the inline head script runs here (deferred scripts are not loaded), so
+  // this is exactly the case the fail-safe exists for.
+  const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/' });
+  const classes = dom.window.document.documentElement.classList;
+  assert.ok(classes.contains('js'), 'js class set');
+  assert.ok(!classes.contains('is-loading'), 'no preloader state');
+  assert.ok(!classes.contains('is-ready'), 'not ready until main.js (or the fail-safe) says so');
+  const failSafe = /setTimeout\(function \(\) \{ c\.add\('is-ready'\); \}, (\d+)\)/.exec(html);
+  assert.ok(failSafe, 'the head script carries a fail-safe');
+  assert.ok(Number(failSafe[1]) <= 3000, 'and it fires within 3s');
+  dom.window.close();
 });

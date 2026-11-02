@@ -1,7 +1,7 @@
 /* Portfolio interactions — Arif Zakwan
  *
  * Progressive enhancement: every feature checks for what it depends on
- * (Lenis, GSAP, WebGL, a fine pointer, the reduced-motion preference) and
+ * (Lenis, GSAP, a fine pointer, the reduced-motion preference) and
  * quietly skips itself when that is missing. The page is fully usable
  * without any of it.
  */
@@ -11,9 +11,7 @@
   const root = document.documentElement;
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
-  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-  const pad2 = (n) => String(n).padStart(2, '0');
 
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   const pointerQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -269,7 +267,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Intro: preloader + kinetic hero name                                */
+  /* Kinetic hero name                                                   */
   /* ------------------------------------------------------------------ */
 
   // Wraps every character in masked spans for the staggered reveal. The
@@ -312,44 +310,8 @@
     walk(element);
   }
 
-  // The preloader plays once per browser session; repeat visits go straight to the page.
-  // sessionStorage can throw (blocked storage), so both helpers fail soft.
-  function introAlreadySeen() {
-    try { return sessionStorage.getItem('intro-seen') === '1'; } catch { return false; }
-  }
-  function markIntroSeen() {
-    try { sessionStorage.setItem('intro-seen', '1'); } catch { /* storage blocked: intro simply plays again next time */ }
-  }
-
-  function runIntro() {
-    const counter = $('#preloaderCount');
-    if (!counter || prefersReducedMotion() || introAlreadySeen()) return Promise.resolve();
-
-    const minDuration = 1100;
-    const start = performance.now();
-    let done = false;
-
-    const tick = (now) => {
-      if (done) return;
-      const progress = clamp((now - start) / minDuration, 0, 1);
-      const eased = 1 - (1 - progress) ** 3;
-      counter.textContent = String(Math.round(eased * 99)).padStart(3, '0');
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-
-    const fontsReady = document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, wait(2500)]) : Promise.resolve();
-
-    return Promise.all([fontsReady, wait(minDuration)]).then(() => {
-      done = true;
-      counter.textContent = '100';
-      markIntroSeen();
-      return wait(250);
-    });
-  }
-
   /* ------------------------------------------------------------------ */
-  /* Reveal-on-scroll, marquee                                           */
+  /* Reveal-on-scroll                                                    */
   /* ------------------------------------------------------------------ */
   function initReveal() {
     const items = $$('.reveal');
@@ -370,89 +332,6 @@
       { threshold: 0.1 }
     );
     items.forEach((item) => observer.observe(item));
-  }
-
-  function initProjectFilters() {
-    const section = $('#projects');
-    if (!section) return;
-
-    const buttons = $$('.project-filter-btn', section);
-    const cards = $$('.project-card', section);
-    if (buttons.length === 0 || cards.length === 0) return;
-
-    const applyFilter = (filter) => {
-      const activeFilter = filter || 'all';
-      buttons.forEach((button) => {
-        const isActive = button.dataset.filter === activeFilter;
-        button.classList.toggle('is-active', isActive);
-        button.setAttribute('aria-pressed', String(isActive));
-      });
-
-      cards.forEach((card) => {
-        const matches = activeFilter === 'all' || card.dataset.category === activeFilter;
-        card.classList.toggle('is-hidden', !matches);
-        if (matches) card.removeAttribute('hidden');
-        else card.setAttribute('hidden', 'hidden');
-      });
-    };
-
-    buttons.forEach((button) => {
-      button.addEventListener('click', () => applyFilter(button.dataset.filter));
-    });
-
-    applyFilter('all');
-  }
-
-  // Drifts constantly; speeds up and reverses with scroll velocity/direction.
-  function initMarquee() {
-    const marquee = $('.marquee');
-    const track = marquee && $('.marquee-track', marquee);
-    if (!track || prefersReducedMotion() || !('IntersectionObserver' in window)) return;
-
-    marquee.classList.add('is-driven');
-
-    let offset = 0;
-    let direction = -1;
-    let velocity = 0;
-    let lastY = window.scrollY;
-    let last = performance.now();
-    let running = false;
-    let frame = 0;
-
-    const loop = (now) => {
-      if (!running) return;
-      const dt = Math.min(64, now - last) / 1000;
-      last = now;
-
-      const y = window.scrollY;
-      const delta = y - lastY;
-      lastY = y;
-      velocity += (delta - velocity) * 0.1;
-      if (delta !== 0) direction = delta > 0 ? -1 : 1;
-
-      const speed = 60 + Math.min(Math.abs(velocity) * 40, 1200); // px per second
-      offset += direction * speed * dt;
-
-      const half = track.scrollWidth / 2; // two identical groups -> seamless wrap
-      if (half > 0) {
-        if (offset <= -half) offset += half;
-        if (offset > 0) offset -= half;
-      }
-      track.style.transform = `translate3d(${offset}px, 0, 0)`;
-      frame = requestAnimationFrame(loop);
-    };
-
-    new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !running) {
-        running = true;
-        last = performance.now();
-        lastY = window.scrollY;
-        frame = requestAnimationFrame(loop);
-      } else if (!entry.isIntersecting) {
-        running = false;
-        cancelAnimationFrame(frame);
-      }
-    }).observe(marquee);
   }
 
   /* ------------------------------------------------------------------ */
@@ -487,126 +366,6 @@
         });
       });
     }
-
-    $$('.project-card').forEach((card) => {
-      const index = $('.project-index', card);
-      if (!index) return;
-      gsap.to(index, {
-        yPercent: -25,
-        ease: 'none',
-        scrollTrigger: { trigger: card, start: 'top bottom', end: 'bottom top', scrub: true },
-      });
-    });
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* 3D skills totem — lazy, desktop + WebGL + motion allowed            */
-  /* ------------------------------------------------------------------ */
-  // Probed once: the answer cannot change mid-session, and each probe allocates
-  // a canvas plus a WebGL context that is never explicitly released.
-  let webglSupport;
-  function hasWebGL() {
-    if (webglSupport !== undefined) return webglSupport;
-    try {
-      const canvas = document.createElement('canvas');
-      webglSupport = Boolean(canvas.getContext('webgl2'));
-    } catch {
-      webglSupport = false;
-    }
-    return webglSupport;
-  }
-
-  function wireTotem(totem, cards, grid) {
-    const indexLabel = $('#totemIndex');
-    const totalLabel = $('#totemTotal');
-    if (totalLabel) totalLabel.textContent = `/ ${pad2(cards.length)}`;
-
-    let active = -1;
-    const setActive = (index) => {
-      if (index === active || index < 0) return;
-      active = index;
-      cards.forEach((card, i) => card.classList.toggle('is-active', i === index));
-      if (indexLabel) indexLabel.textContent = pad2(index + 1);
-      totem.setActive(index);
-    };
-    setActive(0);
-
-    // The card crossing the middle of the viewport is the active skill.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActive(cards.indexOf(entry.target));
-        });
-      },
-      { rootMargin: '-45% 0px -45% 0px' }
-    );
-    cards.forEach((card) => observer.observe(card));
-
-    let ticking = false;
-    const updateProgress = () => {
-      ticking = false;
-      const rect = grid.getBoundingClientRect();
-      totem.setProgress(clamp((window.innerHeight * 0.5 - rect.top) / Math.max(1, rect.height), 0, 1));
-    };
-    window.addEventListener(
-      'scroll',
-      () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(updateProgress);
-      },
-      { passive: true }
-    );
-    updateProgress();
-  }
-
-  async function startTotem(cards, grid) {
-    root.classList.add('has-totem'); // makes the stage measurable before the canvas is sized
-    try {
-      const { createTotem } = await import('./totem.js');
-      const skills = cards.map((card) => ({
-        name: $('.skill-name', card).textContent.trim(),
-        tag: $('.skill-tag', card).textContent.trim(),
-      }));
-      const totem = await createTotem({ container: $('#totemCanvas'), skills });
-      wireTotem(totem, cards, grid);
-    } catch (error) {
-      root.classList.remove('has-totem');
-      // Expected on desktops without WebGL or with module loading blocked, and
-      // already covered by the static grid, so this is a developer signal rather
-      // than noise in a visitor's console: opt in with `window.__portfolioDebug`.
-      if (window.__portfolioDebug === true) {
-        console.warn('3D totem unavailable, keeping the static skills grid.', error);
-      }
-    }
-    if (window.ScrollTrigger) window.ScrollTrigger.refresh();
-  }
-
-  function initTotem() {
-    const section = $('#skills');
-    const grid = $('#skillsGrid');
-    const cards = grid ? $$('.skill-card', grid) : [];
-    if (!section || cards.length === 0 || prefersReducedMotion() || !('IntersectionObserver' in window)) return;
-
-    let started = false;
-    const arm = () => {
-      if (started || !desktopQuery.matches || !hasWebGL()) return;
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (started || !entries.some((entry) => entry.isIntersecting)) return;
-          started = true;
-          observer.disconnect();
-          startTotem(cards, grid);
-        },
-        { rootMargin: '600px 0px' }
-      );
-      observer.observe(section);
-    };
-
-    arm();
-    desktopQuery.addEventListener('change', (event) => {
-      if (event.matches) arm();
-    });
   }
 
   /* ------------------------------------------------------------------ */
@@ -617,8 +376,7 @@
   // mean the class is never added and the finished drawing shows instead.
   // Returns a function that draws whatever is on screen already: the observer
   // needs rendering frames, and a background tab produces none, so the boot
-  // sequence calls it once the intro has lifted rather than trusting a
-  // callback to arrive.
+  // sequence calls it once rather than trusting a callback to arrive.
   function initDiagrams() {
     const diagrams = $$('.diagram');
     if (diagrams.length === 0 || prefersReducedMotion() || !('IntersectionObserver' in window)) {
@@ -931,8 +689,6 @@
   initCursor();
   initMagnetic();
   initReveal();
-  initProjectFilters();
-  initMarquee();
   initForm();
   initCaseStudies(lenis);
 
@@ -940,13 +696,13 @@
   if (heroName) splitChars(heroName);
 
   initScrollEffects();
-  initTotem();
   const drawDiagramsInView = initDiagrams();
 
-  runIntro().then(() => {
-    root.classList.remove('is-loading');
-    root.classList.add('is-ready');
-    if (window.ScrollTrigger) window.ScrollTrigger.refresh();
-    drawDiagramsInView();
-  });
+  // No preloader: the hero entrance starts as soon as the name is split. The
+  // layout read commits the characters' hidden starting position first, or
+  // the browser would skip straight to the end state with no transition.
+  if (heroName) void heroName.offsetWidth;
+  root.classList.add('is-ready');
+  if (window.ScrollTrigger) window.ScrollTrigger.refresh();
+  drawDiagramsInView();
 })();
