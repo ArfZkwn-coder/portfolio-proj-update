@@ -76,17 +76,18 @@ const isIsoTimestamp = (value) => {
 
 export function isAllowedOrigin(request, allowedOrigin) {
   if (!allowedOrigin) return false;
+  // Only Origin is compared. A browser always sends it on a cross-origin POST;
+  // a Referer carries a path and would never equal the bare origin anyway.
+  // Missing means a non-browser caller: refuse, because an allowlist that fails
+  // open is not an allowlist.
   const origin = request.headers.get('Origin');
-  const referer = request.headers.get('Referer');
-  const candidates = [origin, referer].filter(Boolean);
-  // Neither header present means a non-browser caller: refuse, because an
-  // allowlist that fails open is not an allowlist.
-  if (candidates.length === 0) return false;
-  return candidates.some((value) => String(value).replace(/\/+$/, '') === allowedOrigin.replace(/\/+$/, ''));
+  if (!origin) return false;
+  return String(origin).replace(/\/+$/, '') === allowedOrigin.replace(/\/+$/, '');
 }
 
 export function checkBodySize(rawBody, maxBytes = MAX_BODY_BYTES) {
-  const size = typeof rawBody === 'string' ? rawBody.length : Number(rawBody) || 0;
+  // Bytes, not characters: a two-byte character counts twice.
+  const size = typeof rawBody === 'string' ? new TextEncoder().encode(rawBody).byteLength : Number(rawBody) || 0;
   return { ok: size > 0 && size <= maxBytes, size, maxBytes };
 }
 
@@ -120,7 +121,6 @@ export function validateEvent(input) {
 export function validateSubmission(input) {
   const errors = [];
   if (!isPlainObject(input)) return { ok: false, errors: ['body must be a JSON object'] };
-  if (Array.isArray(input)) return { ok: false, errors: ['body must be a JSON object, not an array'] };
 
   // Checked against the raw input, before any cleaning can rewrite it.
   if (hasMarkup(input.email)) errors.push('email must not contain markup');
@@ -183,7 +183,7 @@ export function validateSubmission(input) {
 
 // Best effort only: Workers instances are not shared, so this blunts a single
 // runaway client rather than providing a real quota. Documented, not hidden.
-export function createRateLimiter({ limit = 20, windowMs = 60_000, now = () => Date.now() } = {}) {
+export function createRateLimiter({ limit = 20, windowMs = 60_000, now = () => Date.now(), maxKeys = 5000 } = {}) {
   const hits = new Map();
   return {
     check(key) {
@@ -194,8 +194,17 @@ export function createRateLimiter({ limit = 20, windowMs = 60_000, now = () => D
         return { ok: false, remaining: 0 };
       }
       bucket.push(stamp);
+      // Re-inserted so Map order is recency: the first key is the stalest.
+      hits.delete(key);
       hits.set(key, bucket);
-      if (hits.size > 5000) hits.clear(); // never grow without bound
+      if (hits.size > maxKeys) {
+        // Never grow without bound, but never wipe live windows to do it:
+        // expired keys go first, then the least recently seen.
+        for (const [other, stamps] of hits) {
+          if (stamps.every((ts) => stamp - ts >= windowMs)) hits.delete(other);
+        }
+        while (hits.size > maxKeys) hits.delete(hits.keys().next().value);
+      }
       return { ok: true, remaining: limit - bucket.length };
     },
   };

@@ -27,7 +27,7 @@
     <a class="nav-cta" href="resume.html">Résumé ↗</a>
   </nav>
 
-  <main id="main" class="notfound">
+  <main id="main" class="notfound" tabindex="-1">
     <section aria-labelledby="notfound-title">
       <div class="section-header">
         <span class="section-number" aria-hidden="true">404</span>
@@ -56,11 +56,22 @@
   </footer>
 
   <script>
-    /* The page is complete without this; it only keeps the footer year current.
+    /* The page is complete without this; it keeps the footer year current and
+       makes the skip link work: with <base> pinned to the site root, a plain
+       #main would navigate to the homepage instead of skipping on this page.
        Inline on purpose so the 404 has no extra script request. */
     (function () {
       var year = document.getElementById('year');
       if (year) year.textContent = String(new Date().getFullYear());
+      var skip = document.querySelector('.skip-link');
+      var main = document.getElementById('main');
+      if (skip && main) {
+        skip.addEventListener('click', function (event) {
+          event.preventDefault();
+          main.focus({ preventScroll: true });
+          main.scrollIntoView({ behavior: 'auto', block: 'start' });
+        });
+      }
     })();
   </script>
 </body>

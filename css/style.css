@@ -45,6 +45,7 @@ body {
   opacity: 0.5;
 }
 .cursor.hover { width: 16px; height: 16px; }
+.cursor.is-hidden { opacity: 0; }
 .cursor-ring.hover { width: 56px; height: 56px; opacity: 0.2; }
 
 /* ── NOISE OVERLAY ── */
@@ -272,7 +273,7 @@ nav.scrolled {
   background: var(--solid);
   color: var(--solid-text);
 }
-.hero-cta:hover { background: var(--accent-strong); transform: translateY(-2px); }
+.hero-cta:hover { background: var(--accent-strong); color: var(--paper); transform: translateY(-2px); }
 
 .hero-cta-secondary {
   border: 1px solid var(--ink);
@@ -290,60 +291,11 @@ nav.scrolled {
   justify-content: center;
   align-items: stretch;
   gap: var(--space-3);
-  max-width: 22rem;
+  max-width: 30rem;
   justify-self: end;
   width: 100%;
   opacity: 0;
   animation: fadeIn 1s 1s forwards;
-}
-
-/* Capability chips. These hold words, not metrics, so they are laid out as a
-   wordmark plus a label rather than dressed up as statistics. */
-.hero-capability {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--line);
-  background: var(--card);
-  position: relative;
-  overflow: hidden;
-  transition: border-color var(--dur-base), transform var(--dur-base), background var(--dur-base);
-}
-.hero-capability:hover { border-color: var(--accent); transform: translateX(-4px); }
-.hero-capability::before {
-  content: '';
-  position: absolute;
-  right: 0; top: 0;
-  width: 3px; height: 0;
-  background: var(--accent-bright);
-  transition: height 0.4s;
-}
-.hero-capability:hover::before { height: 100%; }
-
-.hero-capability-icon {
-  width: 26px; height: 26px;
-  flex: none;
-  color: var(--accent);
-}
-.hero-capability-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.hero-capability-mark {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  line-height: 1;
-  color: var(--accent);
-  font-style: italic;
-}
-.hero-capability-label {
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-top: 0.3rem;
 }
 
 /* ── SECTION BASE ── */
@@ -796,7 +748,7 @@ section { padding: var(--pad-section) max(var(--pad-inline), env(safe-area-inset
   transition: background var(--dur-fast), transform var(--dur-fast);
   align-self: flex-start;
 }
-.form-submit:hover:not(:disabled) { background: var(--accent-strong); transform: translateY(-2px); }
+.form-submit:hover:not(:disabled) { background: var(--accent-strong); color: var(--paper); transform: translateY(-2px); }
 .form-submit:disabled { cursor: progress; }
 .form-submit-busy { display: none; }
 .contact-form.is-busy .form-submit-label { display: none; }
@@ -860,11 +812,6 @@ footer {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-@keyframes scrollDrop {
-  0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
-  50%  { transform: scaleY(1); transform-origin: top; opacity: 1; }
-  100% { transform: scaleY(1); transform-origin: bottom; opacity: 0; }
-}
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.6; transform: scale(1.3); }
@@ -885,9 +832,8 @@ footer {
   .mobile-menu { display: flex; }
   #hero { grid-template-columns: 1fr; gap: var(--space-6); }
   .hero-left { padding-right: 0; }
-  /* Stack the capability chips and let them fill the column. */
+  /* The featured-project card fills the column. */
   .hero-right { flex-direction: column; align-items: stretch; max-width: none; justify-self: stretch; }
-  .hero-capability:hover { transform: none; }
   .about-inner { grid-template-columns: 1fr; gap: var(--space-7); }
 
   .projects-grid { grid-template-columns: 1fr; }
@@ -975,6 +921,8 @@ footer {
 @media (max-width: 900px) {
   /* The hamburger already replaced the section links at this width. */
   .nav-cta { display: none; }
+  /* Pages without a hamburger (privacy, 404) keep their only way to the résumé. */
+  .notfound-page .nav-cta { display: inline-flex; }
 }
 
 .hero-cta-tertiary {
@@ -1012,7 +960,6 @@ footer {
 /* ── 404 PAGE ── */
 /* 404.html links tokens.css + this stylesheet and nothing else, so it needs the
    baseline that the reset would otherwise leave to the browser. */
-body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-weight: 400; line-height: 1.6; }
 .notfound-page nav { background: var(--nav-bg-solid); border-bottom: 1px solid var(--line); }
 .notfound {
   min-height: 60svh;
@@ -1106,14 +1053,19 @@ html.menu-open nav { z-index: 100; }
 /* Custom cursor exists only for fine pointers (set by main.js) */
 html.has-cursor,
 html.has-cursor a,
-html.has-cursor button { cursor: none; }
+html.has-cursor button,
+html.has-cursor select,
+html.has-cursor .project-card,
+html.has-cursor .hero-feature,
+html.has-cursor .project-case-open,
+html.has-cursor .case-study-close { cursor: none; }
 html.has-cursor input,
 html.has-cursor textarea { cursor: text; }
 html.has-cursor .cursor,
 html.has-cursor .cursor-ring { display: block; }
 
 .form-status { margin: 0; }
-.form-field .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.form-field.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 /* ==========================================================================
    PHASE 2 — scroll & motion
@@ -1293,6 +1245,8 @@ html.has-cursor .form-submit {
   transition: border-color var(--dur-fast), gap var(--dur-fast);
 }
 .js .project-case-open:hover { border-bottom-color: var(--accent); gap: 0.75rem; }
+/* main.js adds no-dialog when the browser has no showModal: the opener would be dead. */
+.js.no-dialog .project-case-open { display: none; }
 
 .case-study {
   width: min(46rem, calc(100vw - 2 * var(--space-5)));
@@ -1539,7 +1493,6 @@ body::after {
 .footer-links a { text-transform: uppercase; }
 
 /* ── 11. MOTION — the drawing builds itself ── */
-@keyframes bp-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 @keyframes bp-wire { 0% { opacity: 0; stroke-dashoffset: 500; } 18% { opacity: 1; } 100% { opacity: 1; stroke-dashoffset: 0; } }
 @keyframes bp-node { from { opacity: 0; } to { opacity: 1; } }
 @keyframes bp-dash { to { opacity: 0.65; } }
@@ -1598,7 +1551,17 @@ html.motion .diagram .wire-dash { opacity: 0; }
 .certs-grid { gap: var(--space-5); background: transparent; }
 .cert-card { background: var(--node-fill); border: 1px solid var(--line); border-left: 2px solid var(--accent-bright); }
 .cert-card:hover,
-.cert-card:focus-within { background: var(--node-fill); }
+.cert-card:focus-within { background: var(--node-fill); border-color: var(--accent-bright); }
+/* The card no longer flips dark on hover, so the dark-surface text colours the
+   base sheet applies there must be put back, or the copy vanishes. */
+.cert-card:hover .cert-name,
+.cert-card:focus-within .cert-name { color: var(--ink); }
+.cert-card:hover .cert-year,
+.cert-card:focus-within .cert-year { color: var(--muted); }
+.cert-card:hover .cert-verify,
+.cert-card:focus-within .cert-verify { color: var(--accent); border-bottom-color: var(--accent); }
+.cert-card:hover :focus-visible,
+.cert-card:focus-within :focus-visible { outline-color: var(--accent); }
 .cert-card:hover .cert-badge,
 .cert-card:focus-within .cert-badge { background: var(--section-alt); border-color: var(--line); }
 .cert-card:hover .cert-badge svg,

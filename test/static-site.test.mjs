@@ -112,3 +112,39 @@ test('the ZimaOS deploy ships every file the pages load, and nothing private', (
     if (entry) assert.ok(shipped.includes(entry), `the deploy publishes ${entry}, which the site loads`);
   }
 });
+
+test('404.html: the skip link stays on the 404 page even though <base> points at the site root', () => {
+  // With <base href="/portfolio-proj-update/">, a bare #main resolves to the
+  // homepage; the inline script has to handle the click itself.
+  const dom = new JSDOM(read('404.html'), {
+    runScripts: 'dangerously',
+    url: `https://docs-publisher.tail62b6df.ts.net${SITE_PATH}missing/deep/path`,
+    beforeParse(window) { window.Element.prototype.scrollIntoView = function scrollIntoView() {}; },
+  });
+  const { document, MouseEvent } = dom.window;
+  const main = document.getElementById('main');
+  assert.equal(main.getAttribute('tabindex'), '-1', '<main> can take focus');
+  const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+  document.querySelector('.skip-link').dispatchEvent(click);
+  assert.equal(click.defaultPrevented, true, 'the browser is not sent off to the homepage');
+  assert.equal(document.activeElement, main, 'focus moves to the content of this page');
+  dom.window.close();
+});
+
+test('source files use LF line endings, as .gitattributes promises', () => {
+  const dirs = ['css', 'js', 'relay', 'test'];
+  const files = ['README.md', 'index.html', 'resume.html', 'privacy.html', '404.html', 'package.json'];
+  for (const dir of dirs) {
+    for (const name of fs.readdirSync(`../${dir}`)) {
+      if (/\.(js|mjs|css|json|md|toml)$/.test(name) && !name.startsWith('package-lock')) files.push(`${dir}/${name}`);
+    }
+  }
+  for (const file of files) {
+    assert.ok(!read(file).includes('\r\n'), `${file} has CRLF line endings`);
+  }
+});
+
+test('package.json carries no dependency nothing uses', () => {
+  const pkg = JSON.parse(read('package.json'));
+  assert.ok(!('postcss' in pkg.devDependencies), 'postcss was never imported anywhere');
+});

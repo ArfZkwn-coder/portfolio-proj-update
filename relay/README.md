@@ -9,12 +9,14 @@ payload before it reaches the workflow.
 ```
 browser                          relay (this Worker)               automation
 ──────────────────────────────   ─────────────────────────────   ───────────────────
-click on a tracked link  ──┐
-  → POST /event             ├─→  validate origin, size, shape
-  → POST /submit            │    strip markup, honeypot, rate limit
-  (carries the click list) ─┘    → POST /submit only ──────────→  Pabbly Connect
-                                                                  Webhook Trigger
-                                                                  {{trigger.*}}
+click on a tracked link
+  → queued in the browser only
+form submit
+  → POST /submit            ───→  validate origin, size, shape
+  (carries the click list)        strip markup, honeypot, rate limit
+                                  → forward ────────────────────→  Pabbly Connect
+                                                                   Webhook Trigger
+                                                                   {{trigger.*}}
 ```
 
 Swap modes by changing one attribute — `js/tracking.js` picks the route from the
@@ -142,7 +144,7 @@ no field is ever `null` or `undefined` — absent means an empty string.
 Answered `202 {"ok":true,"forwarded":false}`. Click counts live in the visitor's
 browser and arrive with the submission, so the webhook is never called for an
 anonymous visitor. The route exists so that contract stays stable if clicks are
-ever routed somewhere of their own.
+ever routed somewhere of their own; the site itself no longer calls it.
 
 ### Responses
 
@@ -211,9 +213,10 @@ Put the Worker URL in the markup — **not** in JavaScript:
 - `index.html` → `<form id="contactForm" data-track-endpoint="https://…">`
 - `resume.html` → `<html lang="en" data-track-endpoint="https://…">` (no form on that page)
 
-Both ship empty on purpose, and empty means **tracking is off**: the form falls
-back to `mailto:`, click counting does nothing, and no test needs changing. To
-turn tracking off again, empty those two attributes.
+Both currently ship with the `YOUR-SUBDOMAIN` placeholder, which counts as **tracking
+off** exactly as an empty value does: the form falls back to `mailto:` and click
+counting does nothing, until a real Worker URL replaces it. To turn tracking off
+again, empty those two attributes.
 
 `test/tracking.test.mjs` asserts the client bundle contains no credential, no
 webhook URL and no vendor name, so a shortcut here fails the suite rather than

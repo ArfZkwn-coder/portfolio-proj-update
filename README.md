@@ -2,7 +2,7 @@
 
 Live: https://docs-publisher.tail62b6df.ts.net/portfolio-proj-update
 
-Single-page portfolio for an IT enthusiast and automation specialist, plus a print-first résumé page. Plain HTML, CSS and JavaScript with no build step, self-hosted on a ZimaOS server (nginx behind Tailscale Funnel) and published by Gitea Actions once CI passes — see [Deploy](#deploy). Motion and 3D are progressive enhancements: if a library, WebGL, a fine pointer or motion is unavailable (or the visitor prefers reduced motion), that feature skips itself and the page still works.
+Single-page portfolio for an IT enthusiast and automation specialist, plus a print-first résumé page. Plain HTML, CSS and JavaScript with no build step, self-hosted on a ZimaOS server (nginx behind Tailscale Funnel) and published by Gitea Actions once CI passes — see [Deploy](#deploy). Motion is a progressive enhancement: if a library, a fine pointer or motion is unavailable (or the visitor prefers reduced motion), that feature skips itself and the page still works.
 
 ## Structure
 
@@ -42,10 +42,10 @@ Practical consequences when editing:
 
 - **Accent tiers.** `--accent` is the *text* accent on light surfaces (≥4.5:1, safe
   at any size). `--accent-on-dark` is for text on dark surfaces.
-  `--accent-bright` is decorative only (rules, dots, 3D) and is never used for
+  `--accent-bright` is decorative only (rules, dots, diagram accents) and is never used for
   small text.
 - **Inverted surfaces** use the fixed `--solid`/`--solid-text` pair, not
-  `--ink`/`--paper`. That keeps buttons and the dark Skills panel cream-on-dark
+  `--ink`/`--paper`. That keeps buttons and the mobile menu cream-on-dark
   in both colour schemes.
 - **Modal surfaces** use `--dialog-surface`/`--dialog-text`/`--scrim`.
 - **A surface token that carries text needs a dark-scheme value.** The scrolled
@@ -161,7 +161,7 @@ forwarded.
   modes, so a workflow does not care which route the data took.
 - **Clicks are counted anonymously.** They are queued in the visitor's own
   browser (capped, 7-day TTL) and only travel with a submission the visitor chose
-  to send. In direct mode an anonymous click sends **nothing**, so the workflow
+  to send. In both modes an anonymous click sends **nothing**, so the workflow
   never learns about a visitor who did not contact you.
 - **No cookies, no third-party scripts.** The only identifier is a random
   per-tab value; [privacy.html](privacy.html) states this, and a test checks the

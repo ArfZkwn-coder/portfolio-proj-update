@@ -20,7 +20,7 @@ const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
 // source, in order, so later declarations win the same way the cascade does.
 function readRootTokens(source) {
   const tokens = {};
-  const rootBlock = /:root\s*(?:\[[^\]]*\])?\s*\{([^{}]*)\}/g;
+  const rootBlock = /:root\s*\{([^{}]*)\}/g;
   for (const match of source.matchAll(rootBlock)) {
     for (const declaration of match[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
       tokens[declaration[1]] = declaration[2].trim();
@@ -81,6 +81,11 @@ function ratio(foreground, background) {
 
 // [foreground token, background token, minimum ratio, why]
 const PAIRS = [
+  ['--paper', '--accent-strong', 4.5, 'hovered primary buttons'],
+  ['--ink', '--node-fill', 4.5, 'blueprint card headings, certificates on hover'],
+  ['--text-body', '--node-fill', 4.5, 'blueprint card copy'],
+  ['--muted', '--node-fill', 4.5, 'blueprint card labels, diagram kickers'],
+  ['--accent', '--node-fill', 4.5, 'blueprint card accents and links'],
   ['--ink', '--paper', 4.5, 'headings and body on the page background'],
   ['--ink', '--card', 4.5, 'text on the alternating cream sections'],
   ['--text-body', '--paper', 4.5, 'paragraph copy on paper'],
@@ -129,6 +134,11 @@ for (const [foreground, background, minimum, why] of PAIRS) {
 /* ------------------------------------------------------------------ */
 
 const DARK_PAIRS = [
+  ['--paper', '--accent-strong', 4.5, 'hovered primary buttons in dark mode'],
+  ['--ink', '--node-fill', 4.5, 'blueprint card headings in dark mode'],
+  ['--text-body', '--node-fill', 4.5, 'blueprint card copy in dark mode'],
+  ['--muted', '--node-fill', 4.5, 'blueprint card labels in dark mode'],
+  ['--accent', '--node-fill', 4.5, 'blueprint card accents in dark mode'],
   ['--ink', '--paper', 4.5, 'text on the dark page background'],
   ['--ink', '--card', 4.5, 'text on dark alternating sections'],
   ['--text-body', '--paper', 4.5, 'paragraph copy in dark mode'],

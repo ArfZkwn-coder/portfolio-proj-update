@@ -6,6 +6,10 @@
    than viewed on a themed screen.
    ========================================================================== */
 
+/* A reset of its own: this page does not load style.css, so without it the UA's
+   list indent and heading/paragraph margins sit on top of the spacing below. */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
   background: var(--paper);
   color: var(--ink);
@@ -16,6 +20,7 @@ body {
 }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#resume:focus { outline: none; }
 
 .skip-link {
   position: absolute;
@@ -75,7 +80,7 @@ main {
   cursor: pointer;
   transition: background var(--dur-fast);
 }
-.resume-print:hover { background: var(--accent-strong); }
+.resume-print:hover { background: var(--accent-strong); color: var(--paper); }
 
 .resume-hint {
   padding: var(--space-3) var(--space-5) 0;

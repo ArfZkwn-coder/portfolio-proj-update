@@ -301,17 +301,15 @@
       }
     };
 
-    // A click event must not be allowed to delay the navigation, so it is
-    // fire-and-forget and never awaited.
-    const send = (path, payload, keepalive) => {
+    // A submission is awaited by the page, so it can carry an AbortSignal that the
+    // caller uses to stop waiting. Plain fetch, not sendBeacon: a beacon is sent
+    // with credentials, which a cross-origin JSON endpoint cannot accept unless it
+    // opts in, and it reports success before anything has been answered.
+    const send = (path, payload, keepalive, signal) => {
       const endpoint = readConfig().endpoint;
       const url = path === '' ? endpoint : `${endpoint.replace(/\/+$/, '')}${path}`;
       const body = JSON.stringify(payload);
       try {
-        if (keepalive && typeof window.navigator.sendBeacon === 'function') {
-          const blob = new window.Blob([body], { type: 'application/json' });
-          if (window.navigator.sendBeacon(url, blob)) return Promise.resolve(true);
-        }
         if (typeof window.fetch !== 'function') return Promise.resolve(false);
         return window.fetch(url, {
           method: 'POST',
@@ -322,6 +320,7 @@
           keepalive: Boolean(keepalive),
           mode: 'cors',
           credentials: 'omit',
+          signal,
         }).then((response) => Boolean(response && response.ok)).catch(() => false);
       } catch {
         return Promise.resolve(false);
@@ -347,20 +346,20 @@
       };
     };
 
+    // A click only ever joins the visitor's own browser-side queue. It reaches the
+    // relay (or the automation) inside a submission the visitor chose to send, so
+    // a stranger who contacts nobody is never reported anywhere. privacy.html
+    // promises exactly this.
     const trackClick = (channel) => {
       if (!shouldTrack(readConfig())) return;
       const event = buildClickEvent(channel, window.location.pathname, sessionId(), Date.now());
-      writeQueue(readQueue().concat([event])); // the count is kept either way
-      // Calling the automation directly, one request per click would hand it
-      // data about a visitor who has not contacted anyone. The count stays
-      // local and travels with the submission instead.
-      if (readConfig().mode === 'direct') return;
-      send('/event', event, true); // best effort; failure is invisible by design
+      writeQueue(readQueue().concat([event]));
     };
 
-    const submit = (fields) => {
+    const submit = (fields, options) => {
       const config = readConfig();
       if (!shouldTrack(config)) return Promise.resolve(false);
+      const signal = options && options.signal ? options.signal : undefined;
       // Copied *before* awaiting, so a click landing mid-request cannot clear a
       // queue that was already read.
       const clicks = readQueue();
@@ -375,14 +374,14 @@
 
       if (config.mode === 'direct') {
         // One request, straight to the workflow, no relay in between.
-        return send('', buildWebhookPayload(fields, context), false).then((ok) => {
+        return send('', buildWebhookPayload(fields, context), false, signal).then((ok) => {
           if (ok) writeQueue([]);
           return ok;
         });
       }
 
       const payload = buildSubmission(fields, context);
-      return send('/submit', payload, false).then((ok) => {
+      return send('/submit', payload, false, signal).then((ok) => {
         if (ok) writeQueue([]); // only clear once the relay has accepted it
         return ok;
       });

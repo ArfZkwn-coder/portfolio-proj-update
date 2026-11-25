@@ -34,6 +34,7 @@
 /* eslint-disable no-undef -- Workers runtime globals; see the note above. */
 
 import {
+  MAX_BODY_BYTES,
   checkBodySize,
   createRateLimiter,
   isAllowedOrigin,
@@ -63,8 +64,10 @@ function corsHeaders(request, env) {
 }
 
 function reply(request, env, status, body) {
+  // A 204 has no body, so it carries no content type either.
+  if (status === 204) return new Response(null, { status, headers: corsHeaders(request, env) });
   const headers = Object.assign({}, JSON_HEADERS, corsHeaders(request, env));
-  return new Response(status === 204 ? null : JSON.stringify(body || {}), { status, headers });
+  return new Response(JSON.stringify(body || {}), { status, headers });
 }
 
 // Cloudflare gives a stable per-request client IP; hashing it keeps raw
@@ -78,10 +81,42 @@ async function clientKey(request) {
     .join('');
 }
 
+// Refuses an oversize body before buffering all of it: the declared length is
+// checked first, and the stream is cut off as soon as it passes the cap, so a
+// client cannot make the Worker hold a huge payload just to reject it.
 async function readJson(request) {
-  const raw = await request.text();
+  const tooBig = { ok: false, status: 413, error: `body must be 1..${MAX_BODY_BYTES} bytes` };
+  const declared = Number(request.headers.get('Content-Length'));
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return tooBig;
+
+  let raw;
+  if (request.body && typeof request.body.getReader === 'function') {
+    const reader = request.body.getReader();
+    const chunks = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BODY_BYTES) {
+        await reader.cancel().catch(() => {});
+        return tooBig;
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    raw = new TextDecoder().decode(bytes);
+  } else {
+    raw = await request.text();
+  }
+
   const size = checkBodySize(raw);
-  if (!size.ok) return { ok: false, status: 413, error: `body must be 1..${size.maxBytes} bytes` };
+  if (!size.ok) return tooBig;
   try {
     return { ok: true, value: JSON.parse(raw) };
   } catch {
@@ -134,6 +169,7 @@ export default {
     }
 
     if (url.pathname === '/health') {
+      if (request.method !== 'GET') return reply(request, env, 405, { error: 'method not allowed' });
       const configured = Boolean(env.ALLOWED_ORIGIN && env.PABBLY_WEBHOOK_URL && env.PABBLY_SIGNING_SECRET);
       // Never echo the webhook URL: it contains the workflow token.
       return reply(request, env, configured ? 200 : 503, {

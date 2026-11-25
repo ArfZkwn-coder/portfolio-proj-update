@@ -99,6 +99,21 @@ test('stylesheet: every var() reference is declared (in :root or by a component)
 });
 
 test('stylesheet: no raw colour in a component rule', () => {
+  // Removes one at-rule by matching braces. A greedy regex here once swallowed
+  // the @media screen block that follows the print block, hiding it from the check.
+  const stripAtBlock = (source, header) => {
+    const start = source.search(header);
+    if (start === -1) return source;
+    let depth = 0;
+    for (let i = source.indexOf('{', start); i < source.length; i += 1) {
+      if (source[i] === '{') depth += 1;
+      if (source[i] === '}') {
+        depth -= 1;
+        if (depth === 0) return source.slice(0, start) + source.slice(i + 1);
+      }
+    }
+    return source;
+  };
   // Every colour belongs in a :root block: the shared tokens, the dark-scheme
   // override, or resume.css's print override. Strip those (and the whole print
   // block, whose literal black-on-white values are the point of printing), plus
@@ -107,7 +122,7 @@ test('stylesheet: no raw colour in a component rule', () => {
   const kept = [];
   for (const { name, source } of PAGE_FILES) {
     let stripped = withoutComments(source).replace(/:root\s*(?:\[[^\]]*\])?\s*\{[^{}]*\}/g, '');
-    if (name.endsWith('resume.css')) stripped = stripped.replace(/@media\s+print\s*\{[\s\S]*\n\}/, '');
+    if (name.endsWith('resume.css')) stripped = stripAtBlock(stripped, /@media\s+print\s*\{/);
     stripped = stripped.replace(/url\("data:[^"]*"\)/g, 'url(data-uri)');
     for (const match of stripped.matchAll(/(?<![\w-])(#[0-9a-f]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\))/gi)) {
       kept.push(`${name}: ${match[1]}`);
@@ -170,4 +185,37 @@ test('stylesheet: assets and external references stay relative', () => {
   }
   const cssDir = path.dirname(stylePath.pathname.replace(/^\/([A-Za-z]:)/, '$1'));
   assert.ok(!fs.existsSync(path.join(cssDir, 'site.css')), 'no stale site.css');
+});
+
+test('stylesheet: regression guards for bugs the audit found', () => {
+  // The honeypot wrapper has both classes on one element; a descendant selector
+  // matched nothing and left a visible "Company" field that dropped real messages.
+  assert.ok(/\.form-field\.hp\s*\{/.test(page), 'the honeypot rule targets .form-field.hp');
+  assert.ok(!/\.form-field\s+\.hp\b/.test(page), 'and not a descendant that does not exist');
+
+  // main.js toggles this class; with no rule behind it the dot stayed over the "Open" label.
+  assert.ok(/\.cursor\.is-hidden\s*\{/.test(page), 'the cursor dot has an is-hidden state');
+
+  // Interactive elements that set cursor:pointer must still lose it under the custom cursor.
+  for (const selector of ['.project-card', '.hero-feature', '.project-case-open']) {
+    assert.ok(new RegExp(`html\\.has-cursor\\s+${selector.replace('.', '\\.')}\\b`).test(page), `${selector} keeps cursor:none`);
+  }
+
+  // Hovered primary buttons swap their fill, so their text must follow it.
+  assert.ok(/\.hero-cta:hover\s*\{[^}]*color:\s*var\(--paper\)/.test(page), '.hero-cta:hover sets its own text colour');
+  assert.ok(/\.form-submit:hover:not\(:disabled\)\s*\{[^}]*color:\s*var\(--paper\)/.test(page), '.form-submit:hover sets its own text colour');
+  assert.ok(/\.resume-print:hover\s*\{[^}]*color:\s*var\(--paper\)/.test(resume), '.resume-print:hover sets its own text colour');
+
+  // The certificate cards no longer flip dark, so their hover text must not stay light.
+  assert.ok(/\.cert-card:hover \.cert-name,\s*\.cert-card:focus-within \.cert-name\s*\{\s*color:\s*var\(--ink\)/.test(page),
+    'certificate names stay readable on hover');
+
+  // résumé.css does not load style.css, so it needs its own reset.
+  assert.ok(/\*,\s*\*::before,\s*\*::after\s*\{[^}]*margin:\s*0;[^}]*padding:\s*0/.test(resume), 'resume.css resets margins and padding');
+
+  // Dead code that was removed should stay removed.
+  assert.ok(!page.includes('hero-capability'), 'the old capability chips are gone');
+  assert.ok(!/data-contrast/.test(tokens), 'the never-toggled high-contrast override is gone');
+  assert.ok(/\.js\.no-dialog\s+\.project-case-open\s*\{\s*display:\s*none/.test(page), 'dead openers are hidden when dialogs are unsupported');
+  assert.ok(/\.notfound-page\s+\.nav-cta\s*\{\s*display:\s*inline-flex/.test(page), 'pages with no hamburger keep the résumé link on mobile');
 });

@@ -52,7 +52,7 @@ test('fonts are self-hosted: no page reaches out to a third-party font origin', 
     assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(source), `${file} loads fonts from Google`);
     assert.match(source, /href="css\/fonts\.css"/, `${file} loads the self-hosted @font-face sheet`);
   }
-  for (const face of ['dm-sans-latin.woff2', 'dm-serif-display-latin.woff2', 'dm-serif-display-italic-latin.woff2']) {
+  for (const face of ['dm-sans-latin.woff2', 'dm-serif-display-latin.woff2', 'dm-serif-display-italic-latin.woff2', 'dm-mono-latin.woff2', 'dm-mono-500-latin.woff2']) {
     assert.ok(fs.existsSync(`../fonts/${face}`), `fonts/${face} ships`);
   }
 });
@@ -119,7 +119,7 @@ test('accessibility plumbing ships with the markup', () => {
   }
 
   // Required inputs describe themselves and own an error slot.
-  for (const id of ['fname', 'femail', 'fmessage']) {
+  for (const id of ['fname', 'femail', 'fmessage', 'ftopic']) {
     const field = document.getElementById(id);
     const describedBy = field.getAttribute('aria-describedby');
     assert.ok(describedBy, `${id} has aria-describedby`);
@@ -219,7 +219,9 @@ test('sections: nav and mobile menu follow DOM order, every link resolves, numbe
   const hrefs = (sel) => [...document.querySelectorAll(sel)].map((a) => a.getAttribute('href').slice(1));
   const expected = sectionIds.filter((id) => id !== 'hero');
   assert.deepEqual(hrefs('.nav-links a'), expected, 'desktop nav order');
-  assert.deepEqual(hrefs('#mobileMenu a'), expected, 'mobile menu order');
+  assert.deepEqual(hrefs('#mobileMenu a[href^="#"]'), expected, 'mobile menu order');
+  assert.equal(document.querySelector('#mobileMenu a[href="resume.html"]')?.textContent.includes('Résumé'), true,
+    'the mobile menu offers the résumé, because the bar button is hidden at that width');
   const numbers = [...document.querySelectorAll('.section-number')].map((n) => n.textContent.trim());
   assert.deepEqual(numbers, ['01', '02', '03', '04']);
   // Old deep links keep landing in the right place inside the merged sections.
@@ -259,4 +261,55 @@ test('head script: marks JS on, and a fail-safe readies the hero if main.js neve
   assert.ok(failSafe, 'the head script carries a fail-safe');
   assert.ok(Number(failSafe[1]) <= 3000, 'and it fires within 3s');
   dom.window.close();
+});
+
+test('skip links land on a focusable <main> on every page', () => {
+  for (const [file, id] of [['index.html', 'main'], ['resume.html', 'resume'], ['privacy.html', 'main'], ['404.html', 'main']]) {
+    const doc = new JSDOM(fs.readFileSync(`../${file}`, 'utf8')).window.document;
+    assert.equal(doc.querySelector('.skip-link').getAttribute('href'), `#${id}`, `${file}: the skip link targets #${id}`);
+    const target = doc.getElementById(id);
+    assert.equal(target.tagName, 'MAIN', `${file}: #${id} is the main landmark`);
+    assert.equal(target.getAttribute('tabindex'), '-1', `${file}: <main> takes programmatic focus, or the skip link leaves focus behind`);
+  }
+});
+
+test('contact form: the honeypot is the element the stylesheet hides', () => {
+  const trap = document.querySelector('.form-field.hp');
+  assert.ok(trap, 'the honeypot wrapper carries both classes on one element');
+  assert.ok(trap.querySelector('input[name="company"]'), 'and wraps the company field');
+  assert.equal(trap.getAttribute('aria-hidden'), 'true');
+  assert.equal(trap.querySelector('input').getAttribute('tabindex'), '-1', 'keyboard users never land on it');
+});
+
+test('topic select is a complete required field: marked, described, and with its own error slot', () => {
+  const label = document.querySelector('label[for="ftopic"]');
+  assert.ok(label.querySelector('.field-req'), 'the required marker matches the other required fields');
+  assert.equal(document.getElementById('ftopic').getAttribute('aria-describedby'), 'ftopic-error');
+  assert.ok(/choose a topic/i.test(document.getElementById('ftopic-error').textContent));
+});
+
+test('timeline: the progress bar exists, and adding it kept the first item first', () => {
+  const timeline = document.querySelector('.timeline');
+  assert.ok(timeline.querySelector(':scope > .timeline-progress'), 'main.js animates this element');
+  assert.ok(timeline.firstElementChild.classList.contains('timeline-item'), 'the first-child pulse rule still reaches the newest role');
+});
+
+test('privacy: names the relay in the path, and its date is not behind the sitemap', () => {
+  const privacy = fs.readFileSync('../privacy.html', 'utf8');
+  assert.match(privacy, /Cloudflare Worker/, 'the page mentions the relay that handles submissions');
+  const stamp = /Last updated (\d{1,2}) (\w+) (\d{4})/.exec(privacy);
+  assert.ok(stamp, 'the page states when it was last updated');
+  const updated = Date.parse(`${stamp[2]} ${stamp[1]}, ${stamp[3]} UTC`);
+  const sitemap = fs.readFileSync('../sitemap.xml', 'utf8');
+  const entry = /privacy\.html<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/.exec(sitemap);
+  assert.ok(entry, 'the sitemap dates the privacy page');
+  assert.equal(Date.parse(entry[1]), updated, 'the page and the sitemap agree on the date');
+});
+
+test('the résumé instruments its Coursera link like the portfolio does', () => {
+  const resume = fs.readFileSync('../resume.html', 'utf8');
+  const link = /<a[^>]*coursera\.org[^>]*>/.exec(resume);
+  assert.ok(link, 'the résumé links to the certificate');
+  assert.match(link[0], /data-track="outbound"/);
+  assert.match(link[0], /data-track-channel="coursera"/);
 });

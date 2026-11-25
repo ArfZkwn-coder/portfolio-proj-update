@@ -12,7 +12,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const openDoms = [];
 after(() => { for (const d of openDoms) d.window.close(); });
 
-function makeEnv({ finePointer = false, reduced = false, desktop = true, libs = false, fetchImpl = null, captureMailto = false, formTimeoutMs = null, hash = '' } = {}) {
+function makeEnv({ finePointer = false, reduced = false, desktop = true, libs = false, fetchImpl = null, captureMailto = false, formTimeoutMs = null, hash = '', noModal = false } = {}) {
   const errors = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', (e) => errors.push(e.message));
@@ -23,10 +23,12 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, libs = 
 
   document.documentElement.classList.add('js'); // what the inline <head> script does
 
+  // Media-query listeners are recorded so a test can fire a `change` itself.
+  window.__mq = [];
   window.matchMedia = (q) => ({
     media: q,
     matches: q.includes('reduce') ? reduced : q.includes('hover: hover') ? finePointer : q.includes('901') ? desktop : false,
-    addEventListener() {}, removeEventListener() {},
+    addEventListener(type, fn) { window.__mq.push({ query: q, type, fn }); }, removeEventListener() {},
   });
   window.__ios = [];
   window.IntersectionObserver = class {
@@ -70,6 +72,10 @@ function makeEnv({ finePointer = false, reduced = false, desktop = true, libs = 
     window.dispatchEvent(new window.Event('popstate'));
     window.dispatchEvent(new window.HashChangeEvent('hashchange'));
   };
+
+  // A browser without the modal API must be set up before the script boots,
+  // because the script decides once, at start-up, whether the dialogs can work.
+  if (noModal) delete window.HTMLDialogElement.prototype.showModal;
 
   if (libs) {
     window.eval(lib('gsap/dist/gsap.min.js'));
@@ -163,6 +169,7 @@ test('reveal + active-nav observers do their jobs', async () => {
   navIO.cb([{ isIntersecting: true, target: document.getElementById('journey') }]);
   const active = document.querySelector('.nav-links a.active');
   assert.equal(active.getAttribute('href'), '#journey'); assert.equal(active.getAttribute('aria-current'), 'true');
+  assert.equal(document.querySelector('#mobileMenu a[href="#journey"]').getAttribute('aria-current'), 'true', 'the mobile menu follows the section too');
   navIO.cb([{ isIntersecting: true, target: document.getElementById('projects') }]);
   assert.equal(document.querySelectorAll('.nav-links a.active').length, 1);
 });
@@ -218,7 +225,7 @@ test('form (endpoint): success resets + confirms; failure shows an error and re-
     const { window, document } = makeEnv({ fetchImpl: async (url, init) => { calls.push([url, init.method]); if (!ok) throw new Error('net'); return { ok: true }; } });
     const form = document.getElementById('contactForm'); const status = document.getElementById('formStatus'); const btn = form.querySelector('.form-submit');
     form.dataset.endpoint = 'https://example.test/f';
-    document.getElementById('fname').value = 'A'; document.getElementById('femail').value = 'a@b.co'; document.getElementById('fmessage').value = 'msg';
+    document.getElementById('fname').value = 'Alice'; document.getElementById('femail').value = 'a@b.co'; document.getElementById('fmessage').value = 'msg';
     document.getElementById('ftopic').value = 'A job opportunity';
     form.dispatchEvent(new window.Event('submit', { cancelable: true, bubbles: true }));
     await sleep(30);
@@ -243,7 +250,7 @@ test('form (endpoint): a request that never answers times out and re-enables the
   });
   const form = document.getElementById('contactForm'); const status = document.getElementById('formStatus'); const btn = form.querySelector('.form-submit');
   form.dataset.endpoint = 'https://example.test/f';
-  document.getElementById('fname').value = 'A'; document.getElementById('femail').value = 'a@b.co'; document.getElementById('fmessage').value = 'msg';
+  document.getElementById('fname').value = 'Alice'; document.getElementById('femail').value = 'a@b.co'; document.getElementById('fmessage').value = 'msg';
   document.getElementById('ftopic').value = 'A job opportunity';
 
   form.dispatchEvent(new window.Event('submit', { cancelable: true, bubbles: true }));
@@ -300,8 +307,9 @@ test('with real GSAP + ScrollTrigger + Lenis loaded: boots without errors and wi
   const { window, document, root, errors, warns } = makeEnv({ libs: true, finePointer: true });
   assert.ok(window.gsap && window.ScrollTrigger && window.Lenis);
   assert.ok(root.classList.contains('lenis'), 'Lenis initialised (adds .lenis to <html>)');
-  // The hero's two parallax layers (desktop).
-  assert.ok(window.ScrollTrigger.getAll().length >= 2, `ScrollTrigger instances created: ${window.ScrollTrigger.getAll().length}`);
+  // The hero's two parallax layers (desktop), the timeline's progress bar, and one trigger per timeline item.
+  assert.ok(document.querySelector('.timeline > .timeline-progress'), 'the timeline ships its progress bar');
+  assert.ok(window.ScrollTrigger.getAll().length >= 6, `ScrollTrigger instances created: ${window.ScrollTrigger.getAll().length}`);
   assert.ok(root.classList.contains('is-ready'));
   // menu open/close drives lenis.stop/start without throwing
   document.getElementById('hamburger').click(); document.getElementById('hamburger').click();
@@ -360,16 +368,19 @@ test('menu: opening moves focus into the panel, Tab is trapped, Escape restores 
   assert.equal(document.activeElement, links[0], 'focus lands on the first menu link');
   assert.equal(btn.getAttribute('aria-label'), 'Close menu', 'the button name follows the state');
 
-  // Focus the last link, then Tab: the trap must wrap to the first instead of
-  // escaping into the page behind the modal.
+  // The cycle is the links, then the close button, then back to the first link:
+  // keyboard users can reach "Close menu" and never escape into the page behind.
   links.at(-1).focus();
   const tab = new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
   assert.equal(links.at(-1).dispatchEvent(tab), false, 'Tab from the last link is intercepted');
-  assert.equal(document.activeElement, links[0], 'focus wrapped to the first link');
+  assert.equal(document.activeElement, btn, 'Tab from the last link reaches the close button');
+  const tabFromButton = new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+  assert.equal(btn.dispatchEvent(tabFromButton), false, 'Tab from the close button is intercepted');
+  assert.equal(document.activeElement, links[0], 'and focus wraps to the first link');
 
   const shiftTab = new window.KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
   assert.equal(links[0].dispatchEvent(shiftTab), false, 'Shift+Tab from the first link is intercepted');
-  assert.equal(document.activeElement, links.at(-1), 'focus wrapped to the last link');
+  assert.equal(document.activeElement, btn, 'focus wrapped back to the close button');
 
   document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' }));
   assert.equal(document.activeElement, btn, 'focus returns to the menu button');
@@ -514,9 +525,8 @@ test('tracking: a configured relay receives the submission plus the clicks befor
       new window.MouseEvent('click', { bubbles: true, cancelable: true })
     );
   }
-  assert.equal(calls.length, 2, 'each click is sent as it happens');
-  assert.ok(calls.every((call) => call.url === 'https://relay.test/event'), 'to the event route');
-  assert.ok(calls.every((call) => call.method === 'BEACON'), 'via sendBeacon, so it survives the navigation');
+  assert.deepEqual(calls, [], 'a click on its own never leaves the browser, as privacy.html promises');
+  assert.equal(runtime.readQueue().length, 2, 'the clicks wait in the visitor\'s own queue');
 
   const form = document.getElementById('contactForm');
   document.getElementById('fname').value = 'Test User';
@@ -714,9 +724,132 @@ test('case studies: an unknown slug is ignored, and the feature no-ops without s
   assert.ok([...document.querySelectorAll('dialog.case-study')].every((d) => !d.open), 'nothing opens');
   assert.deepEqual(errors, [], 'an unknown slug is not an error');
 
-  const noModal = makeEnv();
-  delete noModal.window.HTMLDialogElement.prototype.showModal;
+  const noModal = makeEnv({ noModal: true });
   const button = noModal.document.querySelector('.project-case-open');
   assert.doesNotThrow(() => button.click(), 'a browser without the modal API is tolerated');
   assert.ok([...noModal.document.querySelectorAll('dialog.case-study')].every((d) => !d.open));
+  assert.ok(noModal.root.classList.contains('no-dialog'), 'the dead openers are marked for the stylesheet to hide');
+});
+
+/* ------------------------------------------------------------------ */
+/* Regression tests for the full-codebase audit                        */
+/* ------------------------------------------------------------------ */
+
+const fillForm = (env, overrides = {}) => {
+  const values = { fname: 'Alice', femail: 'alice@example.com', fmessage: 'Hello there', ftopic: 'A job opportunity', ...overrides };
+  for (const [id, value] of Object.entries(values)) env.document.getElementById(id).value = value;
+};
+const submitForm = (env) => env.document.getElementById('contactForm')
+  .dispatchEvent(new env.window.Event('submit', { cancelable: true, bubbles: true }));
+
+test('skip link: activating it moves focus to <main>', () => {
+  const env = makeEnv();
+  const { window, document } = env;
+  window.Element.prototype.scrollIntoView = () => {}; // jsdom has no layout to scroll
+  const main = document.getElementById('main');
+  assert.equal(main.getAttribute('tabindex'), '-1', '<main> can take programmatic focus');
+  document.querySelector('.skip-link').click();
+  assert.equal(document.activeElement, main, 'focus lands on the content, not on the skip link');
+});
+
+test('menu: growing the viewport closes it without moving focus to the hidden button', () => {
+  const { window, document } = makeEnv();
+  const btn = document.getElementById('hamburger');
+  btn.click();
+  const desktop = window.__mq.find((entry) => entry.query.includes('901'));
+  assert.ok(desktop, 'the menu listens for the desktop breakpoint');
+  desktop.fn({ matches: true });
+  assert.equal(btn.getAttribute('aria-expanded'), 'false');
+  assert.equal(document.getElementById('mobileMenu').inert, true);
+  assert.notEqual(document.activeElement, btn, 'a button that just became display:none is not focused');
+});
+
+test('form: input the relay would refuse is caught inline, and the topic select explains itself', () => {
+  const env = makeEnv();
+  const { window, document } = env;
+  fillForm(env, { fname: 'A', femail: 'a<b>@example.com', fmessage: 'x', ftopic: '' });
+  submitForm(env);
+
+  for (const id of ['fname', 'femail', 'fmessage', 'ftopic']) {
+    assert.equal(document.getElementById(id).getAttribute('aria-invalid'), 'true', `${id} is marked invalid`);
+    assert.equal(document.getElementById(`${id}-error`).hidden, false, `${id} says why`);
+  }
+  assert.match(document.getElementById('fname-error').textContent, /at least 2 characters/i);
+  assert.match(document.getElementById('ftopic-error').textContent, /choose a topic/i);
+
+  // A <select> reports a new choice through `change`, not `input`.
+  const topic = document.getElementById('ftopic');
+  topic.value = 'A job opportunity';
+  topic.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.equal(topic.getAttribute('aria-invalid'), null, 'choosing a topic clears the error');
+  assert.equal(document.getElementById('ftopic-error').hidden, true);
+});
+
+test('form: a company typed into the honeypot with only spaces is not treated as a bot', async () => {
+  const sent = [];
+  const env = makeEnv({ fetchImpl: async (u) => { sent.push(u); return { ok: true }; } });
+  env.document.getElementById('contactForm').dataset.endpoint = 'https://forms.test/f';
+  fillForm(env);
+  env.document.getElementById('fcompany').value = '   ';
+  submitForm(env);
+  await sleep(20);
+  assert.equal(sent.length, 1, 'whitespace alone does not drop a real submission');
+});
+
+test('tracking: a relay that never answers is aborted at the timeout and the form is usable again', async () => {
+  const env = makeEnv({ formTimeoutMs: 25 });
+  const { window, document } = env;
+  let signal;
+  window.fetch = (url, init) => {
+    signal = init.signal;
+    return new Promise((resolve, reject) => init.signal && init.signal.addEventListener('abort', () => reject(new Error('aborted'))));
+  };
+  document.getElementById('contactForm').setAttribute('data-track-endpoint', 'https://relay.test');
+  window.__portfolioTrackingTestMode = true;
+  const runtime = loadTracking(window);
+  runtime.trackClick('github');
+
+  fillForm(env);
+  submitForm(env);
+  await sleep(10);
+  const button = document.querySelector('.form-submit');
+  assert.ok(signal, 'the request carries an abort signal');
+  assert.equal(signal.aborted, false, 'not aborted while the wait is still running');
+  assert.equal(button.disabled, true);
+
+  await sleep(150);
+  assert.equal(signal.aborted, true, 'the late answer can no longer succeed once the visitor was told it failed');
+  assert.equal(button.disabled, false, 'the button is usable again');
+  assert.ok(document.getElementById('formStatus').classList.contains('is-error'));
+  assert.equal(runtime.readQueue().length, 1, 'the click queue survives a failed send');
+});
+
+test('case studies: closing returns focus to the opener that was used, even when a project has two', () => {
+  const { document } = makeEnv();
+  const [hero, card] = [...document.querySelectorAll('.project-case-open[data-case="docs-publisher-mcp"]')];
+  assert.ok(hero.classList.contains('hero-feature-open'), 'the first opener is the hero\'s');
+  assert.ok(card && card !== hero, 'and the project card has its own');
+
+  card.click();
+  document.getElementById('case-docs-publisher-mcp').querySelector('.case-study-close').click();
+  assert.equal(document.activeElement, card, 'focus goes back to the card button, not up to the hero');
+});
+
+test('cursor: the ring loop only runs while it is chasing the pointer', () => {
+  const { window, document } = makeEnv({ finePointer: true });
+  const queue = [];
+  window.requestAnimationFrame = (fn) => { queue.push(fn); return queue.length; };
+  const drain = () => {
+    let guard = 0;
+    while (queue.length && guard < 500) { queue.shift()(0); guard += 1; }
+    return guard;
+  };
+
+  assert.equal(queue.length, 0, 'nothing is scheduled while the pointer is idle');
+  document.dispatchEvent(new window.MouseEvent('pointermove', { clientX: 10, clientY: 10, bubbles: true }));
+  assert.ok(drain() < 500, 'the loop settles');
+  document.dispatchEvent(new window.MouseEvent('pointermove', { clientX: 500, clientY: 300, bubbles: true }));
+  assert.ok(drain() < 500, 'and settles again after a long move');
+  assert.equal(queue.length, 0, 'then stops asking for frames');
+  assert.equal(document.getElementById('cursorRing').style.getPropertyValue('--x'), '500px', 'ending exactly on the pointer');
 });

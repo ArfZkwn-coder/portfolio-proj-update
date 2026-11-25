@@ -59,22 +59,21 @@
     };
 
     // A modal panel needs focus somewhere useful inside it, so open by focusing
-    // the first link and keep Tab cycling within the menu until it closes.
+    // the first link and keep Tab cycling within the menu until it closes. The
+    // close button is part of the cycle: it is the only visible way to dismiss
+    // the panel without a keyboard's Escape key.
     const trapTab = (event) => {
-      if (event.key !== 'Tab' || links.length === 0) return;
-      const first = links[0];
-      const last = links[links.length - 1];
-      const active = document.activeElement;
-      if (event.shiftKey && (active === first || !menu.contains(active))) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (active === last || !menu.contains(active))) {
-        event.preventDefault();
-        first.focus();
-      }
+      if (event.key !== 'Tab') return;
+      const stops = [...links, button];
+      const index = stops.indexOf(document.activeElement);
+      event.preventDefault();
+      let next;
+      if (event.shiftKey) next = index <= 0 ? stops.length - 1 : index - 1;
+      else next = index === -1 || index === stops.length - 1 ? 0 : index + 1;
+      stops[next].focus();
     };
 
-    const setOpen = (open) => {
+    const setOpen = (open, { restoreFocus = true } = {}) => {
       if (open === isOpen) return;
       isOpen = open;
       button.classList.toggle('open', open);
@@ -96,9 +95,10 @@
       } else {
         document.removeEventListener('click', externalClick);
         document.removeEventListener('keydown', trapTab, true);
-        // The button is the only sensible place to land, whatever was focused
-        // when the menu opened.
-        button.focus();
+        // The button is the natural place to land after a plain close, but not
+        // when the menu closes because the viewport grew (the button is then
+        // hidden) or because a link is taking the visitor somewhere else.
+        if (restoreFocus) button.focus();
       }
     };
 
@@ -107,10 +107,10 @@
       if (event.key === 'Escape' && isOpen) setOpen(false);
     });
     desktopQuery.addEventListener('change', (event) => {
-      if (event.matches) setOpen(false);
+      if (event.matches) setOpen(false, { restoreFocus: false });
     });
 
-    return { close: () => setOpen(false) };
+    return { close: (options) => setOpen(false, options) };
   }
 
   function initAnchors(lenis, closeMenu) {
@@ -124,7 +124,7 @@
         // move focus, rather than animating the viewport under them.
         if (link.classList.contains('skip-link')) {
           event.preventDefault();
-          closeMenu();
+          closeMenu({ restoreFocus: false });
           history.replaceState(null, '', hash);
           target.focus({ preventScroll: true });
           target.scrollIntoView({ behavior: 'auto', block: 'start' });
@@ -132,7 +132,7 @@
         }
 
         event.preventDefault();
-        closeMenu();
+        closeMenu({ restoreFocus: false });
         if (lenis) lenis.scrollTo(target, { duration: 1.2 });
         else target.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
         history.replaceState(null, '', hash);
@@ -168,7 +168,7 @@
 
     // A thin band across the middle of the viewport decides the active section,
     // so tall sections (mobile) can never get "stuck" below a visibility threshold.
-    const links = $$('.nav-links a');
+    const links = $$('.nav-links a, #mobileMenu a[href^="#"]');
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -209,6 +209,26 @@
       element.style.setProperty('--y', `${y}px`);
     };
 
+    // The ring eases toward the pointer, but only while it has somewhere to go:
+    // a loop that runs forever would keep the page busy with the pointer idle.
+    let rafId = 0;
+    const follow = () => {
+      rafId = 0;
+      ringX += (mouseX - ringX) * 0.12;
+      ringY += (mouseY - ringY) * 0.12;
+      if (Math.abs(mouseX - ringX) <= 0.1 && Math.abs(mouseY - ringY) <= 0.1) {
+        ringX = mouseX;
+        ringY = mouseY;
+        place(ring, ringX, ringY);
+        return;
+      }
+      place(ring, ringX, ringY);
+      rafId = requestAnimationFrame(follow);
+    };
+    const startFollow = () => {
+      if (!rafId) rafId = requestAnimationFrame(follow);
+    };
+
     document.addEventListener('pointermove', (event) => {
       mouseX = event.clientX;
       mouseY = event.clientY;
@@ -218,15 +238,8 @@
         ringY = mouseY;
       }
       place(dot, mouseX, mouseY);
+      startFollow();
     });
-
-    const follow = () => {
-      ringX += (mouseX - ringX) * 0.12;
-      ringY += (mouseY - ringY) * 0.12;
-      place(ring, ringX, ringY);
-      requestAnimationFrame(follow);
-    };
-    requestAnimationFrame(follow);
 
     document.addEventListener('pointerover', (event) => {
       const target = event.target instanceof Element ? event.target.closest('a, button, [data-cursor]') : null;
@@ -350,13 +363,16 @@
     }
 
     const timeline = $('.timeline');
-    const bar = $('.timeline-progress');
-    if (timeline && bar) {
-      gsap.fromTo(
-        bar,
-        { scaleY: 0 },
-        { scaleY: 1, ease: 'none', scrollTrigger: { trigger: timeline, start: 'top 70%', end: 'bottom 70%', scrub: true } }
-      );
+    if (timeline) {
+      // The active-item highlight does not depend on the progress bar existing.
+      const bar = $('.timeline-progress', timeline);
+      if (bar) {
+        gsap.fromTo(
+          bar,
+          { scaleY: 0 },
+          { scaleY: 1, ease: 'none', scrollTrigger: { trigger: timeline, start: 'top 70%', end: 'bottom 70%', scrub: true } }
+        );
+      }
       $$('.timeline-item', timeline).forEach((item) => {
         ScrollTrigger.create({
           trigger: item,
@@ -423,7 +439,9 @@
     if (!form || !status) return;
 
     const submit = $('.form-submit', form);
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    // Mirrors the relay's own rule (relay/lib.js), so a visitor is told what to fix
+    // here instead of getting a generic failure after the relay refuses it.
+    const emailPattern = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/;
     // A "loading" endpoint that accepts the connection but never answers would
     // otherwise leave the button disabled and the form stuck busy forever.
     const submitTimeoutMs = 15000;
@@ -459,6 +477,11 @@
       if (field.type === 'email' && !emailPattern.test(value)) {
         return 'Please check the email address — it looks incomplete.';
       }
+      if ((field.name === 'name' || field.name === 'message') && value.replace(/[<>]/g, '').trim().length < 2) {
+        return field.name === 'name'
+          ? 'Please enter at least 2 characters for your name.'
+          : 'Please enter a slightly longer message (at least 2 characters).';
+      }
       return '';
     };
 
@@ -480,15 +503,18 @@
 
     requiredFields.forEach((entry) => {
       entry.field.addEventListener('blur', () => validate(entry));
-      entry.field.addEventListener('input', () => {
+      // `input` covers typing; a <select> reports a new choice through `change`.
+      const revalidate = () => {
         if (entry.field.getAttribute('aria-invalid') === 'true') validate(entry);
-      });
+      };
+      entry.field.addEventListener('input', revalidate);
+      entry.field.addEventListener('change', revalidate);
     });
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const data = new FormData(form);
-      if (data.get('company')) return; // honeypot: real people never fill this in
+      if (String(data.get('company') || '').trim()) return; // honeypot: real people never fill this in
 
       const invalid = requiredFields.filter((entry) => !validate(entry));
       if (invalid.length) {
@@ -537,10 +563,21 @@
       const canSend = tracking && typeof tracking.shouldTrack === 'function' && tracking.shouldTrack();
       if (canSend) {
         setBusy(true);
+        let timer;
         try {
+          // Aborting the request when the wait runs out means a slow answer that
+          // arrives later cannot still succeed (and clear the click queue) after
+          // the visitor was told it failed.
+          const controller = typeof AbortController === 'function' ? new AbortController() : null;
+          const timeout = new Promise((resolve) => {
+            timer = setTimeout(() => {
+              if (controller) controller.abort();
+              resolve(false);
+            }, submitTimeoutMs);
+          });
           const delivered = await Promise.race([
-            tracking.submit({ name, email, message, topic }),
-            new Promise((resolve) => setTimeout(() => resolve(false), submitTimeoutMs)),
+            tracking.submit({ name, email, message, topic }, { signal: controller ? controller.signal : undefined }),
+            timeout,
           ]);
           if (!delivered) throw new Error('the relay did not accept the submission');
           form.reset();
@@ -549,6 +586,7 @@
         } catch {
           show('That did not go through. Please email me directly at arifzakwan2001@gmail.com.', true);
         } finally {
+          clearTimeout(timer);
           setBusy(false);
         }
         return;
@@ -568,8 +606,12 @@
   /* ------------------------------------------------------------------ */
   function initCaseStudies(lenis) {
     const dialogs = $$('dialog.case-study');
-    if (dialogs.length === 0 || typeof HTMLDialogElement === 'undefined'
-      || typeof HTMLDialogElement.prototype.showModal !== 'function') return;
+    if (dialogs.length === 0) return;
+    if (typeof HTMLDialogElement === 'undefined' || typeof HTMLDialogElement.prototype.showModal !== 'function') {
+      // The openers would be dead controls; the stylesheet hides them.
+      root.classList.add('no-dialog');
+      return;
+    }
 
     const bySlug = new Map();
     dialogs.forEach((dialog) => bySlug.set(dialog.id.replace(/^case-/, ''), dialog));
@@ -615,12 +657,14 @@
 
     // The hash is the single source of truth for which case study is open, so
     // the back button, a shared link and a click all take the same path. Each
-    // panel is individually shorable as #case-<slug>.
-    const syncFromHash = () => {
+    // panel is individually shorable as #case-<slug>. A click passes its own
+    // button, because a project can have more than one opener (the featured card
+    // and its card in Selected Work) and focus must return to the one used.
+    const syncFromHash = (explicitTrigger = null) => {
       const slug = (window.location.hash || '').replace(/^#case-/, '');
       if (window.location.hash.startsWith('#case-') && bySlug.has(slug)) {
-        // Arriving by URL rather than by click: there is no control to return to.
-        const trigger = document.querySelector(`.project-case-open[data-case="${slug}"]`);
+        // Arriving by URL rather than by click: fall back to the first opener.
+        const trigger = explicitTrigger || document.querySelector(`.project-case-open[data-case="${slug}"]`);
         open(slug, trigger);
       } else {
         close();
@@ -631,12 +675,10 @@
       button.addEventListener('click', () => {
         const slug = button.dataset.case;
         if (!slug || !bySlug.has(slug)) return;
-        opener = button;
         const hash = `#case-${slug}`;
-        if (window.location.hash === hash) open(slug, button);
         // The marker tells requestClose() this entry is ours to go back to.
-        else window.history.pushState({ caseStudy: true }, '', hash);
-        syncFromHash();
+        if (window.location.hash !== hash) window.history.pushState({ caseStudy: true }, '', hash);
+        syncFromHash(button);
       });
     });
 
@@ -671,8 +713,8 @@
       dialog.addEventListener('close', () => setLocked(false));
     });
 
-    window.addEventListener('hashchange', syncFromHash);
-    window.addEventListener('popstate', syncFromHash);
+    window.addEventListener('hashchange', () => syncFromHash());
+    window.addEventListener('popstate', () => syncFromHash());
     syncFromHash();
   }
 

@@ -64,6 +64,7 @@
     <a href="#about">About</a>
     <a href="#journey">Journey</a>
     <a href="#contact">Contact</a>
+    <a href="resume.html" class="mobile-menu-cta">Résumé ↗</a>
   </div>
 
   <!-- NAV -->
@@ -82,7 +83,7 @@
     <span class="nav-progress" id="navProgress" aria-hidden="true"></span>
   </nav>
 
-  <main id="main">
+  <main id="main" tabindex="-1">
 
   <!-- HERO -->
   <section id="hero">
@@ -335,6 +336,7 @@
             <span class="timeline-skill-tag">Mobile App Development</span>
           </div>
         </div>
+        <span class="timeline-progress" aria-hidden="true"></span>
       </div>
       </div>
       <div class="journey-col" id="education">
@@ -439,13 +441,14 @@
             </div>
           </div>
           <div class="form-field">
-            <label for="ftopic">I'm reaching out about</label>
-            <select id="ftopic" name="topic" required aria-required="true">
+            <label for="ftopic">I'm reaching out about <span class="field-req" aria-hidden="true">*</span></label>
+            <select id="ftopic" name="topic" required aria-required="true" aria-describedby="ftopic-error">
               <option value="" selected disabled>Choose a topic</option>
               <option value="A job opportunity">A job opportunity</option>
               <option value="A freelance project">A freelance project</option>
               <option value="Something else">Something else</option>
             </select>
+            <p class="field-error" id="ftopic-error" hidden>Please choose a topic.</p>
           </div>
           <div class="form-field">
             <label for="fmessage">Message <span class="field-req" aria-hidden="true">*</span></label>

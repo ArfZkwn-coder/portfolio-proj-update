@@ -17,6 +17,7 @@ import {
   validateEvent,
   validateSubmission,
 } from '../relay/lib.js';
+import worker from '../relay/worker.js';
 
 const ORIGIN = 'https://docs-publisher.tail62b6df.ts.net';
 
@@ -304,4 +305,227 @@ test('channels: the allowlist is closed and matches what the site sends', async 
   for (const channel of used) {
     assert.ok(ALLOWED_CHANNELS.includes(channel), `relay and site agree on "${channel}"`);
   }
+});
+
+/* ------------------------------------------------------------------ */
+/* Regression tests for the full-codebase audit (lib.js)               */
+/* ------------------------------------------------------------------ */
+
+test('body: the limit is in bytes, so multi-byte text cannot slip past it', () => {
+  const text = 'é'.repeat(5000); // 5,000 characters, 10,000 UTF-8 bytes
+  assert.equal(text.length < 8192, true, 'it is short enough to pass a character count');
+  const result = checkBodySize(text);
+  assert.equal(result.ok, false, 'but it is over the 8 KB limit');
+  assert.equal(result.size, 10000, 'the size reported is the byte length');
+});
+
+test('origin: only the Origin header counts, never a Referer alone', () => {
+  assert.equal(isAllowedOrigin(headerRequest({ Origin: ORIGIN, Referer: 'https://evil.example/' }), ORIGIN), true,
+    'a matching Origin is enough');
+  assert.equal(isAllowedOrigin(headerRequest({ Origin: 'https://evil.example', Referer: `${ORIGIN}/` }), ORIGIN), false,
+    'a forged-looking Referer cannot rescue a wrong Origin');
+});
+
+test('rate limit: a full table evicts the least recent key and keeps live windows', () => {
+  let now = 1_000_000;
+  const limiter = createRateLimiter({ limit: 1, windowMs: 60_000, now: () => now, maxKeys: 3 });
+  for (const key of ['a', 'b', 'c']) assert.equal(limiter.check(key).ok, true);
+  now += 1000;
+  assert.equal(limiter.check('d').ok, true, 'a fourth key makes the table overflow');
+  // Clearing the whole table would have given b, c and d a fresh allowance.
+  for (const key of ['b', 'c', 'd']) assert.equal(limiter.check(key).ok, false, `${key} is still limited`);
+  assert.equal(limiter.check('a').ok, true, 'only the stalest key was dropped');
+});
+
+test('rate limit: expired keys are dropped before live ones', () => {
+  let now = 1_000_000;
+  const limiter = createRateLimiter({ limit: 1, windowMs: 60_000, now: () => now, maxKeys: 2 });
+  limiter.check('old-1');
+  limiter.check('old-2');
+  now += 120_000;
+  limiter.check('fresh');
+  assert.equal(limiter.check('fresh').ok, false, 'the live window survives the clean-up');
+  assert.equal(limiter.check('old-1').ok, true, 'expired keys have been forgotten');
+});
+
+/* ------------------------------------------------------------------ */
+/* The Worker itself                                                   */
+/* ------------------------------------------------------------------ */
+
+const ENV = {
+  ALLOWED_ORIGIN: ORIGIN,
+  PABBLY_WEBHOOK_URL: 'https://hooks.example.invalid/webhook/abc',
+  PABBLY_SIGNING_SECRET: 'worker-test-secret',
+};
+
+// Each request gets its own client address, because the Worker rate-limits per
+// address and one module-level limiter is shared by every test in this file.
+let nextClient = 0;
+const clientAddress = () => { nextClient += 1; return `10.1.${Math.floor(nextClient / 250)}.${nextClient % 250}`; };
+
+function call(path, { method = 'POST', origin = ORIGIN, body, headers = {}, env = ENV, ip } = {}) {
+  const sent = { 'CF-Connecting-IP': ip || clientAddress(), ...headers };
+  if (origin) sent.Origin = origin;
+  const init = { method, headers: sent };
+  if (body !== undefined && method !== 'GET') init.body = typeof body === 'string' ? body : JSON.stringify(body);
+  return worker.fetch(new Request(`https://relay.test${path}`, init), env);
+}
+
+async function withFetch(impl, run) {
+  const realFetch = globalThis.fetch;
+  const realError = console.error;
+  const forwarded = [];
+  globalThis.fetch = async (url, init) => { forwarded.push({ url, init }); return impl(url, init); };
+  console.error = () => {}; // the Worker logs upstream failures; keep test output clean
+  try {
+    return await run(forwarded);
+  } finally {
+    globalThis.fetch = realFetch;
+    console.error = realError;
+  }
+}
+
+const goodEvent = () => ({ channel: 'github', page: '/portfolio-proj-update/', sessionId: 'abc', ts: Date.now() });
+const upstreamOk = async () => new Response('ok', { status: 200 });
+
+test('worker: a preflight from the allowlisted origin is granted, any other is refused', async () => {
+  const allowed = await call('/submit', { method: 'OPTIONS' });
+  assert.equal(allowed.status, 204);
+  assert.equal(allowed.headers.get('Access-Control-Allow-Origin'), ORIGIN);
+  assert.match(allowed.headers.get('Access-Control-Allow-Methods'), /POST/);
+  assert.equal(allowed.headers.get('Content-Type'), null, 'a 204 has no content type');
+
+  const refused = await call('/submit', { method: 'OPTIONS', origin: 'https://evil.example' });
+  assert.equal(refused.status, 403);
+  assert.equal(refused.headers.get('Access-Control-Allow-Origin'), null);
+});
+
+test('worker: /health reports configuration, only to GET, and never echoes the webhook URL', async () => {
+  const ok = await call('/health', { method: 'GET', origin: null });
+  assert.equal(ok.status, 200);
+  const okText = await ok.text();
+  assert.deepEqual(JSON.parse(okText), { ok: true, missing: [] });
+  assert.ok(!okText.includes('hooks.example.invalid'), 'the token-bearing URL stays secret');
+
+  const missing = await call('/health', { method: 'GET', origin: null, env: { ALLOWED_ORIGIN: ORIGIN } });
+  assert.equal(missing.status, 503);
+  assert.deepEqual((await missing.json()).missing, ['PABBLY_WEBHOOK_URL', 'PABBLY_SIGNING_SECRET']);
+
+  const post = await call('/health', { method: 'POST', body: '{}' });
+  assert.equal(post.status, 405, 'a probe is a GET');
+});
+
+test('worker: wrong method, wrong origin and unknown routes are each refused', async () => {
+  assert.equal((await call('/submit', { method: 'GET', origin: ORIGIN })).status, 405);
+  const badOrigin = await call('/submit', { origin: 'https://evil.example', body: validSubmission() });
+  assert.equal(badOrigin.status, 403);
+  assert.deepEqual(await badOrigin.json(), { error: 'origin not allowed' });
+  assert.equal((await call('/submit', { origin: null, body: validSubmission() })).status, 403, 'no Origin fails closed');
+  assert.equal((await call('/nowhere', { body: {} })).status, 404);
+});
+
+test('worker: oversize and malformed bodies are refused before anything is forwarded', async () => {
+  await withFetch(upstreamOk, async (forwarded) => {
+    const declared = await call('/submit', { body: '{}', headers: { 'Content-Length': '99999' } });
+    assert.equal(declared.status, 413, 'a declared length over the cap is refused outright');
+
+    const streamed = await call('/submit', { body: JSON.stringify({ message: 'é'.repeat(5000) }) });
+    assert.equal(streamed.status, 413, 'a body over 8 KB in bytes is refused even if it is under 8,192 characters');
+
+    const broken = await call('/submit', { body: '{not json' });
+    assert.equal(broken.status, 400);
+    assert.deepEqual(await broken.json(), { error: 'body must be JSON' });
+
+    assert.equal(forwarded.length, 0, 'nothing reached the webhook');
+  });
+});
+
+test('worker: a filled honeypot is answered like success and forwarded nowhere', async () => {
+  await withFetch(upstreamOk, async (forwarded) => {
+    const response = await call('/submit', { body: validSubmission({ company: 'Acme Ltd' }) });
+    assert.equal(response.status, 204);
+    assert.equal(await response.text(), '', 'no body');
+    assert.equal(response.headers.get('Content-Type'), null, 'and so no JSON content type');
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'), ORIGIN, 'the browser may still read it');
+    assert.equal(forwarded.length, 0);
+  });
+});
+
+test('worker: /event is acknowledged and deliberately not forwarded', async () => {
+  await withFetch(upstreamOk, async (forwarded) => {
+    const response = await call('/event', { body: goodEvent() });
+    assert.equal(response.status, 202);
+    assert.deepEqual(await response.json(), { ok: true, forwarded: false });
+    assert.equal(forwarded.length, 0);
+
+    const bad = await call('/event', { body: { ...goodEvent(), channel: 'myspace' } });
+    assert.equal(bad.status, 400);
+    assert.equal((await bad.json()).error, 'invalid event');
+  });
+});
+
+test('worker: a valid submission is forwarded once, flat, with a signature the workflow can verify', async () => {
+  await withFetch(upstreamOk, async (forwarded) => {
+    const response = await call('/submit', { body: validSubmission() });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true });
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'), ORIGIN, 'the real response carries CORS, not only the preflight');
+
+    assert.equal(forwarded.length, 1, 'exactly one request leaves');
+    const [{ url, init }] = forwarded;
+    assert.equal(url, ENV.PABBLY_WEBHOOK_URL);
+    assert.equal(init.method, 'POST');
+    assert.equal(init.headers['X-Portfolio-Event'], 'form_submission');
+    const expected = createHmac('sha256', ENV.PABBLY_SIGNING_SECRET).update(init.body).digest('hex');
+    assert.equal(init.headers['X-Portfolio-Signature'], `sha256=${expected}`, 'signed over the exact bytes sent');
+
+    const payload = JSON.parse(init.body);
+    assert.equal(payload.event, 'form_submission');
+    assert.equal(payload.email, 'test@example.com');
+    assert.equal(payload.clicks_total, '2');
+    for (const value of Object.values(payload)) assert.equal(typeof value, 'string', 'every value is a string');
+  });
+});
+
+test('worker: PABBLY_WAIT_FOR_PROCESSING asks Pabbly to hold the answer', async () => {
+  await withFetch(upstreamOk, async (forwarded) => {
+    await call('/submit', { body: validSubmission(), env: { ...ENV, PABBLY_WAIT_FOR_PROCESSING: '1' } });
+    assert.equal(forwarded[0].url, `${ENV.PABBLY_WEBHOOK_URL}?processed=true`);
+  });
+});
+
+test('worker: an invalid or undeliverable submission reports why, and never claims success', async () => {
+  await withFetch(upstreamOk, async () => {
+    const invalid = await call('/submit', { body: validSubmission({ email: 'nope' }) });
+    assert.equal(invalid.status, 400);
+    const body = await invalid.json();
+    assert.equal(body.error, 'invalid submission');
+    assert.ok(body.details.length > 0);
+
+    const unconfigured = await call('/submit', { body: validSubmission(), env: { ALLOWED_ORIGIN: ORIGIN } });
+    assert.equal(unconfigured.status, 503);
+  });
+
+  await withFetch(async () => new Response('no', { status: 500 }), async () => {
+    const rejected = await call('/submit', { body: validSubmission() });
+    assert.equal(rejected.status, 502, 'a webhook that refuses is a 502');
+    assert.deepEqual(await rejected.json(), { error: 'webhook rejected the submission' });
+  });
+
+  await withFetch(async () => { throw new Error('connection reset'); }, async () => {
+    const unreachable = await call('/submit', { body: validSubmission() });
+    assert.equal(unreachable.status, 502, 'and so is one that cannot be reached');
+    assert.deepEqual(await unreachable.json(), { error: 'webhook unreachable' });
+  });
+});
+
+test('worker: the 21st request from one client in a minute is rate limited', async () => {
+  await withFetch(upstreamOk, async () => {
+    const ip = '203.0.113.77';
+    for (let i = 1; i <= 20; i += 1) {
+      assert.equal((await call('/event', { body: goodEvent(), ip })).status, 202, `request ${i}`);
+    }
+    assert.equal((await call('/event', { body: goodEvent(), ip })).status, 429);
+    assert.equal((await call('/event', { body: goodEvent() })).status, 202, 'another client is unaffected');
+  });
 });

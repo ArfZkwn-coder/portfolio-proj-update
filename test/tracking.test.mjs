@@ -246,7 +246,7 @@ test('markup: every outbound link that matters is instrumented', () => {
     assert.ok(external.length > 0, `${name} has external links`);
     for (const [tag] of external.map((match) => [match[0], match[1]])) {
       const href = tag.match(/href="([^"]+)"/)[1];
-      const isProfile = /github\.com|linkedin\.com/.test(href);
+      const isProfile = /github\.com|linkedin\.com|coursera\.org/.test(href);
       if (!isProfile) continue;
       assert.ok(/data-track="outbound"/.test(tag), `${name}: ${href} is instrumented`);
       assert.ok(/data-track-channel="[a-z]+"/.test(tag), `${name}: ${href} names its channel`);

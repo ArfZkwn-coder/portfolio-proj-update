@@ -34,7 +34,7 @@
     <a class="nav-cta" href="resume.html">Résumé ↗</a>
   </nav>
 
-  <main id="main" class="notfound">
+  <main id="main" class="notfound" tabindex="-1">
     <section aria-labelledby="privacy-title">
       <div class="section-header">
         <span class="section-number" aria-hidden="true">§</span>
@@ -77,7 +77,10 @@
 
         <h2>Where it goes</h2>
         <p>
-          Submissions are received by Pabbly Connect, which passes them to the tools
+          Submissions first pass through a small Cloudflare Worker that checks them
+          and limits abuse; it holds a one-way hash of your IP address in memory for
+          about a minute to do so, and neither logs nor forwards the address. They are then received by
+          Pabbly Connect, which passes them to the tools
           my automation is built from — the ones I use to keep track of enquiries and
           reply to them. What those tools do with the data is my responsibility, and
           I keep it to replying to you and recording that we spoke. Ask me and I will
@@ -99,7 +102,7 @@
           <a href="mailto:arifzakwan2001@gmail.com">arifzakwan2001@gmail.com</a>.
         </p>
 
-        <p class="legal-foot">Last updated 1 October 2026.</p>
+        <p class="legal-foot">Last updated 25 November 2026.</p>
       </div>
     </section>
   </main>

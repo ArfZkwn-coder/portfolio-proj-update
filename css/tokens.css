@@ -107,11 +107,6 @@
   --node-fill: #fafaf8;
 }
 
-:root[data-contrast='high'] {
-  --line: var(--line-strong);
-  --muted: #46453f;
-}
-
 /* Dark OS preference: same tokens, remapped. No JS, no toggle. */
 @media (prefers-color-scheme: dark) {
   :root {
